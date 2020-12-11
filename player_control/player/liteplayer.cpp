@@ -1155,7 +1155,6 @@ void* LitePlayer::DataSchProcess(void *priv)
         if (play->paused == true) {
             pthread_cond_wait(&play->schCond_, &play->schMutex_);
         }
-        pthread_mutex_unlock(&play->schMutex_);
         play->DoSeekIfNeed();
         play->renderSleepTime_ = 0;
         play->ReadPacketAndPushToDecoder();
@@ -1163,6 +1162,7 @@ void* LitePlayer::DataSchProcess(void *priv)
         /* get and render frame */
         play->RenderAudioFrame();
         play->RenderVideoFrame();
+        pthread_mutex_unlock(&play->schMutex_);
         play->ReortRenderPosition();
         if (play->m_isPlayEnd == true) {
             play->DealPlayEnd();

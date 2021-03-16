@@ -44,7 +44,7 @@ C++ 11 or later
 
 [camera\_lite](https://gitee.com/openharmony/multimedia_camera_lite/blob/master/README.md)
 
-[camsera\_sample\_lite](https://gitee.com/openharmony/applications_sample_camera/blob/master/README.md)
+[camera\_sample\_lite](https://gitee.com/openharmony/applications_sample_camera/blob/master/README.md)
 
 [media\_utils\_lite](https://gitee.com/openharmony/multimedia_utils_lite/blob/master/README.md)
 

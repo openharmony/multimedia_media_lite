@@ -51,7 +51,7 @@ shared_library("recorder_lite") {
 config("recorder_external_library_config") {
   include_dirs =
       [ "//foundation/multimedia/media_lite/interfaces/kits/recorder_lite" ]
-  include_dirs += [ "//foundation/multimedia/utils/lite/include" ]
+  include_dirs += [ "//foundation/multimedia/utils/lite/interfaces/kits" ]
 }
 
 lite_component("media_lite") {

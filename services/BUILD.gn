@@ -62,7 +62,7 @@ ndk_lib("media_ndk") {
     "//foundation/multimedia/utils/lite:media_common",
   ]
   head_files = [
-    "//foundation/multimedia/utils/lite/include",
+    "//foundation/multimedia/utils/lite/interfaces/kits",
     "//foundation/multimedia/camera_lite/interfaces/kits",
     "//foundation/multimedia/audio_lite/interfaces/kits",
     "//foundation/multimedia/media_lite/interfaces/kits/player_lite",

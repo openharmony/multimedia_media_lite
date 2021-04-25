@@ -26,7 +26,7 @@ shared_library("audio_lite_api") {
     "//foundation/ace/ace_engine_lite/interfaces/innerkits/builtin/async",
     "//foundation/multimedia/media_lite/interfaces/kits/player_lite/js/builtin/include",
     "//foundation/multimedia/media_lite/interfaces/kits/player_lite",
-    "//foundation/multimedia/utils/lite/include",
+    "//foundation/multimedia/utils/lite/interfaces/kits",
   ]
   outdir = rebase_path("$root_out_dir")
   ldflags = [ "-L$outdir" ]

@@ -75,7 +75,7 @@ shared_library("player_lite") {
 config("player_external_library_config") {
   include_dirs =
       [ "//foundation/multimedia/media_lite/interfaces/kits/player_lite" ]
-  include_dirs += [ "//foundation/multimedia/utils/lite/include" ]
+  include_dirs += [ "//foundation/multimedia/utils/lite/interfaces/kits" ]
 }
 
 lite_component("media_lite") {

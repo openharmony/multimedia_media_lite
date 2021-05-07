@@ -371,7 +371,7 @@ int32_t RecorderSink::SetParameter(int32_t trackId, const Format &format)
     memset_s(items, sizeof(ParameterItem) * RECORDER_PARAMS_CNT, 0x00,
              sizeof(ParameterItem) * RECORDER_PARAMS_CNT);
     int32_t value;
-    if (format.GetIntValue(RCORDER_PRE_CACHE_DURATION, value)) {
+    if (format.GetIntValue(RECORDER_PRE_CACHE_DURATION, value)) {
         items[itemNum].key = KEY_TYPE_PRE_CACHE;
         items[itemNum].value.s32Value = value;
         items[itemNum].size = sizeof(int32_t);

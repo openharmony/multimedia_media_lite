@@ -64,7 +64,7 @@ PlayerDemuxer::PlayerDemuxer()
 PlayerDemuxer::~PlayerDemuxer()
 {
     if (demuxer_ != nullptr) {
-        FormatDemuxerDestory(demuxer_);
+        FormatDemuxerDestroy(demuxer_);
         demuxer_ = nullptr;
     }
 }

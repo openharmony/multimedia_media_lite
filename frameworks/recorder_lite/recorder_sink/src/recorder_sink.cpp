@@ -346,9 +346,9 @@ int32_t RecorderSink::Release()
         }
         started_ = false;
     }
-    ret = FormatMuxerDestory(formatMuxerHandle_);
+    ret = FormatMuxerDestroy(formatMuxerHandle_);
     if (ret != SUCCESS) {
-        MEDIA_ERR_LOG("FormatMuxerDestory failed Ret: 0x%x", ret);
+        MEDIA_ERR_LOG("FormatMuxerDestroy failed Ret: 0x%x", ret);
         return ret;
     }
     formatMuxerHandle_ = nullptr;

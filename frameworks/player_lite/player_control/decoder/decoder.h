@@ -52,7 +52,7 @@ public:
 
     virtual ~Decoder();
 
-    static int32_t GetCapbilityByMime(AvCodecMime mime, CodecType type, uint32_t flags, Capbility &cap);
+    static int32_t GetCapbilityByMime(AvCodecMime mime, CodecType type, uint32_t flags, CodecCapbility &cap);
 
     int32_t CreateHandle(const std::string &name, AvAttribute &attr);
 

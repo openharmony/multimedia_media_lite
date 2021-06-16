@@ -73,6 +73,7 @@ int32_t PlayerDemuxer::Init(void)
 {
     formatListener_.OnError = ErrorEventPro;
     formatListener_.OnInfo = InfoEventPro;
+    FormatInit();
     inited_ = true;
     return 0;
 }

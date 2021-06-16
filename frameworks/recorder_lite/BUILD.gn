@@ -37,8 +37,7 @@ shared_library("recorder_lite") {
   outdir = rebase_path("$root_out_dir")
   ldflags = [
     "-L$outdir",
-    "-lformat_muxer",
-    "-lformat_demuxer",
+    "-lformat_hw",
   ]
   deps = [
     "//base/security/permission/services/permission_lite/pms_client:pms_client",

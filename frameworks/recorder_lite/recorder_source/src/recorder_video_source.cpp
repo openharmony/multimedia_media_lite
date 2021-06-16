@@ -51,14 +51,22 @@ std::shared_ptr<OHOS::Surface> RecorderVideoSource::GetSurface()
 
 void RecorderVideoSource::OnBufferAvailable()
 {
-    if (!started_) {
-        MEDIA_ERR_LOG("Recorder source is not started");
-        return;
-    }
     if (surface_ == nullptr) {
         MEDIA_ERR_LOG("surface is NULL");
         return;
     }
+
+    if (!started_) {
+        MEDIA_ERR_LOG("Recorder source is not started");
+        acquireBuffer_ = surface_->AcquireBuffer();
+        if (acquireBuffer_ == nullptr) {
+            MEDIA_INFO_LOG("Acquire buffer failed.");
+            return;
+        }
+        surface_->ReleaseBuffer(acquireBuffer_);
+        return;
+    }
+
     std::unique_lock<std::mutex> lock(lock_);
     if (frameAvailableCount_ == 0) {
         frameAvailableCondition_.notify_one();
@@ -80,10 +88,18 @@ int32_t RecorderVideoSource::AcquireBuffer(RecorderSourceBuffer &buffer, bool is
     }
     if (isBlocking) {
         std::unique_lock<std::mutex> lock(lock_);
-        if (frameAvailableCount_ == 0) {
+        if (frameAvailableCount_ <= 0) {
             frameAvailableCondition_.wait(lock);
+            if (!started_) {
+                return ERR_READ_BUFFER;
+            }
         }
         frameAvailableCount_--;
+    }
+
+    if (surface_ == nullptr) {
+        MEDIA_ERR_LOG("surface is NULL");
+        return ERR_READ_BUFFER;
     }
     acquireBuffer_ = surface_->AcquireBuffer();
     if (acquireBuffer_ == nullptr) {

@@ -125,6 +125,10 @@ int32_t Player::PlayerImpl::DeInit(void)
     if (released_ == false) {
         Release();
     }
+
+#ifdef __LINUX__
+    HalPlayerSysDeInit();
+#endif
     inited_ = false;
     return 0;
 }

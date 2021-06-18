@@ -59,7 +59,7 @@ shared_library("player_lite") {
   ldflags = [ "-L$outdir" ]
   ldflags += [ "-laudio_hw" ]
   ldflags += [ "-lcodec" ]
-  ldflags += [ "-lformat_demuxer" ]
+  ldflags += [ "-lformat_hw" ]
   ldflags += [ "-lhdi_media" ]
   public_deps = [
     "$ohos_vendor_adapter_dir/multimedia:libhdi_media",

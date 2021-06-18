@@ -22,13 +22,14 @@
 using namespace std;
 int main()
 {
+#ifdef __LITEOS__
     int32_t ret = HalMediaInitialize();
     if (ret != 0) {
         cout << "Media server initialize failed." << endl;
         return 0;
     }
     cout << "Media server initialize succeed." << endl;
-
+#endif
     sigset_t signalSet;
     sigemptyset(&signalSet);
     sigaddset(&signalSet, SIGABRT);

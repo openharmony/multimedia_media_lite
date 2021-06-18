@@ -33,7 +33,7 @@ Decoder::~Decoder()
 {
 }
 
-int32_t Decoder::GetCapbilityByMime(AvCodecMime mime, CodecType type, uint32_t flags, Capbility &cap)
+int32_t Decoder::GetCapbilityByMime(AvCodecMime mime, CodecType type, uint32_t flags, CodecCapbility &cap)
 {
     int32_t ret = CodecGetCapbility(mime, type, flags, &cap);
     if (ret != CODEC_SUCCESS) {

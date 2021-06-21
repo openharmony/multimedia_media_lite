@@ -71,7 +71,7 @@ do { \
 Player::PlayerImpl::PlayerImpl()
     : player_(nullptr), speed_(1.0), playerControlState_(PLAY_STATUS_IDLE),
       isSingleLoop_(false),
-      currentPosition_(INVALID_MEDIA_POSITION),
+      currentPosition_(0),
       rewindPosition_(INVALID_MEDIA_POSITION),
       surface_(nullptr),
       currentState_(PLAYER_IDLE),
@@ -86,6 +86,9 @@ Player::PlayerImpl::PlayerImpl()
       streamCallback_(nullptr)
 {
     (void)memset_s(&formatFileInfo_, sizeof(formatFileInfo_), 0, sizeof(FormatFileInfo));
+    formatFileInfo_.s32UsedVideoStreamIndex = -1;
+    formatFileInfo_.s32UsedAudioStreamIndex = -1;
+    formatFileInfo_.s64Duration = -1;
     buffer_.idx = -1;
     buffer_.flag = 0;
     buffer_.offset = 0;
@@ -149,18 +152,27 @@ int32_t Player::PlayerImpl::SetSource(const Source &source)
         MEDIA_ERR_LOG("current state is:%d, not support SetSource\n", currentState_);
         return -1;
     }
-    GetPlayer();
-    CHK_NULL_RETURN(player_);
+
     SourceType sType = source.GetSourceType();
-    int32_t ret = -1;
     if (sType == SourceType::SOURCE_TYPE_FD) {
         MEDIA_ERR_LOG("not support fdSource now");
-    } else if (sType == SourceType::SOURCE_TYPE_URI) {
+        return -1;
+    }
+
+    GetPlayer();
+    CHK_NULL_RETURN(player_);
+
+    int32_t ret = -1;
+    if (sType == SourceType::SOURCE_TYPE_URI) {
         ret = SetUriSource(source);
     } else if (sType == SourceType::SOURCE_TYPE_STREAM) {
         ret = SetStreamSource(source);
     } else {
         MEDIA_ERR_LOG("SetSource failed, source type is %d", static_cast<int32_t>(sType));
+    }
+
+    if (ret != 0) {
+        ResetInner();
     }
     return ret;
 }
@@ -169,6 +181,9 @@ static void ShowFileInfo(const FormatFileInfo *fileInfo)
 {
     for (int i = 0; i < HI_DEMUXER_RESOLUTION_CNT; i++) {
         const StreamResolution *resolution = &fileInfo->stSteamResolution[i];
+        if (resolution->u32Width == 0 || resolution->u32Height == 0) {
+            break;
+        }
         MEDIA_INFO_LOG("video[%d],w=%u,h=%u,index=%d ", i, resolution->u32Width,
             resolution->u32Height, resolution->s32VideoStreamIndex);
     }
@@ -182,28 +197,7 @@ void Player::PlayerImpl::UpdateState(PlayerImpl *curPlayer, PlayerStatus state)
     if (curPlayer == nullptr) {
         return;
     }
-    switch (state) {
-        case PLAY_STATUS_IDLE:
-            curPlayer->currentState_ |= PLAYER_IDLE;
-            break;
-        case PLAY_STATUS_INIT:
-            curPlayer->currentState_ |= PLAYER_INITIALIZED;
-            break;
-        case PLAY_STATUS_PREPARED:
-            curPlayer->currentState_ |= PLAYER_PREPARED;
-            break;
-        case PLAY_STATUS_PLAY:
-            curPlayer->currentState_ |= PLAYER_STARTED;
-            break;
-        case PLAY_STATUS_TPLAY:
-            curPlayer->currentState_ |= PLAYER_STARTED;
-            break;
-        case PLAY_STATUS_PAUSE:
-            curPlayer->currentState_ |= PLAYER_PAUSED;
-            break;
-        default:
-            break;
-    }
+
     curPlayer->playerControlState_ = state;
     MEDIA_INFO_LOG("@@player UpdateState, state:%d", state);
 }
@@ -266,10 +260,16 @@ int32_t Player::PlayerImpl::Prepare()
     MEDIA_INFO_LOG("process in");
     CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
     CHK_NULL_RETURN(player_);
+
+    if (currentState_ == PLAYER_PREPARED) {
+        MEDIA_ERR_LOG("have operated prepare before");
+        return 0;
+    }
     if (currentState_ != PLAYER_INITIALIZED) {
-        MEDIA_ERR_LOG("Can not Prepare, currentState_ is %d\n", currentState_);
+        MEDIA_ERR_LOG("Can not Prepare, currentState_ is %d", currentState_);
         return -1;
     }
+
     PlayerCtrlCallbackParam param;
     param.player = this;
     param.callbackFun = PlayerControlEventCb;
@@ -280,7 +280,12 @@ int32_t Player::PlayerImpl::Prepare()
     }
 
     currentState_ = PLAYER_PREPARING;
-    player_->Prepare();
+    ret = player_->Prepare();
+    if (ret != 0) {
+        MEDIA_ERR_LOG("Prepare exec failed");
+        currentState_ = PLAYER_INITIALIZED;
+        return -1;
+    }
     currentState_ = PLAYER_PREPARED;
 
     ret = player_->GetFileInfo(formatFileInfo_);
@@ -289,6 +294,11 @@ int32_t Player::PlayerImpl::Prepare()
         return ret;
     }
     ShowFileInfo(&formatFileInfo_);
+    if (formatFileInfo_.s32UsedVideoStreamIndex == -1) {
+        MEDIA_INFO_LOG("process out");
+        return 0;
+    }
+
     /* report video solution */
     for (int i = 0; i < HI_DEMUXER_RESOLUTION_CNT; i++) {
         if (formatFileInfo_.stSteamResolution[i].s32VideoStreamIndex == formatFileInfo_.s32UsedVideoStreamIndex) {
@@ -296,6 +306,7 @@ int32_t Player::PlayerImpl::Prepare()
                 callback_->OnVideoSizeChanged(formatFileInfo_.stSteamResolution[i].u32Width,
                     formatFileInfo_.stSteamResolution[i].u32Height);
             }
+            break;
         }
     }
     MEDIA_INFO_LOG("process out");
@@ -651,10 +662,8 @@ int32_t Player::PlayerImpl::SetAudioStreamType(int32_t type)
     std::lock_guard<std::mutex> valueLock(lock_);
     MEDIA_INFO_LOG("process in");
     CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
-    if (currentState_ == PLAYER_PREPARED || currentState_ == PLAYER_STARTED ||
-        currentState_ == PLAYER_PAUSED || currentState_ == PLAYER_PLAYBACK_COMPLETE) {
-        MEDIA_ERR_LOG("SetAudioStreamType called in state %d,type:%d",
-            currentState_, type);
+    if (currentState_ != PLAYER_IDLE && currentState_ != PLAYER_INITIALIZED) {
+        MEDIA_ERR_LOG("failed, state %d,type:%d", currentState_, type);
         return -1;
     }
     audioStreamType_ = type;
@@ -690,15 +699,23 @@ void Player::PlayerImpl::ResetInner(void)
         streamCallback_.reset();
         streamCallback_ = nullptr;
     }
-    if (callback_ != nullptr) {
-        callback_.reset();
-        callback_ = nullptr;
-    }
+
     currentState_ = PLAYER_IDLE;
-    currentPosition_ = INVALID_MEDIA_POSITION;
     currentRewindMode_ = PLAYER_SEEK_PREVIOUS_SYNC;
     rewindPosition_ = INVALID_MEDIA_POSITION;
     rewindMode_ = PLAYER_SEEK_PREVIOUS_SYNC;
+    isSingleLoop_ = false;
+    speed_ = 1.0;
+    currentPosition_ = 0;
+    playerControlState_ = PLAY_STATUS_IDLE;
+    isStreamSource_ = false;
+    (void)memset_s(&formatFileInfo_, sizeof (FormatFileInfo), 0, sizeof(FormatFileInfo));
+    formatFileInfo_.s32UsedVideoStreamIndex = -1;
+    formatFileInfo_.s32UsedAudioStreamIndex = -1;
+    formatFileInfo_.s64Duration = -1;
+    (void)memset_s(&mediaAttr_, sizeof (PlayerControlStreamAttr), 0, sizeof(PlayerControlStreamAttr));
+    (void)memset_s(&buffer_, sizeof (QueBuffer), 0, sizeof(QueBuffer));
+    buffer_.idx = -1;
 }
 
 int32_t Player::PlayerImpl::Reset(void)
@@ -717,8 +734,14 @@ int32_t Player::PlayerImpl::Release()
 {
     std::lock_guard<std::mutex> valueLock(lock_);
     MEDIA_INFO_LOG("process in");
-    CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
+    CHECK_FAILED_RETURN(released_, false, 0, "have released or not create");
     ResetInner();
+
+    if (callback_ != nullptr) {
+        callback_.reset();
+        callback_ = nullptr;
+    }
+    currentState_ = PLAYER_STATE_ERROR;
     released_ = true;
     return 0;
 }
@@ -1036,7 +1059,7 @@ READ_BUFFER_DATA:
     }
     /* read all buffer data */
     if (playImpl->buffer_.size <= size) {
-        if (playImpl->buffer_.size == 0 && playImpl->buffer_.flag == BUFFER_FLAG_EOS) {;
+        if (playImpl->buffer_.size == 0 && playImpl->buffer_.flag == BUFFER_FLAG_EOS) {
             playImpl->buffer_.offset = 0;
             playImpl->buffer_.size = info.size;
             playImpl->bufferSource_->QueIdleBuffer(&playImpl->buffer_);
@@ -1071,7 +1094,9 @@ int32_t Player::PlayerImpl::SetStreamSource(const Source &source)
     MEDIA_INFO_LOG("process in");
     std::string mimeType;
     Format format;
+
     isStreamSource_ = true;
+    isSingleLoop_ = false;
     format.CopyFrom(source.GetSourceStreamFormat());
     if (format.GetStringValue(CODEC_MIME, mimeType) != true || mimeType.length() == 0) {
         MEDIA_ERR_LOG("get mime type failed");

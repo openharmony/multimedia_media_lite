@@ -209,7 +209,7 @@ int32_t PlayerDemuxer::GetFileInfo(FormatFileInfo &fileInfo)
     uint32_t j;
     for (i = 0; i < info.programNum; i++) {
         programInfo = &info.programInfo[i];
-        for (j = 0; i < programInfo->trackNum; i++) {
+        for (j = 0; j < programInfo->trackNum; j++) {
             if (programInfo->track[j].trackType == TRACK_TYPE_VIDEO) {
                 fileInfo.stSteamResolution[index].s32VideoStreamIndex = programInfo->track[j].trackId;
                 fileInfo.stSteamResolution[index].u32Width = programInfo->track[j].vidTrack.width;

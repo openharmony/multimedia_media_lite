@@ -1092,20 +1092,10 @@ READ_BUFFER_DATA:
 int32_t Player::PlayerImpl::SetStreamSource(const Source &source)
 {
     MEDIA_INFO_LOG("process in");
-    std::string mimeType;
-    Format format;
 
     isStreamSource_ = true;
     isSingleLoop_ = false;
-    format.CopyFrom(source.GetSourceStreamFormat());
-    if (format.GetStringValue(CODEC_MIME, mimeType) != true || mimeType.length() == 0) {
-        MEDIA_ERR_LOG("get mime type failed");
-        return -1;
-    }
-    if (strcmp(mimeType.c_str(), MIME_AUDIO_AAC) != 0) {
-        MEDIA_ERR_LOG("mime_type[%s] error, current only support:%s", mimeType.c_str(), MIME_AUDIO_AAC);
-        return -1;
-    }
+
     bufferSource_ = std::make_shared<BufferSource>();
     if (bufferSource_ == nullptr) {
         MEDIA_ERR_LOG("new BufferSource failed");

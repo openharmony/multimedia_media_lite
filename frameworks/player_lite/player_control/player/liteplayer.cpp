@@ -617,11 +617,31 @@ static AvCodecMime TransformCodecFormatToAvCodecMime(CodecFormat format)
         case CODEC_AAC:
             mime = MEDIA_MIMETYPE_AUDIO_AAC;
             break;
+        case CODEC_MP3:
+            mime = MEDIA_MIMETYPE_AUDIO_MP3;
+            break;
         default:
             MEDIA_ERR_LOG("not support codec:%d", format);
             break;
     }
     return mime;
+}
+
+static std::string GetAudioNameByAvCodecMime(AvCodecMime mime)
+{
+    std::string audioName = "codec.unknow.soft.decoder";
+    switch (mime) {
+        case MEDIA_MIMETYPE_AUDIO_AAC:
+            audioName = "codec.aac.soft.decoder";
+            break;
+        case MEDIA_MIMETYPE_AUDIO_MP3:
+            audioName = "codec.mp3.soft.decoder";
+            break;
+        default:
+            MEDIA_ERR_LOG("not support codec type:%d", mime);
+            break;
+    }
+    return audioName;
 }
 
 int32_t PlayerControl::DecoderStart(void)
@@ -633,7 +653,8 @@ int32_t PlayerControl::DecoderStart(void)
     MEDIA_INFO_LOG("PlayerControl::DecoderStart streamid:%d-%d",
         fmtFileInfo_.s32UsedAudioStreamIndex, fmtFileInfo_.s32UsedVideoStreamIndex);
     if (fmtFileInfo_.s32UsedAudioStreamIndex != -1) {
-        if (fmtFileInfo_.enAudioType != CODEC_AAC) {
+        AvCodecMime mime = TransformCodecFormatToAvCodecMime(fmtFileInfo_.enAudioType);
+        if (mime == MEDIA_MIMETYPE_INVALID) {
             MEDIA_ERR_LOG("DecoderStart not support codec:%d", fmtFileInfo_.enAudioType);
             return -1;
         }
@@ -641,10 +662,10 @@ int32_t PlayerControl::DecoderStart(void)
         CHECK_NULL_RETURN(audioDecoder_, -1, "new decoder failed");
         AvAttribute attr;
         attr.type = AUDIO_DECODER;
-        attr.adecAttr.mime = MEDIA_MIMETYPE_AUDIO_AAC;
+        attr.adecAttr.mime = mime;
         attr.adecAttr.priv = nullptr;
         attr.adecAttr.bufSize = 1024;
-        const std::string audioName = "codec.aac.soft.decoder";
+        const std::string audioName = GetAudioNameByAvCodecMime(mime);
         int32_t ret = audioDecoder_->CreateHandle(audioName, attr);
         CHECK_FAILED_RETURN(ret, 0, -1, "create audio decoder failed");
         ret = audioDecoder_->StartDec();

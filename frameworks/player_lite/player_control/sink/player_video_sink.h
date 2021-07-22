@@ -62,6 +62,8 @@ private:
     void RelaseQueAllFrame(void);
     void RenderRptEvent(EventCbType event);
     int32_t WriteToVideoDevice(OutputInfo &renderFrame);
+    void QueueRenderFrame(OutputInfo &frame, bool cacheQueue);
+    void CheckConfigVideoOutput(void);
 
     SinkAttr attr_;
     HalVideoOutputHdl handle_;
@@ -85,6 +87,10 @@ private:
     std::mutex mutex_;
     std::vector<OutputInfo> frameCacheQue_;
     std::vector<OutputInfo> frameReleaseQue_;
+    int32_t lastConfigRegionX_;
+    int32_t lastConfigRegionY_;
+    int32_t lastConfigRegionW_;
+    int32_t lastConfigRegionH_;
 };
 }  // namespace Media
 }  // namespace OHOS

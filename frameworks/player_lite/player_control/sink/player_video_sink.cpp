@@ -66,7 +66,8 @@ VideoSink::VideoSink(void)
     : handle_(0), speed_(1.0f), paused_(false), started_(false), syncHdl_(nullptr),
       renderFrameCnt_(0), renderMode_(RENDER_MODE_NORMAL), rendStartTime_(-1), lastRendPts_(AV_INVALID_PTS),
       recievedEos_(false), EosPts_(AV_INVALID_PTS), pauseAfterPlay_(false), firstVidRend_(false),
-      lastRendCnt_(0), vidRendStartTime_(AV_INVALID_PTS), eosSended_(false)
+      lastRendCnt_(0), vidRendStartTime_(AV_INVALID_PTS), eosSended_(false), lastConfigRegionX_(-1),
+      lastConfigRegionY_(-1), lastConfigRegionW_(), lastConfigRegionH_(-1)
 {
     ResetRendStartTime();
     attr_.sinkType = SINK_TYPE_BUT;
@@ -218,6 +219,19 @@ int32_t VideoSink::RegisterCallBack(PlayEventCallback &callback)
     return 0;
 }
 
+void VideoSink::QueueRenderFrame(OutputInfo &frame, bool cacheQueue)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (frame.type != AUDIO_DECODER || frame.bufferCnt == 0) {
+        return;
+    }
+    if (cacheQueue) {
+        frameCacheQue_.push_back(frame);
+    } else {
+        frameReleaseQue_.push_back(frame);
+    }
+}
+
 int32_t VideoSink::GetRenderFrame(OutputInfo &renderFrame, OutputInfo &frame)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -281,34 +295,51 @@ void VideoSink::RenderRptEvent(EventCbType event)
     }
 }
 
+void VideoSink::CheckConfigVideoOutput(void)
+{
+    Surface *surface = attr_.vidAttr.surface;
+    if (surface == nullptr) {
+        return;
+    }
+
+    int32_t x = std::stoi(surface->GetUserData("region_position_x"));
+    int32_t y = std::stoi(surface->GetUserData("region_position_y"));
+    int32_t w = std::stoi(surface->GetUserData("region_width"));
+    int32_t h = std::stoi(surface->GetUserData("region_height"));
+    /* no need to repeat operation */
+    if (x == lastConfigRegionX_ && y == lastConfigRegionY_ && w == lastConfigRegionW_ && h == lastConfigRegionH_) {
+        return;
+    }
+    lastConfigRegionX_ = x;
+    lastConfigRegionY_ = y;
+    lastConfigRegionW_ = w;
+    lastConfigRegionH_ = h;
+
+    int32_t right = x + w - 1;
+    int32_t botttom = y + h - 1;
+    /* Make sure the coordinates are even */
+    x = x - x % 2;
+    y = y - y % 2;
+    w = right - x + 1;
+    h = botttom - y + 1;
+    w = w + w % 2;
+    h = h + h % 2;
+    HalVideoOutputAttr voAttr = {x, y, w, h, 0};
+    int ret = HalConfigVideoOutput(handle_, voAttr);
+    if (ret != 0) {
+        MEDIA_ERR_LOG("ConfigVideoOutput failed:%d, x:%d, y:%d, w:%d, h:%d", ret, x, y, w, h);
+    }
+}
+
 int32_t VideoSink::WriteToVideoDevice(OutputInfo &renderFrame)
 {
-    int ret;
-    Surface *surface = attr_.vidAttr.surface;
-    if (surface != nullptr) {
-        int32_t x = std::stoi(surface->GetUserData("region_position_x"));
-        int32_t y = std::stoi(surface->GetUserData("region_position_y"));
-        int32_t w = std::stoi(surface->GetUserData("region_width"));
-        int32_t h = std::stoi(surface->GetUserData("region_height"));
-        int32_t right = x + w - 1;
-        int32_t botttom = y + h - 1;
-        /* Make sure the coordinates are even */
-        x = x - x % 2;
-        y = y - y % 2;
-        w = right - x + 1;
-        h = botttom - y + 1;
-        w = w + w % 2;
-        h = h + h % 2;
-        HalVideoOutputAttr voAttr = {x, y, w, h, 0};
-        ret = HalConfigVideoOutput(handle_, voAttr);
-        if (ret != 0) {
-            MEDIA_ERR_LOG("ConfigVideoOutput failed:%d, x:%d, y:%d, w:%d, h:%d", ret, x, y, w, h);
-        }
+    CheckConfigVideoOutput();
+
+    int ret = HalWriteVo(handle_, renderFrame.vendorPrivate);
+    if (ret == SINK_SUCCESS) {
+        RelaseQueHeadFrame();
     }
-    ret = HalWriteVo(handle_, renderFrame.vendorPrivate);
-    RelaseQueHeadFrame();
-    CHECK_FAILED_RETURN(ret, 0, -1, "HalWriteVo failed");
-    return HI_SUCCESS;
+    return ret;
 }
 
 int32_t VideoSink::RenderFrame(OutputInfo &frame)
@@ -316,8 +347,13 @@ int32_t VideoSink::RenderFrame(OutputInfo &frame)
     SyncRet syncRet = SYNC_RET_PLAY;
     int64_t crtPlayPts = 0;
     OutputInfo renderFrame;
-    CHECK_FAILED_RETURN(started_, true, SINK_RENDER_ERROR, "not started");
-    CHECK_FAILED_RETURN(paused_, false, SINK_RENDER_ERROR, "paused");
+
+    /* the frame should be save to queue at state paused and none-started */
+    if (!started_ || paused_) {
+        QueueRenderFrame(frame, started_ ? true : false);
+        return SINK_SUCCESS;
+    }
+
     if (GetRenderFrame(renderFrame, frame) != SINK_SUCCESS) {
         if (recievedEos_ == true) {
             RenderRptEvent(EVNET_VIDEO_PLAY_EOS);
@@ -325,26 +361,31 @@ int32_t VideoSink::RenderFrame(OutputInfo &frame)
         }
         return SINK_QUE_EMPTY;
     }
-    if (pauseAfterPlay_) {
-        return SINK_SUCCESS;
-    }
+
     crtPlayPts = renderFrame.timeStamp;
     int32_t ret = (syncHdl_ != nullptr) ? syncHdl_->ProcVidFrame(crtPlayPts, syncRet) : HI_SUCCESS;
     if (ret != HI_SUCCESS) {
-        MEDIA_ERR_LOG("AVPLAY_SYNC_Proc_VidFrame pts: %llu failed", renderFrame.timeStamp);
+         MEDIA_ERR_LOG("ProcVidFrame pts: %llu failed", renderFrame.timeStamp);
         return SINK_RENDER_ERROR;
     }
-    lastRendPts_ = (renderFrame.timeStamp > lastRendPts_) ? renderFrame.timeStamp : lastRendPts_;
+
     if (syncRet == SYNC_RET_PLAY) {
         ret = WriteToVideoDevice(renderFrame);
+        renderFrameCnt_++;
     } else if (syncRet == SYNC_RET_DROP) {
         RelaseQueHeadFrame();
         ret = SINK_SUCCESS;
     } else if (syncRet == SYNC_RET_REPEAT) {
         ret = SINK_RENDER_DELAY;
     } else {
-        MEDIA_ERR_LOG("aud invalid sync ret: %d", syncRet);
+        MEDIA_ERR_LOG("video invalid sync ret: %d", syncRet);
+        RelaseQueHeadFrame();
         ret =  SINK_RENDER_ERROR;
+    }
+
+    /* render pts update after the frame that have been processed */
+    if (ret == SINK_SUCCESS || ret == SINK_RENDER_ERROR) {
+        lastRendPts_ = (renderFrame.timeStamp > lastRendPts_) ? renderFrame.timeStamp : lastRendPts_;
     }
     return ret;
 }

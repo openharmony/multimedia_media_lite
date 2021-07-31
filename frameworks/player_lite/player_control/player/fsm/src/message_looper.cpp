@@ -26,7 +26,7 @@
 #include "fsm_common.h"
 
 namespace OHOS {
-#if (defined(__HuaweiLite__) || defined(__OHOS__))
+#if (defined(__LITE__))
 const uint32_t MSGLOOPER_LITEOS_STACK_SIZE = 0x10000;
 #endif
 const uint32_t MSGLOOPER_EMPTY_WAIT_TIME_US = 200 * 1000; /* empty wait time is 200 ms, namely 200 * 1000 us */
@@ -132,7 +132,7 @@ int32_t MessageLooper::Start()
     }
 
     m_isThreadRunning = true;
-#if (defined(__HuaweiLite__) || defined(__OHOS__))
+#if (defined(__LITE__))
     pthread_attr_t attr;
 
     pthread_attr_init(&attr);
@@ -143,14 +143,14 @@ int32_t MessageLooper::Start()
 #endif
     if (ret != 0) {
         MEDIA_ERR_LOG("pthread_create failed %d", ret);
-#if (defined(__HuaweiLite__) || defined(__OHOS__))
+#if (defined(__LITE__))
         pthread_attr_destroy(&attr);
 #endif
         m_isThreadRunning = false;
         return HI_FAILURE;
     }
 
-#if (defined(__HuaweiLite__) || defined(__OHOS__))
+#if (defined(__LITE__))
     pthread_attr_destroy(&attr);
 #endif
 

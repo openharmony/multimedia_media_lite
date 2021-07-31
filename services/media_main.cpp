@@ -12,24 +12,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "hal_media.h"
+#include "hal_camera.h"
+#include "samgr_lite.h"
+#include "player_server.h"
+#include "camera_server.h"
+#include "recorder_service.h"
+#include "ohos_init.h"
 
 #include <csignal>
 #include <cstdint>
 #include <iostream>
 #include <unistd.h>
 
+using namespace OHOS;
+using namespace OHOS::Media;
+extern "C" void __attribute__((weak)) OHOS_SystemInit(void)
+{
+    SAMGR_Bootstrap();
+}
+
 using namespace std;
 int main()
 {
-#ifdef __LITEOS__
-    int32_t ret = HalMediaInitialize();
-    if (ret != 0) {
-        cout << "Media server initialize failed." << endl;
-        return 0;
-    }
+    OHOS_SystemInit();
+
+    cout << "Camera server start." << endl;
+    CameraServer::GetInstance()->InitCameraServer();
+    
+    cout << "Player server start" << endl;
+    PlayerServer::GetInstance()->PlayerServerInit();
+
+ 
+
     cout << "Media server initialize succeed." << endl;
-#endif
+
     sigset_t signalSet;
     sigemptyset(&signalSet);
     sigaddset(&signalSet, SIGABRT);
@@ -40,3 +56,5 @@ int main()
     sigwait(&signalSet, &sig);
     return 0;
 }
+
+SYSEX_SERVICE_INIT(RecorderServiceReg);

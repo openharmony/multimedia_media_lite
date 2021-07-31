@@ -18,7 +18,7 @@
 #include <list>
 #include <string>
 #include <pthread.h>
-#include "message.h"
+#include "fsm_message.h"
 
 namespace OHOS {
 struct MsgPrivateInfo {

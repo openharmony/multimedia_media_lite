@@ -17,10 +17,6 @@
 #include <sys/time.h>
 #include "player_video_sink.h"
 #include "media_log.h"
-extern "C"
-{
-#include "hal_display.h"
-}
 
 namespace OHOS {
 namespace Media {
@@ -63,7 +59,7 @@ static int64_t GetCurTimeMs()
 }
 
 VideoSink::VideoSink(void)
-    : handle_(0), speed_(1.0f), paused_(false), started_(false), syncHdl_(nullptr),
+    :speed_(1.0f), paused_(false), started_(false), syncHdl_(nullptr),
       renderFrameCnt_(0), renderMode_(RENDER_MODE_NORMAL), rendStartTime_(-1), lastRendPts_(AV_INVALID_PTS),
       recievedEos_(false), EosPts_(AV_INVALID_PTS), pauseAfterPlay_(false), firstVidRend_(false),
       lastRendCnt_(0), vidRendStartTime_(AV_INVALID_PTS), eosSended_(false), lastConfigRegionX_(-1),
@@ -92,14 +88,16 @@ VideoSink::~VideoSink()
 int32_t VideoSink::DeInit()
 {
     int32_t ret = HI_SUCCESS;
-    HalPlayerVoDeinit(handle_);
+    layerFuncs_->DeinitDisplay(0);
     return ret;
 }
 
 int32_t VideoSink::Init(SinkAttr &attr)
 {
     attr_ = attr;
-    return HalPlayerVoInit(&handle_);
+    (void)LayerInitialize(&layerFuncs_);
+    layerFuncs_->InitDisplay(0);
+    return 0;
 }
 
 void VideoSink::GetStatus(VideoSinkStatus &status)
@@ -129,10 +127,53 @@ void VideoSink::GetStatus(VideoSinkStatus &status)
     status.fpsDecimal = 0;
 }
 
+void VideoSink::CheckConfigVideoOutput(void)
+{
+    Surface *surface = attr_.vidAttr.surface;
+    if (surface == nullptr) {
+        return;
+    }
+    IRect attr;
+    uint32_t layerId = 0;
+    int32_t x = std::stoi(surface->GetUserData("region_position_x"));
+    int32_t y = std::stoi(surface->GetUserData("region_position_y"));
+    int32_t w = std::stoi(surface->GetUserData("region_width"));
+    int32_t h = std::stoi(surface->GetUserData("region_height"));
+    /* no need to repeat operation */
+    if (x == lastConfigRegionX_ && y == lastConfigRegionY_ && w == lastConfigRegionW_ && h == lastConfigRegionH_) {
+        return;
+    }
+    lastConfigRegionX_ = x;
+    lastConfigRegionY_ = y;
+    lastConfigRegionW_ = w;
+    lastConfigRegionH_ = h;
+
+    int32_t right = x + w - 1;
+    int32_t botttom = y + h - 1;
+    /* Make sure the coordinates are even */
+    x = x - x % 2;
+    y = y - y % 2;
+    w = right - x + 1;
+    h = botttom - y + 1;
+    w = w + w % 2;
+    h = h + h % 2;
+    attr.x = x;
+    attr.y =y;
+    attr.w =w;
+    attr.h =h;
+    LayerInfo lInfo;
+    lInfo.width = w;
+    lInfo.height = h;
+    if (layerFuncs_ != nullptr) {
+        layerFuncs_->SetLayerSize(0, 0, &attr);
+        layerFuncs_->CreateLayer(0, &lInfo, &layerId);
+    }
+}
+
 int32_t VideoSink::Start()
 {
     vidRendStartTime_ = GetCurTimeMs();
-    CHECK_FAILED_RETURN(HalStartVideoOutput(handle_), 0, -1, "HalStartVideoOutput failed");
+    CheckConfigVideoOutput();
     if (syncHdl_ != nullptr) {
         syncHdl_->Start(SYNC_CHN_VID);
     }
@@ -151,7 +192,9 @@ int32_t VideoSink::Stop()
     RelaseQueAllFrame();
     ResetRendStartTime();
     renderFrameCnt_ = 0;
-    CHECK_FAILED_RETURN(HalStopVideoOutput(handle_), 0, -1, "HalStopVideoOutput failed");
+    if (layerFuncs_ != nullptr) {
+        layerFuncs_->CloseLayer(0, 0);
+    }
     started_ = false;
     return HI_SUCCESS;
 }
@@ -295,51 +338,15 @@ void VideoSink::RenderRptEvent(EventCbType event)
     }
 }
 
-void VideoSink::CheckConfigVideoOutput(void)
-{
-    Surface *surface = attr_.vidAttr.surface;
-    if (surface == nullptr) {
-        return;
-    }
-
-    int32_t x = std::stoi(surface->GetUserData("region_position_x"));
-    int32_t y = std::stoi(surface->GetUserData("region_position_y"));
-    int32_t w = std::stoi(surface->GetUserData("region_width"));
-    int32_t h = std::stoi(surface->GetUserData("region_height"));
-    /* no need to repeat operation */
-    if (x == lastConfigRegionX_ && y == lastConfigRegionY_ && w == lastConfigRegionW_ && h == lastConfigRegionH_) {
-        return;
-    }
-    lastConfigRegionX_ = x;
-    lastConfigRegionY_ = y;
-    lastConfigRegionW_ = w;
-    lastConfigRegionH_ = h;
-
-    int32_t right = x + w - 1;
-    int32_t botttom = y + h - 1;
-    /* Make sure the coordinates are even */
-    x = x - x % 2;
-    y = y - y % 2;
-    w = right - x + 1;
-    h = botttom - y + 1;
-    w = w + w % 2;
-    h = h + h % 2;
-    HalVideoOutputAttr voAttr = {x, y, w, h, 0};
-    int ret = HalConfigVideoOutput(handle_, voAttr);
-    if (ret != 0) {
-        MEDIA_ERR_LOG("ConfigVideoOutput failed:%d, x:%d, y:%d, w:%d, h:%d", ret, x, y, w, h);
-    }
-}
-
 int32_t VideoSink::WriteToVideoDevice(OutputInfo &renderFrame)
 {
-    CheckConfigVideoOutput();
-
-    int ret = HalWriteVo(handle_, renderFrame.vendorPrivate);
-    if (ret == SINK_SUCCESS) {
-        RelaseQueHeadFrame();
+    if (layerFuncs_ != nullptr) {
+        LayerBuffer layerBuf;
+        layerBuf.data.virAddr = renderFrame.vendorPrivate;
+        layerFuncs_->Flush(0, 0, &layerBuf);
     }
-    return ret;
+    RelaseQueHeadFrame();
+    return SINK_SUCCESS;
 }
 
 int32_t VideoSink::RenderFrame(OutputInfo &frame)

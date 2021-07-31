@@ -37,7 +37,7 @@ uint64_t FsmGetCurTimeUs()
 
 void FsmCondInitRelative(pthread_cond_t &cond)
 {
-#if (!defined(__HuaweiLite__) && !defined(__OHOS__))
+#if (!defined(__LITE__))
     pthread_condattr_t condAttr;
     (void)pthread_condattr_init(&condAttr);
 
@@ -52,7 +52,7 @@ int32_t FsmCondTimewait(pthread_cond_t &cond, pthread_mutex_t &mutex, uint32_t d
 {
     struct timespec ts = { 0, 0 };
 
-#if (!defined(__HuaweiLite__) && !defined(__OHOS__))
+#if (!defined(__LITE__))
     (void)clock_gettime(CLOCK_MONOTONIC, &ts);
 #else
     ts.tv_sec = 0;

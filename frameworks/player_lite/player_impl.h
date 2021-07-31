@@ -24,9 +24,9 @@
 #include "hi_demuxer.h"
 #include "liteplayer.h"
 #include "player_define.h"
-#include "player.h"
 #include "source.h"
-
+#include "surface.h"
+#include "player.h"
 using namespace std;
 using OHOS::Media::PlayerControl;
 namespace OHOS {
@@ -40,7 +40,7 @@ typedef enum {
     PAYERADP_EVT_PLAY_TIME = 5,
     PAYERADP_EVT_ERROR           = 6,
     PAYERADP_EVT_INFO            = 7,
-}PlayAdapterEvt;
+} PlayAdapterEvt;
 
 class AdapterStreamCallback : public StreamCallback {
 public:
@@ -62,9 +62,9 @@ private:
 };
 
 class PlayerControl;
-class Player::PlayerImpl {
+class PlayerImpl {
 friend class BufferSource;
-friend struct StreamSource;
+friend class StreamSource;
 
 public:
     PlayerImpl();
@@ -78,7 +78,7 @@ public:
     int32_t Rewind(int64_t mSeconds, int32_t mode);
     int32_t SetVolume(float leftVolume, float rightVolume);
     int32_t SetSurface(Surface *surface);
-    bool IsLooping();
+    bool IsSingleLooping();
     int32_t GetPlayerState(int32_t &state);
     int32_t GetCurrentPosition(int64_t &currentPosition);
     int32_t GetDuration(int64_t &duration);

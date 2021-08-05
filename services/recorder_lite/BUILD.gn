@@ -11,41 +11,46 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import("//build/lite/config/component/lite_component.gni")
-import("//build/lite/ndk/ndk.gni")
 
-shared_library("recorder_lite") {
+static_library("recorder_server") {
   sources = [
-    "recorder.cpp",
-    "recorder_client.cpp",
+    "recorder_audio_source.cpp",
+    "recorder_impl.cpp",
+    "recorder_samgr.cpp",
+    "recorder_service.cpp",
+    "recorder_sink.cpp",
+    "recorder_video_source.cpp",
   ]
-  cflags = [ "-fPIC" ]
-  cflags += [ "-Wall" ]
+  cflags = [ "-Wall" ]
   cflags_cc = cflags
+  public_configs = [ ":recorder_server_public_config" ]
+  public_deps = [
+    "//base/security/permission/services/permission_lite/pms_client:pms_client",
+    "//foundation/communication/ipc_lite:liteipc_adapter",
+    "//foundation/distributedschedule/samgr_lite/samgr:samgr",
+    "//foundation/graphic/surface:lite_surface",
+    "//foundation/multimedia/audio_lite/frameworks:audio_capturer_lite",
+    "//foundation/multimedia/utils/lite:media_common",
+    "//third_party/bounds_checking_function:libsec_shared",
+  ]
+}
+
+config("recorder_server_public_config") {
   include_dirs = [
-    "recorder_sink/include",
-    "recorder_source/include",
+    "//foundation/multimedia/media_lite/interfaces/kits/recorder_lite",
     "//third_party/bounds_checking_function/include",
-    "//foundation/multimedia/utils/lite/hals",
     "//drivers/peripheral/audio/interfaces/include",
     "//drivers/peripheral/codec/interfaces/include",
     "//drivers/peripheral/format/interfaces/include",
     "//base/security/permission/interfaces/kits/permission_lite",
     "//foundation/distributedschedule/samgr_lite/interfaces/kits/registry",
     "//foundation/distributedschedule/samgr_lite/interfaces/kits/samgr",
+    "//foundation/distributedschedule/samgr_lite/interfaces/kits/communication/broadcast",
     "//foundation/multimedia/media_lite/services/recorder_lite",
+    "//foundation/multimedia/media_lite/interfaces/kits/recorder_lite",
   ]
-  public_configs = [ ":recorder_external_library_config" ]
-  deps = [
-    "//base/security/permission/services/permission_lite/pms_client:pms_client",
-    "//foundation/communication/ipc_lite:liteipc_adapter",
-    "//foundation/multimedia/audio_lite/frameworks:audio_capturer_lite",
-    "//foundation/multimedia/utils/lite:media_common",
-    "//third_party/bounds_checking_function:libsec_shared",
+  ldflags = [
+    "-lformat_hw",
+    "-lcodec",
   ]
-  public_deps = [ "//foundation/graphic/surface:lite_surface" ]
-}
-config("recorder_external_library_config") {
-  include_dirs =
-      [ "//foundation/multimedia/media_lite/interfaces/kits/recorder_lite" ]
-  include_dirs += [ "//foundation/multimedia/utils/lite/interfaces/kits" ]
 }

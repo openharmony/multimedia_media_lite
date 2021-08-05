@@ -56,7 +56,7 @@ using OHOS::Surface;
  * This constant can be used as the value of {@link Format} in {@link SetParameter} to configure the duration for
  * storing recorded data in the cache.
  */
-const string RECORDER_PRE_CACHE_DURATION = "pre-cache-duration";
+const string RCORDER_PRE_CACHE_DURATION = "pre-cache-duration";
 
 /**
  * @brief Enumerates video source types.
@@ -581,11 +581,11 @@ public:
     int32_t SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration);
 
     /**
-     * @brief Sets an extended parameter for recording, for example, {@link RECORDER_PRE_CACHE_DURATION}.
+     * @brief Sets an extended parameter for recording, for example, {@link RCORDER_PRE_CACHE_DURATION}.
      *
      * @param sourceId Indicates the data source ID. The value <b>-1</b> indicates all sources.
      * @param format Indicates the string key and value. For details, see {@link Format} and
-     * {@link RECORDER_PRE_CACHE_DURATION}.
+     * {@link RCORDER_PRE_CACHE_DURATION}.
      * @return Returns {@link SUCCESS} if the setting is successful; returns an error code defined
      * in {@link media_errors.h} otherwise.
      * @since 1.0

@@ -110,7 +110,7 @@ public:
     };
 
     PlayerCallback() = default;
-    ~PlayerCallback() = default;
+    virtual ~PlayerCallback() = default;
 
     /**
     * @brief Called when the playback is complete.
@@ -157,15 +157,15 @@ public:
     * @version 1.0
     */
     virtual void OnRewindToComplete() = 0;
-    };
+};
 
-    /**
-    * @brief Provides functions for playing online movies, offline movies, and streams, for example, playing local
-    * movies and advanced audio coding (AAC) streams.
-    *
-    * @since 1.0
-    * @version 1.0
-    */
+/**
+ * @brief Provides functions for playing online movies, offline movies, and streams, for example, playing local
+ * movies and advanced audio coding (AAC) streams.
+ *
+ * @since 1.0
+ * @version 1.0
+ */
 class Player {
 public:
     Player();
@@ -362,8 +362,8 @@ public:
     void SetPlayerCallback(const std::shared_ptr<PlayerCallback> &cb);
 
 private:
-    class PlayerImpl;
-    std::unique_ptr<PlayerImpl> impl_;
+    class PlayerClient;
+    PlayerClient* player_;
 };
 }  // namespace Media
 }  // namespace OHOS

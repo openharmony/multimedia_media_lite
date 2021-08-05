@@ -16,7 +16,7 @@
 #ifndef FSM_MESSAGE_HANDLER_H
 #define FSM_MESSAGE_HANDLER_H
 
-#include "message.h"
+#include "fsm_message.h"
 
 namespace OHOS {
 class MessageHandler {

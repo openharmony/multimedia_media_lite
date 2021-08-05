@@ -28,7 +28,6 @@
 extern "C"
 {
 #include "codec_interface.h"
-#include "hal_display.h"
 }
 
 using namespace std;
@@ -68,7 +67,7 @@ do { \
     } \
 } while (0)
 
-Player::PlayerImpl::PlayerImpl()
+PlayerImpl::PlayerImpl()
     : player_(nullptr), speed_(1.0), playerControlState_(PLAY_STATUS_IDLE),
       isSingleLoop_(false),
       currentPosition_(0),
@@ -97,22 +96,18 @@ Player::PlayerImpl::PlayerImpl()
     (void)memset_s(&mediaAttr_, sizeof(mediaAttr_), 0, sizeof(PlayerControlStreamAttr));
 }
 
-int32_t Player::PlayerImpl::Init(void)
+int32_t PlayerImpl::Init(void)
 {
-    int ret;
     if (inited_ == true) {
         return 0;
     }
-    ret = HalPlayerSysInit();
+    int ret = CodecInit();
     if (ret != 0) {
-        MEDIA_WARNING_LOG("SystemInit has been inited before Ret: %x", ret);
-    }
-    ret = CodecInit();
-    if (ret != 0) {
+		MEDIA_ERR_LOG("PlayerImpl::Init CodecInit err\n");
         return ret;
     }
     if (memset_s(&buffer_, sizeof(QueBuffer), 0, sizeof(QueBuffer)) != EOK) {
-        return -1;
+        MEDIA_ERR_LOG("PlayerImpl::Init memset err\n");
     }
     buffer_.idx = -1;
     inited_ = true;
@@ -120,7 +115,7 @@ int32_t Player::PlayerImpl::Init(void)
     return 0;
 }
 
-int32_t Player::PlayerImpl::DeInit(void)
+int32_t PlayerImpl::DeInit(void)
 {
     if (inited_ != true) {
         return 0;
@@ -128,23 +123,20 @@ int32_t Player::PlayerImpl::DeInit(void)
     if (released_ == false) {
         Release();
     }
-
-#ifdef __LINUX__
-    HalPlayerSysDeInit();
-#endif
     inited_ = false;
     return 0;
 }
 
-Player::PlayerImpl::~PlayerImpl()
+PlayerImpl::~PlayerImpl()
 {
     DeInit();
     player_ = nullptr;
     MEDIA_INFO_LOG("~PlayerImpl process");
 }
 
-int32_t Player::PlayerImpl::SetSource(const Source &source)
+int32_t PlayerImpl::SetSource(const Source &source)
 {
+    Init();
     std::lock_guard<std::mutex> valueLock(lock_);
     MEDIA_INFO_LOG("process in");
     CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
@@ -192,7 +184,7 @@ static void ShowFileInfo(const FormatFileInfo *fileInfo)
         fileInfo->s32UsedVideoStreamIndex);
 }
 
-void Player::PlayerImpl::UpdateState(PlayerImpl *curPlayer, PlayerStatus state)
+void PlayerImpl::UpdateState(PlayerImpl *curPlayer, PlayerStatus state)
 {
     if (curPlayer == nullptr) {
         return;
@@ -202,7 +194,7 @@ void Player::PlayerImpl::UpdateState(PlayerImpl *curPlayer, PlayerStatus state)
     MEDIA_INFO_LOG("@@player UpdateState, state:%d", state);
 }
 
-void Player::PlayerImpl::PlayerControlEventCb(void* pPlayer, PlayerControlEvent enEvent, const void* pData)
+void PlayerImpl::PlayerControlEventCb(void* pPlayer, PlayerControlEvent enEvent, const void* pData)
 {
     PlayerControlError subErr = PLAYERCONTROL_ERROR_BUTT;
     PlayerImpl *curPlayer = (PlayerImpl *)pPlayer;
@@ -253,7 +245,7 @@ void Player::PlayerImpl::PlayerControlEventCb(void* pPlayer, PlayerControlEvent 
     }
 }
 
-int32_t Player::PlayerImpl::Prepare()
+int32_t PlayerImpl::Prepare()
 {
     std::lock_guard<std::mutex> valueLock(lock_);
     int ret;
@@ -313,7 +305,7 @@ int32_t Player::PlayerImpl::Prepare()
     return 0;
 }
 
-int32_t Player::PlayerImpl::Play()
+int32_t PlayerImpl::Play()
 {
     std::lock_guard<std::mutex> valueLock(lock_);
     int ret;
@@ -368,7 +360,7 @@ play:
     return 0;
 }
 
-bool Player::PlayerImpl::IsPlaying()
+bool PlayerImpl::IsPlaying()
 {
     std::lock_guard<std::mutex> valueLock(lock_);
     MEDIA_INFO_LOG("process in\n");
@@ -380,7 +372,7 @@ bool Player::PlayerImpl::IsPlaying()
     return isPlaying;
 }
 
-int32_t Player::PlayerImpl::Pause()
+int32_t PlayerImpl::Pause()
 {
     std::lock_guard<std::mutex> valueLock(lock_);
     MEDIA_INFO_LOG("process in");
@@ -401,7 +393,7 @@ int32_t Player::PlayerImpl::Pause()
     return 0;
 }
 
-int32_t Player::PlayerImpl::Stop()
+int32_t PlayerImpl::Stop()
 {
     std::lock_guard<std::mutex> valueLock(lock_);
     MEDIA_INFO_LOG("process in");
@@ -426,7 +418,7 @@ int32_t Player::PlayerImpl::Stop()
     return 0;
 }
 
-int32_t Player::PlayerImpl::RewindInner(int64_t mSeconds, PlayerSeekMode mode)
+int32_t PlayerImpl::RewindInner(int64_t mSeconds, PlayerSeekMode mode)
 {
     MEDIA_INFO_LOG("process in");
     CHK_NULL_RETURN(player_);
@@ -457,7 +449,7 @@ int32_t Player::PlayerImpl::RewindInner(int64_t mSeconds, PlayerSeekMode mode)
     return ret;
 }
 
-bool Player::PlayerImpl::IsValidRewindMode(PlayerSeekMode mode)
+bool PlayerImpl::IsValidRewindMode(PlayerSeekMode mode)
 {
     switch (mode) {
         case PLAYER_SEEK_PREVIOUS_SYNC:
@@ -473,7 +465,7 @@ bool Player::PlayerImpl::IsValidRewindMode(PlayerSeekMode mode)
     return true;
 }
 
-int32_t Player::PlayerImpl::Rewind(int64_t mSeconds, int32_t mode)
+int32_t PlayerImpl::Rewind(int64_t mSeconds, int32_t mode)
 {
     std::lock_guard<std::mutex> valueLock(lock_);
     MEDIA_INFO_LOG("process in");
@@ -502,7 +494,7 @@ int32_t Player::PlayerImpl::Rewind(int64_t mSeconds, int32_t mode)
     return ret;
 }
 
-int32_t Player::PlayerImpl::SetVolume(float leftVolume, float rightVolume)
+int32_t PlayerImpl::SetVolume(float leftVolume, float rightVolume)
 {
     std::lock_guard<std::mutex> valueLock(lock_);
     MEDIA_INFO_LOG("process in");
@@ -528,7 +520,7 @@ int32_t Player::PlayerImpl::SetVolume(float leftVolume, float rightVolume)
     return ret;
 }
 
-int32_t Player::PlayerImpl::SetSurface(Surface *surface)
+int32_t PlayerImpl::SetSurface(Surface *surface)
 {
     std::lock_guard<std::mutex> valueLock(lock_);
     MEDIA_INFO_LOG("process in");
@@ -542,7 +534,7 @@ int32_t Player::PlayerImpl::SetSurface(Surface *surface)
     return 0;
 }
 
-bool Player::PlayerImpl::IsLooping()
+bool PlayerImpl::IsSingleLooping()
 {
     std::lock_guard<std::mutex> valueLock(lock_);
     CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
@@ -550,7 +542,7 @@ bool Player::PlayerImpl::IsLooping()
     return isLoop;
 }
 
-int32_t Player::PlayerImpl::GetPlayerState(int32_t &state)
+int32_t PlayerImpl::GetPlayerState(int32_t &state)
 {
     std::lock_guard<std::mutex> valueLock(lock_);
     CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
@@ -558,7 +550,7 @@ int32_t Player::PlayerImpl::GetPlayerState(int32_t &state)
     return 0;
 }
 
-int32_t Player::PlayerImpl::GetCurrentPosition(int64_t &position)
+int32_t PlayerImpl::GetCurrentPosition(int64_t &position)
 {
     std::lock_guard<std::mutex> valueLock(lock_);
     MEDIA_INFO_LOG("process in");
@@ -567,7 +559,7 @@ int32_t Player::PlayerImpl::GetCurrentPosition(int64_t &position)
     return 0;
 }
 
-void Player::PlayerImpl::GetDurationInner(int64_t &durationMs)
+void PlayerImpl::GetDurationInner(int64_t &durationMs)
 {
     FormatFileInfo formatInfo;
     int32_t ret = player_->GetFileInfo(formatInfo);
@@ -577,7 +569,7 @@ void Player::PlayerImpl::GetDurationInner(int64_t &durationMs)
     durationMs = (ret == 0) ? formatInfo.s64Duration : -1;
 }
 
-int32_t Player::PlayerImpl::GetDuration(int64_t &durationMs)
+int32_t PlayerImpl::GetDuration(int64_t &durationMs)
 {
     std::lock_guard<std::mutex> valueLock(lock_);
     MEDIA_INFO_LOG("process in");
@@ -593,7 +585,7 @@ int32_t Player::PlayerImpl::GetDuration(int64_t &durationMs)
     return 0;
 }
 
-int32_t Player::PlayerImpl::GetVideoWidth(int32_t &videoWidth)
+int32_t PlayerImpl::GetVideoWidth(int32_t &videoWidth)
 {
     std::lock_guard<std::mutex> valueLock(lock_);
     MEDIA_INFO_LOG("process in");
@@ -625,7 +617,7 @@ int32_t Player::PlayerImpl::GetVideoWidth(int32_t &videoWidth)
     return 0;
 }
 
-int32_t Player::PlayerImpl::GetVideoHeight(int32_t &videoHeight)
+int32_t PlayerImpl::GetVideoHeight(int32_t &videoHeight)
 {
     std::lock_guard<std::mutex> valueLock(lock_);
     MEDIA_INFO_LOG("process in");
@@ -657,7 +649,7 @@ int32_t Player::PlayerImpl::GetVideoHeight(int32_t &videoHeight)
     return ret;
 }
 
-int32_t Player::PlayerImpl::SetAudioStreamType(int32_t type)
+int32_t PlayerImpl::SetAudioStreamType(int32_t type)
 {
     std::lock_guard<std::mutex> valueLock(lock_);
     MEDIA_INFO_LOG("process in");
@@ -670,7 +662,7 @@ int32_t Player::PlayerImpl::SetAudioStreamType(int32_t type)
     return 0;
 }
 
-void Player::PlayerImpl::GetAudioStreamType(int32_t &type)
+void PlayerImpl::GetAudioStreamType(int32_t &type)
 {
     std::lock_guard<std::mutex> valueLock(lock_);
     if (released_) {
@@ -680,7 +672,7 @@ void Player::PlayerImpl::GetAudioStreamType(int32_t &type)
     type = static_cast<int32_t>(audioStreamType_);
 }
 
-void Player::PlayerImpl::ResetInner(void)
+void PlayerImpl::ResetInner(void)
 {
     isSingleLoop_ = false;
     if (player_ != nullptr) {
@@ -718,7 +710,7 @@ void Player::PlayerImpl::ResetInner(void)
     buffer_.idx = -1;
 }
 
-int32_t Player::PlayerImpl::Reset(void)
+int32_t PlayerImpl::Reset(void)
 {
     std::lock_guard<std::mutex> valueLock(lock_);
     MEDIA_INFO_LOG("process in");
@@ -730,7 +722,7 @@ int32_t Player::PlayerImpl::Reset(void)
     return 0;
 }
 
-int32_t Player::PlayerImpl::Release()
+int32_t PlayerImpl::Release()
 {
     std::lock_guard<std::mutex> valueLock(lock_);
     MEDIA_INFO_LOG("process in");
@@ -746,7 +738,7 @@ int32_t Player::PlayerImpl::Release()
     return 0;
 }
 
-int Player::PlayerImpl::CreatePlayerParamCheck(PlayerControlParam &createParam)
+int PlayerImpl::CreatePlayerParamCheck(PlayerControlParam &createParam)
 {
     if (createParam.u32PlayPosNotifyIntervalMs < MIN_NOTIFY_INTERVAL_MS
         && createParam.u32PlayPosNotifyIntervalMs > 0) {
@@ -775,7 +767,7 @@ int Player::PlayerImpl::CreatePlayerParamCheck(PlayerControlParam &createParam)
     return 0;
 }
 
-int Player::PlayerImpl::GetPlayer()
+int PlayerImpl::GetPlayer()
 {
     MEDIA_INFO_LOG("process in");
     PlayerControlParam playerParam;
@@ -805,7 +797,7 @@ int Player::PlayerImpl::GetPlayer()
     return 0;
 }
 
-void Player::PlayerImpl::SetPlayerCallback(const std::shared_ptr<PlayerCallback> &cb)
+void PlayerImpl::SetPlayerCallback(const std::shared_ptr<PlayerCallback> &cb)
 {
     std::lock_guard<std::mutex> valueLock(lock_);
     MEDIA_INFO_LOG("process in");
@@ -816,7 +808,7 @@ void Player::PlayerImpl::SetPlayerCallback(const std::shared_ptr<PlayerCallback>
     callback_ = cb;
 }
 
-void Player::PlayerImpl::NotifyPlaybackComplete(PlayerImpl *curPlayer)
+void PlayerImpl::NotifyPlaybackComplete(PlayerImpl *curPlayer)
 {
     if (curPlayer == nullptr) {
         return;
@@ -832,7 +824,7 @@ void Player::PlayerImpl::NotifyPlaybackComplete(PlayerImpl *curPlayer)
     curPlayer->Rewind(0, PLAYER_SEEK_PREVIOUS_SYNC);
 }
 
-void Player::PlayerImpl::NotifySeekComplete(PlayerImpl *curPlayer)
+void PlayerImpl::NotifySeekComplete(PlayerImpl *curPlayer)
 {
     if (curPlayer == nullptr) {
         return;
@@ -850,7 +842,7 @@ void Player::PlayerImpl::NotifySeekComplete(PlayerImpl *curPlayer)
     }
 }
 
-int32_t Player::PlayerImpl::SetLoop(bool loop)
+int32_t PlayerImpl::SetLoop(bool loop)
 {
     std::lock_guard<std::mutex> valueLock(lock_);
     CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
@@ -859,7 +851,7 @@ int32_t Player::PlayerImpl::SetLoop(bool loop)
     return 0;
 }
 
-int32_t Player::PlayerImpl::SetUriSource(const Source &source)
+int32_t PlayerImpl::SetUriSource(const Source &source)
 {
     MEDIA_INFO_LOG("process in");
     const std::string uri = source.GetSourceUri();
@@ -1014,7 +1006,7 @@ void AdapterStreamCallback::SetParameters(const Format &params)
     MEDIA_ERR_LOG("process, not support");
 }
 
-int32_t Player::PlayerImpl::GetReadableSize(const void *handle)
+int32_t PlayerImpl::GetReadableSize(const void *handle)
 {
     const PlayerImpl *playImpl = (const PlayerImpl*)handle;
     if (playImpl == nullptr) {
@@ -1028,7 +1020,7 @@ int32_t Player::PlayerImpl::GetReadableSize(const void *handle)
     return playImpl->bufferSource_->GetFilledQueDataSize();
 }
 
-int32_t Player::PlayerImpl::ReadData(void *handle, uint8_t *data, int32_t size, int32_t timeOutMs, DataFlags *flags)
+int32_t PlayerImpl::ReadData(void *handle, uint8_t *data, int32_t size, int32_t timeOutMs, DataFlags *flags)
 {
     PlayerImpl *playImpl = (PlayerImpl*)handle;
 
@@ -1089,7 +1081,7 @@ READ_BUFFER_DATA:
     return readLen;
 }
 
-int32_t Player::PlayerImpl::SetStreamSource(const Source &source)
+int32_t PlayerImpl::SetStreamSource(const Source &source)
 {
     MEDIA_INFO_LOG("process in");
 

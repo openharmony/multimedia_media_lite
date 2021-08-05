@@ -17,7 +17,7 @@
 #define HI_FINITE_STATEMACHINE_H
 
 #include <stdint.h>
-#include "message.h"
+#include "fsm_message.h"
 
 #ifdef __cplusplus
 #if __cplusplus

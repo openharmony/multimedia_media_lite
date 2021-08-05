@@ -12,10 +12,10 @@
 # limitations under the License.
 import("//build/lite/config/component/lite_component.gni")
 import("//build/lite/ndk/ndk.gni")
-shared_library("player_lite") {
+
+shared_library("player_lite_impl") {
   sources = [
     "buffersource/src/buffer_source.cpp",
-    "player.cpp",
     "player_control/decoder/decoder.cpp",
     "player_control/player/fsm/src/fsm_common.cpp",
     "player_control/player/fsm/src/hi_fsm.cpp",
@@ -39,36 +39,66 @@ shared_library("player_lite") {
   cflags += [ "-Wall" ]
   cflags_cc = cflags
   include_dirs = [
-    "//base/security/permission/interfaces/kits/permission_lite",
-    "buffersource/include",
-    "player_control/include",
-    "player_control/decoder",
-    "player_control/player",
-    "player_control/player/fsm/src",
-    "player_control/player/fsm/include",
-    "player_control/sink",
-    "player_control/source",
     "//third_party/bounds_checking_function/include",
     "//foundation/multimedia/utils/lite/hals",
-    "//drivers/peripheral/audio/interfaces/include",
-    "//drivers/peripheral/codec/interfaces/include",
-    "//drivers/peripheral/format/interfaces/include",
+    "//foundation/multimedia/utils/lite/interfaces/kits",
+    "//drivers/peripheral/display/interfaces/include",
+    "//drivers/peripheral/base"
   ]
   outdir = rebase_path("$root_out_dir")
-  public_configs = [ ":player_external_library_config" ]
+  public_configs = [ ":player_impl_external_library_config" ]
   ldflags = [ "-L$outdir" ]
   ldflags += [ "-laudio_hw" ]
   ldflags += [ "-lcodec" ]
   ldflags += [ "-lformat_hw" ]
-  ldflags += [ "-lhdi_media" ]
+  ldflags += [ "-lhdi_videodisplayer" ]
   public_deps = [
-    "$ohos_vendor_adapter_dir/multimedia:libhdi_media",
     "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
-    "//base/security/permission/services/permission_lite/pms_client:pms_client",
     "//foundation/graphic/surface:lite_surface",
     "//foundation/multimedia/utils/lite:media_common",
     "//third_party/bounds_checking_function:libsec_shared",
     "//third_party/iniparser:iniparser",
+  ]
+}
+
+config("player_impl_external_library_config") {
+  include_dirs = [ "//foundation/multimedia/fr:ameworks/player_lite" ]
+  include_dirs +=
+      [ "//foundation/multimedia/media_lite/interfaces/kits/player_lite" ]
+  include_dirs += [ "//foundation/multimedia/media_lite/frameworks/player_lite/buffersource/include" ]
+  include_dirs += [ "//foundation/multimedia/media_lite/frameworks/player_lite/player_control/include" ]
+  include_dirs += [ "//foundation/multimedia/media_lite/frameworks/player_lite/player_control/player" ]
+  include_dirs += [ "//foundation/multimedia/utils/lite/interfaces/kits" ]
+  include_dirs += [ "//drivers/peripheral/format/interfaces/include" ]
+  include_dirs += [ "//foundation/multimedia/media_lite/frameworks/player_lite/player_control/player/fsm/src" ]
+  include_dirs += [ "//foundation/multimedia/media_lite/frameworks/player_lite/player_control/player/fsm/include" ]
+  include_dirs += [ "//foundation/multimedia/media_lite/frameworks/player_lite/player_control/source" ]
+  include_dirs += [ "//foundation/multimedia/media_lite/frameworks/player_lite/player_control/sink" ]
+  include_dirs += [ "//drivers/peripheral/codec/interfaces/include" ]
+  include_dirs += [ "//foundation/multimedia/media_lite/frameworks/player_lite/player_control/decoder" ]
+  include_dirs += [ "//drivers/peripheral/audio/interfaces/include" ]
+}
+
+shared_library("player_lite") {
+  sources = [ "player.cpp" ]
+  cflags = [ "-fPIC" ]
+  cflags += [ "-Wall" ]
+  cflags_cc = cflags
+  include_dirs = [
+    "//base/security/permission/interfaces/kits/permission_lite",
+    "//foundation/multimedia/media_lite/services/player_lite/client/include",
+    "//foundation/multimedia/media_lite/frameworks/player_lite",
+  ]
+  outdir = rebase_path("$root_out_dir")
+  public_configs = [ ":player_external_library_config" ]
+  ldflags = [ "-L$outdir" ]
+  public_deps = [
+    "//base/security/permission/services/permission_lite/pms_client:pms_client",
+    "//foundation/distributedschedule/samgr_lite/samgr:samgr",
+    "//foundation/graphic/surface:lite_surface",
+    "//foundation/multimedia/media_lite/services/player_lite:player_client",
+    "//foundation/multimedia/utils/lite:media_common",
+    "//third_party/bounds_checking_function:libsec_shared",
   ]
 }
 
@@ -80,6 +110,7 @@ config("player_external_library_config") {
 
 lite_component("media_lite") {
   features = [
+    ":player_lite_impl",
     ":player_lite",
     "//foundation/multimedia/media_lite/interfaces/kits/player_lite/js/builtin:audio_lite_api",
   ]

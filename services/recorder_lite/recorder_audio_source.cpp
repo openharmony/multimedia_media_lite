@@ -19,7 +19,8 @@
 namespace OHOS {
 namespace Media {
 const int64_t AUDIO_SOURCE_TIME_US_S = 1000000ULL;   /* us to s */
-const int64_t AUDIO_SOURCE_TIME_NS_US = 1000ULL;     /* ns  to us  */
+const int64_t AUDIO_SOURCE_TIME_NS_US = 1000ULL;     /* ns  to us */
+
 
 RecorderAudioSource::RecorderAudioSource()
     :audioCap_(new AudioCapturer()),
@@ -53,7 +54,7 @@ int32_t RecorderAudioSource::Init(const RecorderAudioSourceConfig &sourceConfig)
         return ret;
     }
     uint64_t frameCnt = audioCap_->GetFrameCount();
-    framesize_ = static_cast<uint32_t>(frameCnt * info.channelCount * info.bitWidth / sizeof(uint8_t));
+    framesize_ = static_cast<uint32_t>((frameCnt * info.channelCount * info.bitWidth) / sizeof(uint8_t));
     if (framesize_ == 0) {
         MEDIA_ERR_LOG("Can't get framesize");
         return ERR_UNKNOWN;
@@ -76,18 +77,18 @@ int32_t RecorderAudioSource::Start()
     return SUCCESS;
 }
 
-static int32_t Int64Multiple(int64_t firstNumber, int64_t secondeNumner, int64_t &result)
+static int32_t Int64Multiple(int64_t firstNumber, int64_t secondNumber, int64_t &result)
 {
-    if (secondeNumner == 0) {
+    if (secondNumber == 0) {
         result = 0;
         return SUCCESS;
     }
 
     const int64_t int64Max = 0x7fffffffffffffff;
-    if (firstNumber > (int64Max / secondeNumner)) {
+    if (firstNumber > (int64Max / secondNumber)) {
         return ERR_INVALID_OPERATION;
     }
-    result = firstNumber * secondeNumner;
+    result = firstNumber * secondNumber;
     return SUCCESS;
 }
 
@@ -106,7 +107,7 @@ int32_t RecorderAudioSource::AcquireBuffer(RecorderSourceBuffer &buffer, bool is
     Timestamp timestamp;
     Timestamp::Timebase base = Timestamp::Timebase::MONOTONIC;
     if (!audioCap_->GetAudioTime(timestamp, base)) {
-        MEDIA_ERR_LOG("AudioCapturer Can't GetAudioTime ");
+        MEDIA_ERR_LOG("AudioCapturer Can't GetAudioTime");
         return ERR_READ_BUFFER;
     }
     int64_t timeStampSecPart = 0;

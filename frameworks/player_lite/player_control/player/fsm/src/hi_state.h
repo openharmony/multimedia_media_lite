@@ -19,7 +19,7 @@
 #include <string>
 #include <vector>
 #include <map>
-#include "message.h"
+#include "fsm_message.h"
 
 namespace OHOS {
 class HiState {

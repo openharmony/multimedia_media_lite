@@ -19,7 +19,7 @@
 #include <list>
 #include <string>
 #include "message_handler.h"
-#include "message.h"
+#include "fsm_message.h"
 #include "mmessage_pool.h"
 
 namespace OHOS {

@@ -20,6 +20,8 @@ namespace OHOS {
 namespace Media {
 constexpr int32_t KEY_IS_SYNC_FRAME = 1; // "is-sync-frame"
 constexpr int32_t KEY_TIME_US = 2;       // "timeUs"
+Surface *g_surface=nullptr;
+
 RecorderVideoSource::RecorderVideoSource()
     : surface_(nullptr),
       frameAvailableCount_(0),
@@ -42,9 +44,14 @@ std::shared_ptr<OHOS::Surface> RecorderVideoSource::GetSurface()
         if (surface == nullptr) {
             return nullptr;
         }
+        surface->SetWidthAndHeight(1920,1080);
+        surface->SetQueueSize(3);
+        surface->SetSize(1024 * 1024);
+        g_surface = surface;
         surface->RegisterConsumerListener(*this);
         surface_.reset(surface);
     }
+    
     MEDIA_INFO_LOG("Get Recorder Surface SUCCESS :%p", surface_.get());
     return surface_;
 }
@@ -66,7 +73,6 @@ void RecorderVideoSource::OnBufferAvailable()
         surface_->ReleaseBuffer(acquireBuffer_);
         return;
     }
-
     std::unique_lock<std::mutex> lock(lock_);
     if (frameAvailableCount_ == 0) {
         frameAvailableCondition_.notify_one();

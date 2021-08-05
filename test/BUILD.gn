@@ -24,10 +24,8 @@ executable("test_play_file_h265") {
   ldflags = [ "-lstdc++" ]
   ldflags += [ "-lcodec" ]
   ldflags += [ "-Wl,-rpath-link=$ohos_root_path/$root_out_dir" ]
-  ldflags += [ "-lhdi_media" ]
   deps = [
-    "$ohos_vendor_adapter_dir:hardware_media_sdk",
-    "$ohos_vendor_adapter_dir/multimedia:libhdi_media",
+    "//device/hisilicon/hardware:hardware_media_sdk",
     "//third_party/bounds_checking_function:libsec_shared",
   ]
 }

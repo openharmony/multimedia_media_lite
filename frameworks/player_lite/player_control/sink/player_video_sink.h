@@ -23,7 +23,7 @@
 #include "codec_type.h"
 #include "player_sync.h"
 #include <mutex>
-#include "hal_display.h"
+#include "display_layer.h"
 
 using namespace std;
 
@@ -66,7 +66,6 @@ private:
     void CheckConfigVideoOutput(void);
 
     SinkAttr attr_;
-    HalVideoOutputHdl handle_;
     float speed_;
     bool paused_;
     bool started_;
@@ -85,6 +84,7 @@ private:
     PlayEventCallback callBack_;
     bool eosSended_;
     std::mutex mutex_;
+    LayerFuncs *layerFuncs_;
     std::vector<OutputInfo> frameCacheQue_;
     std::vector<OutputInfo> frameReleaseQue_;
     int32_t lastConfigRegionX_;

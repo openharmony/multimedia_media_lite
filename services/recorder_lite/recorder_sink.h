@@ -31,7 +31,6 @@ namespace OHOS {
 namespace Media {
 using namespace std;
 
-
 class RecorderSink {
 public:
 

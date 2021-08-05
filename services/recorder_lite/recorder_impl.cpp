@@ -38,7 +38,7 @@ constexpr float RECORDER_DEFAULT_SPEED = 1.0;
 constexpr uint32_t RECORDER_AUDIO_THREAD_PRIORITY = 19;
 constexpr uint32_t RECORDER_VIDEO_THREAD_PRIORITY = 20;
 
-Recorder::RecorderImpl::RecorderImpl()
+RecorderImpl::RecorderImpl()
 {
     for (uint32_t i = 0; i < RECORDER_SOURCE_MAX_CNT; i++) {
         sourceManager_[i].videoSource = nullptr;
@@ -59,7 +59,7 @@ Recorder::RecorderImpl::RecorderImpl()
     MEDIA_INFO_LOG("ctor status_:%d", status_);
 }
 
-Recorder::RecorderImpl::~RecorderImpl()
+RecorderImpl::~RecorderImpl()
 {
     if (status_ != RELEASED) {
         (void)Release();
@@ -80,7 +80,7 @@ Recorder::RecorderImpl::~RecorderImpl()
     }
 }
 
-int32_t Recorder::RecorderImpl::ResetConfig()
+int32_t RecorderImpl::ResetConfig()
 {
     for (uint32_t i = 0; i < RECORDER_SOURCE_MAX_CNT; i++) {
         sourceManager_[i].videoSourceStarted = false;
@@ -105,7 +105,7 @@ int32_t Recorder::RecorderImpl::ResetConfig()
     return SUCCESS;
 }
 
-int32_t Recorder::RecorderImpl::InitCheck()
+int32_t RecorderImpl::InitCheck()
 {
     if (status_ == RELEASED) {
         MEDIA_ERR_LOG("InitCheck ILLEGAL_STATE  status:%u", status_);
@@ -114,7 +114,7 @@ int32_t Recorder::RecorderImpl::InitCheck()
     return SUCCESS;
 }
 
-int32_t Recorder::RecorderImpl::GetFreeVideoSourceID(int32_t &sourceId)
+int32_t RecorderImpl::GetFreeVideoSourceID(int32_t &sourceId)
 {
     for (uint32_t i = 0; i < RECORDER_SOURCE_MAX_CNT; i++) {
         if (sourceManager_[i].videoSource == nullptr) {
@@ -126,7 +126,7 @@ int32_t Recorder::RecorderImpl::GetFreeVideoSourceID(int32_t &sourceId)
     return ERROR;
 }
 
-int32_t Recorder::RecorderImpl::GetFreeAudioSourceID(int32_t &sourceId)
+int32_t RecorderImpl::GetFreeAudioSourceID(int32_t &sourceId)
 {
     for (uint32_t i = 0; i < RECORDER_SOURCE_MAX_CNT; i++) {
         if (sourceManager_[i].audioSource == nullptr) {
@@ -138,7 +138,7 @@ int32_t Recorder::RecorderImpl::GetFreeAudioSourceID(int32_t &sourceId)
     return ERROR;
 }
 
-bool Recorder::RecorderImpl::IsValidSourceID(int32_t sourceId)
+bool RecorderImpl::IsValidSourceID(int32_t sourceId)
 {
     for (uint32_t i = 0; i < RECORDER_SOURCE_MAX_CNT; i++) {
         if (sourceId == static_cast<int32_t>(i) &&
@@ -151,7 +151,7 @@ bool Recorder::RecorderImpl::IsValidSourceID(int32_t sourceId)
     return false;
 }
 
-int32_t Recorder::RecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId)
+int32_t RecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (source < VIDEO_SOURCE_SURFACE_YUV || source >= VIDEO_SOURCE_BUTT) {
@@ -168,7 +168,7 @@ int32_t Recorder::RecorderImpl::SetVideoSource(VideoSourceType source, int32_t &
     return SUCCESS;
 }
 
-int32_t Recorder::RecorderImpl::SetVideoEncoder(int32_t sourceId, VideoCodecFormat encoder)
+int32_t RecorderImpl::SetVideoEncoder(int32_t sourceId, VideoCodecFormat encoder)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (!IsValidSourceID(sourceId)) {
@@ -184,7 +184,7 @@ int32_t Recorder::RecorderImpl::SetVideoEncoder(int32_t sourceId, VideoCodecForm
     return SUCCESS;
 }
 
-int32_t Recorder::RecorderImpl::SetVideoSize(int32_t sourceId, int32_t width, int32_t height)
+int32_t RecorderImpl::SetVideoSize(int32_t sourceId, int32_t width, int32_t height)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (!IsValidSourceID(sourceId)) {
@@ -200,7 +200,7 @@ int32_t Recorder::RecorderImpl::SetVideoSize(int32_t sourceId, int32_t width, in
     MEDIA_INFO_LOG("Video Size width:%d height:%d", width, height);
     return SUCCESS;
 }
-int32_t Recorder::RecorderImpl::SetVideoFrameRate(int32_t sourceId, int32_t frameRate)
+int32_t RecorderImpl::SetVideoFrameRate(int32_t sourceId, int32_t frameRate)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (!IsValidSourceID(sourceId)) {
@@ -216,7 +216,7 @@ int32_t Recorder::RecorderImpl::SetVideoFrameRate(int32_t sourceId, int32_t fram
     return SUCCESS;
 }
 
-int32_t Recorder::RecorderImpl::SetVideoEncodingBitRate(int32_t sourceId, int32_t rate)
+int32_t RecorderImpl::SetVideoEncodingBitRate(int32_t sourceId, int32_t rate)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (!IsValidSourceID(sourceId)) {
@@ -232,7 +232,7 @@ int32_t Recorder::RecorderImpl::SetVideoEncodingBitRate(int32_t sourceId, int32_
     return SUCCESS;
 }
 
-int32_t Recorder::RecorderImpl::SetCaptureRate(int32_t sourceId, double fps)
+int32_t RecorderImpl::SetCaptureRate(int32_t sourceId, double fps)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (!IsValidSourceID(sourceId)) {
@@ -248,7 +248,7 @@ int32_t Recorder::RecorderImpl::SetCaptureRate(int32_t sourceId, double fps)
     return SUCCESS;
 }
 
-int32_t Recorder::RecorderImpl::SetOrientationHint(int32_t sourceId, int32_t degree)
+int32_t RecorderImpl::SetOrientationHint(int32_t sourceId, int32_t degree)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (!IsValidSourceID(sourceId)) {
@@ -263,7 +263,7 @@ int32_t Recorder::RecorderImpl::SetOrientationHint(int32_t sourceId, int32_t deg
     return SUCCESS;
 }
 
-std::shared_ptr<OHOS::Surface> Recorder::RecorderImpl::GetSurface(int32_t sourceId)
+std::shared_ptr<OHOS::Surface> RecorderImpl::GetSurface(int32_t sourceId)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (!IsValidSourceID(sourceId)) {
@@ -273,7 +273,7 @@ std::shared_ptr<OHOS::Surface> Recorder::RecorderImpl::GetSurface(int32_t source
     return sourceManager_[sourceId].videoSource->GetSurface();
 }
 
-bool Recorder::RecorderImpl::IsValidAudioSource(AudioSourceType source)
+bool RecorderImpl::IsValidAudioSource(AudioSourceType source)
 {
     if (source <= AUDIO_SOURCE_INVALID || source > AUDIO_VOICE_PERFORMANCE) {
         MEDIA_ERR_LOG("input AudioSourceType : %d is invalid", source);
@@ -282,7 +282,7 @@ bool Recorder::RecorderImpl::IsValidAudioSource(AudioSourceType source)
     return true;
 }
 
-int32_t Recorder::RecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId)
+int32_t RecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     int32_t ret = GetFreeAudioSourceID(sourceId);
@@ -298,7 +298,7 @@ int32_t Recorder::RecorderImpl::SetAudioSource(AudioSourceType source, int32_t &
     return SUCCESS;
 }
 
-int32_t Recorder::RecorderImpl::SetAudioEncoder(int32_t sourceId, AudioCodecFormat encoder)
+int32_t RecorderImpl::SetAudioEncoder(int32_t sourceId, AudioCodecFormat encoder)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (!IsValidSourceID(sourceId)) {
@@ -314,7 +314,7 @@ int32_t Recorder::RecorderImpl::SetAudioEncoder(int32_t sourceId, AudioCodecForm
     return SUCCESS;
 }
 
-int32_t Recorder::RecorderImpl::SetAudioSampleRate(int32_t sourceId, int32_t rate)
+int32_t RecorderImpl::SetAudioSampleRate(int32_t sourceId, int32_t rate)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (!IsValidSourceID(sourceId)) {
@@ -330,7 +330,7 @@ int32_t Recorder::RecorderImpl::SetAudioSampleRate(int32_t sourceId, int32_t rat
     return SUCCESS;
 }
 
-int32_t Recorder::RecorderImpl::SetAudioChannels(int32_t sourceId, int32_t num)
+int32_t RecorderImpl::SetAudioChannels(int32_t sourceId, int32_t num)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (!IsValidSourceID(sourceId)) {
@@ -346,7 +346,7 @@ int32_t Recorder::RecorderImpl::SetAudioChannels(int32_t sourceId, int32_t num)
     return SUCCESS;
 }
 
-int32_t Recorder::RecorderImpl::SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRate)
+int32_t RecorderImpl::SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRate)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (!IsValidSourceID(sourceId)) {
@@ -362,7 +362,7 @@ int32_t Recorder::RecorderImpl::SetAudioEncodingBitRate(int32_t sourceId, int32_
     return SUCCESS;
 }
 
-int32_t Recorder::RecorderImpl::SetLocation(int32_t latitude, int32_t longitude)
+int32_t RecorderImpl::SetLocation(int32_t latitude, int32_t longitude)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     int32_t ret;
@@ -374,7 +374,7 @@ int32_t Recorder::RecorderImpl::SetLocation(int32_t latitude, int32_t longitude)
     return recorderSink_->SetLocation(latitude, longitude);
 }
 
-int32_t Recorder::RecorderImpl::SetMaxDuration(int32_t duration)
+int32_t RecorderImpl::SetMaxDuration(int32_t duration)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     int32_t ret;
@@ -387,7 +387,7 @@ int32_t Recorder::RecorderImpl::SetMaxDuration(int32_t duration)
     return recorderSink_->SetMaxDuration(duration);
 }
 
-int32_t Recorder::RecorderImpl::SetOutputFormat(OutputFormatType format)
+int32_t RecorderImpl::SetOutputFormat(OutputFormatType format)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     int32_t ret;
@@ -413,7 +413,7 @@ int32_t Recorder::RecorderImpl::SetOutputFormat(OutputFormatType format)
     return recorderSink_->SetOutputFormat(outPutFormat);
 }
 
-int32_t Recorder::RecorderImpl::SetOutputPath(const string &path)
+int32_t RecorderImpl::SetOutputPath(const string &path)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_MEMBER_PTR_RETURN(recorderSink_);
@@ -437,7 +437,7 @@ int32_t Recorder::RecorderImpl::SetOutputPath(const string &path)
     return SUCCESS;
 }
 
-int32_t Recorder::RecorderImpl::IsValidFileFd(int32_t fd)
+int32_t RecorderImpl::IsValidFileFd(int32_t fd)
 {
     int flags = fcntl(fd, F_GETFL);
     if (flags == -1) {
@@ -447,13 +447,13 @@ int32_t Recorder::RecorderImpl::IsValidFileFd(int32_t fd)
     // fd must be in read-write mode or write-only mode.
     uint32_t flagsCheck = static_cast<uint32_t>(flags);
     if ((flagsCheck & (O_RDWR | O_WRONLY)) == 0) {
-        MEDIA_ERR_LOG("File descriptor is not in read-write mode or write-only mode fd:%d", fd);
+        MEDIA_ERR_LOG("File descriptor is not in read-write mode or write-only mode fd:%d flag:%x", fd, flagsCheck);
         return ERR_INVALID_OPERATION;
     }
     return SUCCESS;
 }
 
-int32_t Recorder::RecorderImpl::SetOutputFile(int32_t fd)
+int32_t RecorderImpl::SetOutputFile(int32_t fd)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     int32_t ret;
@@ -470,7 +470,7 @@ int32_t Recorder::RecorderImpl::SetOutputFile(int32_t fd)
     return recorderSink_->SetOutputFile(fd);
 }
 
-int32_t Recorder::RecorderImpl::SetNextOutputFile(int32_t fd)
+int32_t RecorderImpl::SetNextOutputFile(int32_t fd)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     int32_t ret;
@@ -487,7 +487,7 @@ int32_t Recorder::RecorderImpl::SetNextOutputFile(int32_t fd)
     return recorderSink_->SetNextOutputFile(fd);
 }
 
-int32_t Recorder::RecorderImpl::SetMaxFileSize(int64_t size)
+int32_t RecorderImpl::SetMaxFileSize(int64_t size)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     int32_t ret;
@@ -500,7 +500,7 @@ int32_t Recorder::RecorderImpl::SetMaxFileSize(int64_t size)
     return recorderSink_->SetMaxFileSize(size);
 }
 
-int32_t Recorder::RecorderImpl::SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback)
+int32_t RecorderImpl::SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     int32_t ret;
@@ -517,7 +517,7 @@ int32_t Recorder::RecorderImpl::SetRecorderCallback(const std::shared_ptr<Record
     return recorderSink_->SetRecorderCallback(callback);
 }
 
-int32_t Recorder::RecorderImpl::PrepareAudioSource()
+int32_t RecorderImpl::PrepareAudioSource()
 {
     int32_t ret = 0;
     for (uint32_t i = 0; i < RECORDER_SOURCE_MAX_CNT; i++) {
@@ -549,7 +549,7 @@ int32_t Recorder::RecorderImpl::PrepareAudioSource()
     return SUCCESS;
 }
 
-int32_t Recorder::RecorderImpl::PrepareVideoSource()
+int32_t RecorderImpl::PrepareVideoSource()
 {
     int32_t ret = 0;
     for (uint32_t i = 0; i < RECORDER_SOURCE_MAX_CNT; i++) {
@@ -557,7 +557,7 @@ int32_t Recorder::RecorderImpl::PrepareVideoSource()
             TrackSource trackSource;
             ret = GetVideoTrackSource(sourceManager_[i].videoSourceConfig, trackSource);
             if (ret != SUCCESS) {
-                MEDIA_ERR_LOG("GetVideoTrackSource  failed Ret: 0x%x", ret);
+                MEDIA_ERR_LOG("GetVideoTrackSource  failed. index:%d ret:0x%x", i, ret);
                 return ret;
             }
             int32_t trackId;
@@ -576,7 +576,7 @@ int32_t Recorder::RecorderImpl::PrepareVideoSource()
     return SUCCESS;
 }
 
-int32_t Recorder::RecorderImpl::GetVideoTrackSource(const RecorderVideoSourceConfig &videoSourceConfig,
+int32_t RecorderImpl::GetVideoTrackSource(const RecorderVideoSourceConfig &videoSourceConfig,
                                                     TrackSource &trackSource)
 {
     trackSource.trackSourceType = TRACK_SOURCE_TYPE_VIDEO;
@@ -593,7 +593,8 @@ int32_t Recorder::RecorderImpl::GetVideoTrackSource(const RecorderVideoSourceCon
     }
     if (videoSourceConfig.width <= 0 || videoSourceConfig.height <= 0 ||
         videoSourceConfig.bitRate <= 0 || videoSourceConfig.frameRate <= 0) {
-        MEDIA_ERR_LOG("VideoTrackSource not prepared");
+        MEDIA_ERR_LOG("VideoTrackSource not prepared, width:%d, height:%d, bitRate:%d, frameRate:%d",
+        videoSourceConfig.width, videoSourceConfig.height, videoSourceConfig.bitRate, videoSourceConfig.frameRate);
         return ERR_INVALID_PARAM;
     }
     trackSource.trackSourceInfo.videoInfo.width = videoSourceConfig.width;
@@ -605,7 +606,7 @@ int32_t Recorder::RecorderImpl::GetVideoTrackSource(const RecorderVideoSourceCon
     return SUCCESS;
 }
 
-int32_t Recorder::RecorderImpl::GetAudioTrackSource(const RecorderAudioSourceConfig &audioSourceConfig,
+int32_t RecorderImpl::GetAudioTrackSource(const RecorderAudioSourceConfig &audioSourceConfig,
                                                     TrackSource &trackSource)
 {
     trackSource.trackSourceType = TRACK_SOURCE_TYPE_AUDIO;
@@ -642,7 +643,7 @@ int32_t Recorder::RecorderImpl::GetAudioTrackSource(const RecorderAudioSourceCon
     return SUCCESS;
 }
 
-int32_t Recorder::RecorderImpl::PrepareRecorderSink()
+int32_t RecorderImpl::PrepareRecorderSink()
 {
     int32_t ret;
     if ((ret = InitCheck()) != SUCCESS) {
@@ -653,7 +654,7 @@ int32_t Recorder::RecorderImpl::PrepareRecorderSink()
     return recorderSink_->Prepare();
 }
 
-int32_t Recorder::RecorderImpl::Prepare()
+int32_t RecorderImpl::Prepare()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     int32_t ret = PrepareRecorderSink();
@@ -718,7 +719,7 @@ void AudioSourceProcess(const SourceManager *audioSourceManager, const RecorderS
     MEDIA_INFO_LOG("audioSourceManager:%p  over", audioSourceManager);
 }
 
-int32_t Recorder::RecorderImpl::StartAudioSource()
+int32_t RecorderImpl::StartAudioSource()
 {
     int32_t ret = 0;
     for (uint32_t i = 0; i < RECORDER_SOURCE_MAX_CNT; i++) {
@@ -736,7 +737,7 @@ int32_t Recorder::RecorderImpl::StartAudioSource()
     return SUCCESS;
 }
 
-int32_t Recorder::RecorderImpl::StopAudioSource()
+int32_t RecorderImpl::StopAudioSource()
 {
     int32_t ret = 0;
     for (uint32_t i = 0; i < RECORDER_SOURCE_MAX_CNT; i++) {
@@ -801,7 +802,7 @@ void VideoSourceProcess(const SourceManager *videoSourceManager, const RecorderS
 }
 
 
-int32_t Recorder::RecorderImpl::StartVideoSource()
+int32_t RecorderImpl::StartVideoSource()
 {
     int32_t ret = 0;
     for (uint32_t i = 0; i < RECORDER_SOURCE_MAX_CNT; i++) {
@@ -819,7 +820,7 @@ int32_t Recorder::RecorderImpl::StartVideoSource()
     return SUCCESS;
 }
 
-int32_t Recorder::RecorderImpl::StopVideoSource()
+int32_t RecorderImpl::StopVideoSource()
 {
     int32_t ret = 0;
     for (uint32_t i = 0; i < RECORDER_SOURCE_MAX_CNT; i++) {
@@ -839,7 +840,7 @@ int32_t Recorder::RecorderImpl::StopVideoSource()
     return SUCCESS;
 }
 
-int32_t Recorder::RecorderImpl::Start()
+int32_t RecorderImpl::Start()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (status_ != PREPPARED &&
@@ -869,7 +870,7 @@ int32_t Recorder::RecorderImpl::Start()
     return SUCCESS;
 }
 
-int32_t Recorder::RecorderImpl::PauseAudioSource()
+int32_t RecorderImpl::PauseAudioSource()
 {
     int32_t ret = 0;
     for (uint32_t i = 0; i < RECORDER_SOURCE_MAX_CNT; i++) {
@@ -885,7 +886,7 @@ int32_t Recorder::RecorderImpl::PauseAudioSource()
     return SUCCESS;
 }
 
-int32_t Recorder::RecorderImpl::PauseVideoSource()
+int32_t RecorderImpl::PauseVideoSource()
 {
     int32_t ret = 0;
     for (uint32_t i = 0; i < RECORDER_SOURCE_MAX_CNT; i++) {
@@ -901,7 +902,7 @@ int32_t Recorder::RecorderImpl::PauseVideoSource()
     return SUCCESS;
 }
 
-int32_t Recorder::RecorderImpl::ResumeAudioSource()
+int32_t RecorderImpl::ResumeAudioSource()
 {
     int32_t ret = 0;
     for (uint32_t i = 0; i < RECORDER_SOURCE_MAX_CNT; i++) {
@@ -917,7 +918,7 @@ int32_t Recorder::RecorderImpl::ResumeAudioSource()
     return SUCCESS;
 }
 
-int32_t Recorder::RecorderImpl::ResumeVideoSource()
+int32_t RecorderImpl::ResumeVideoSource()
 {
     int32_t ret = 0;
     for (uint32_t i = 0; i < RECORDER_SOURCE_MAX_CNT; i++) {
@@ -933,7 +934,7 @@ int32_t Recorder::RecorderImpl::ResumeVideoSource()
     return SUCCESS;
 }
 
-int32_t Recorder::RecorderImpl::Pause()
+int32_t RecorderImpl::Pause()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (status_ != RECORDING) {
@@ -961,7 +962,7 @@ int32_t Recorder::RecorderImpl::Pause()
     return SUCCESS;
 }
 
-int32_t Recorder::RecorderImpl::Resume()
+int32_t RecorderImpl::Resume()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (status_ != PAUSED) {
@@ -989,7 +990,7 @@ int32_t Recorder::RecorderImpl::Resume()
     return SUCCESS;
 }
 
-int32_t Recorder::RecorderImpl::Stop(bool block)
+int32_t RecorderImpl::Stop(bool block)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (status_ != RECORDING &&
@@ -1020,7 +1021,7 @@ int32_t Recorder::RecorderImpl::Stop(bool block)
     return SUCCESS;
 }
 
-int32_t Recorder::RecorderImpl::Reset()
+int32_t RecorderImpl::Reset()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     int32_t ret;
@@ -1051,7 +1052,7 @@ int32_t Recorder::RecorderImpl::Reset()
     return SUCCESS;
 }
 
-int32_t Recorder::RecorderImpl::Release()
+int32_t RecorderImpl::Release()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     int32_t ret;
@@ -1077,7 +1078,7 @@ int32_t Recorder::RecorderImpl::Release()
     return SUCCESS;
 }
 
-int32_t Recorder::RecorderImpl::SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration)
+int32_t RecorderImpl::SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (status_ != RECORDING) {
@@ -1104,7 +1105,7 @@ int32_t Recorder::RecorderImpl::SetFileSplitDuration(FileSplitType type, int64_t
     return recorderSink_->SetFileSplitDuration(manualSplitType, timestamp, duration);
 }
 
-int32_t Recorder::RecorderImpl::SetParameter(int32_t sourceId, const Format &format)
+int32_t RecorderImpl::SetParameter(int32_t sourceId, const Format &format)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     int32_t ret;

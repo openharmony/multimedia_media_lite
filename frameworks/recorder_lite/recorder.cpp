@@ -13,11 +13,10 @@
  * limitations under the License.
  */
 
-#include "recorder.h"
+#include "recorder_client.h"
 
 #include "media_log.h"
 #include "pms_interface.h"
-#include "recorder_impl.h"
 #include "securec.h"
 
 namespace OHOS {

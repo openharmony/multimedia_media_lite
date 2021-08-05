@@ -17,24 +17,17 @@
 #define RECORDER_IMPL_H
 
 #include "recorder.h"
-#include <vector>
 #include "recorder_audio_source.h"
-#include "recorder_video_source.h"
 #include "recorder_sink.h"
+#include "recorder_video_source.h"
+#include "serializer.h"
+#include <vector>
 
 namespace OHOS {
 namespace Media {
 constexpr uint32_t RECORDER_SOURCE_MAX_CNT = 4;
 
-enum RecState {
-    INITIALIZED,
-    PREPPARED,
-    RECORDING,
-    PAUSED,
-    RESETED,
-    STOPPED,
-    RELEASED
-};
+enum RecState { INITIALIZED = 0, PREPPARED, RECORDING, PAUSED, RESETED, STOPPED, RELEASED };
 
 struct SourceManager {
     RecorderVideoSource *videoSource;
@@ -51,7 +44,7 @@ struct SourceManager {
     RecorderAudioSourceConfig audioSourceConfig;
 };
 
-class Recorder::RecorderImpl {
+class RecorderImpl {
 public:
     RecorderImpl();
     virtual ~RecorderImpl();
@@ -117,7 +110,20 @@ private:
     RecState status_ = RELEASED;
     std::mutex mutex_;
 };
-}  // namespace Media
-}  // namespace OHOS
 
-#endif  // RECORDER_IMPL_H
+class RecorderCallbackClient : public RecorderCallback {
+public:
+    RecorderCallbackClient() = delete;
+    ~RecorderCallbackClient() = default;
+    RecorderCallbackClient(SvcIdentity *sid) : sid_(sid) {}
+
+    void OnError(int32_t errorType, int32_t errorCode) override;
+    void OnInfo(int32_t type, int32_t extra) override;
+
+private:
+    SvcIdentity *sid_ = nullptr;
+};
+} // namespace Media
+} // namespace OHOS
+
+#endif // RECORDER_IMPL_H

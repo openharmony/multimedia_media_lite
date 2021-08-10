@@ -117,12 +117,29 @@ Recorder::RecorderImpl::RecorderImpl()
     MEDIA_ERR_LOG("Create recorder client succeed.");
 }
 
+static int32_t DisConnectCallback(void *owner, int code, IpcIo *reply)
+{
+    if (code != 0) {
+        MEDIA_ERR_LOG("callback error, code = %d", code);
+        return -1;
+    }
+
+    if (owner == nullptr) {
+        return -1;
+    }
+    CallBackPara *para = (CallBackPara *)owner;
+    MEDIA_INFO_LOG("Callback, funcId = %d", para->funcId);
+    return 0;
+}
+
+
 Recorder::RecorderImpl::~RecorderImpl()
 {
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
-    uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_DISCONNECT, &io, nullptr, nullptr);
+    CallBackPara para = {.funcId = REC_FUNC_DISCONNECT, .ret = MEDIA_IPC_FAILED};
+    uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_DISCONNECT, &io, &para, DisConnectCallback);
     if (ret != 0) {
         MEDIA_ERR_LOG("Disconnect recorder server failed, ret=%d", ret);
     }

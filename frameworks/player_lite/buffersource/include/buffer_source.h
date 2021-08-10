@@ -63,7 +63,7 @@ typedef enum TagBufferFlag {
 }BufferFlag;
 
 class BufferSource {
-#define QUEUE_SIZE  5
+#define QUEUE_SIZE  20
 #define BUFER_SIZE       (2* 1024)  /* 2KB */
 
 public:

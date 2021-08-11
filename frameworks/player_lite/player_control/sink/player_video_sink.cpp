@@ -134,6 +134,7 @@ void VideoSink::CheckConfigVideoOutput(void)
         return;
     }
     IRect attr;
+    uint32_t devId = 0;
     uint32_t layerId = 0;
     int32_t x = std::stoi(surface->GetUserData("region_position_x"));
     int32_t y = std::stoi(surface->GetUserData("region_position_y"));
@@ -165,8 +166,8 @@ void VideoSink::CheckConfigVideoOutput(void)
     lInfo.width = w;
     lInfo.height = h;
     if (layerFuncs_ != nullptr) {
-        layerFuncs_->SetLayerSize(0, 0, &attr);
-        layerFuncs_->CreateLayer(0, &lInfo, &layerId);
+        layerFuncs_->CreateLayer(devId, &lInfo, &layerId);
+        layerFuncs_->SetLayerSize(devId, layerId, &attr);
     }
 }
 

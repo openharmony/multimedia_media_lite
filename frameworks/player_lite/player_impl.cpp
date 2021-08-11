@@ -553,7 +553,6 @@ int32_t PlayerImpl::GetPlayerState(int32_t &state)
 int32_t PlayerImpl::GetCurrentPosition(int64_t &position)
 {
     std::lock_guard<std::mutex> valueLock(lock_);
-    MEDIA_INFO_LOG("process in");
     CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
     position = (currentPosition_ >= 0) ? currentPosition_ : -1;
     return 0;

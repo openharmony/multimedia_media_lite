@@ -15,6 +15,7 @@
 
 #include "decoder.h"
 #include <stdio.h>
+#include "media_log.h"
 #include "securec.h"
 extern "C"
 {
@@ -47,15 +48,15 @@ static bool ConvertAdecAttributToParams(AvAttribute &attr, Param *param,
 {
     int32_t index = 0;
     param[index].key = KEY_MIMETYPE;
-    param[index].val = (void*)&(attr.adecAttr.mime);
+    param[index].val = (void *)&(attr.adecAttr.mime);
     param[index].size = sizeof(attr.adecAttr.mime);
     index++;
     param[index].key = KEY_BUFFERSIZE;
-    param[index].val = (void*)&(attr.adecAttr.bufSize);
+    param[index].val = (void *)&(attr.adecAttr.bufSize);
     param[index].size = sizeof(attr.adecAttr.bufSize);
     index++;
     param[index].key = KEY_CODEC_TYPE;
-    param[index].val = (void*)&(attr.type);
+    param[index].val = (void *)&(attr.type);
     param[index].size = sizeof(attr.type);
     index++;
     if (attr.adecAttr.priv) {
@@ -66,7 +67,7 @@ static bool ConvertAdecAttributToParams(AvAttribute &attr, Param *param,
     }
     actualLen = index;
     if (actualLen > maxLen) {
-        printf("anylsis adec param too much\n");
+        MEDIA_ERR_LOG("anylsis adec param too much");
         return false;
     }
     return true;
@@ -98,7 +99,7 @@ static bool ConvertVdecAttributToParams(AvAttribute &attr, Param *param,
     index++;
     actualLen = index;
     if (actualLen > maxLen) {
-        printf("anylsis vdec param too much\n");
+        MEDIA_ERR_LOG("anylsis vdec param too much");
         return false;
     }
     return true;
@@ -108,7 +109,7 @@ static bool ConvertAttributeToParams(AvAttribute &attr, Param *param,
                                            int maxLen, int &actualLen)
 {
     if (param == nullptr) {
-        printf("[%s] param NULL \n", __FUNCTION__);
+        MEDIA_ERR_LOG("param NULL");
         return false;
     }
 
@@ -123,7 +124,7 @@ static bool ConvertAttributeToParams(AvAttribute &attr, Param *param,
             break;
         }
         default: {
-            printf("not support this type:%d\n", attr.type);
+            MEDIA_ERR_LOG("not support this type:%d", attr.type);
             ret = false;
         }
     }
@@ -136,7 +137,7 @@ int32_t Decoder::CreateHandle(const std::string &name, AvAttribute &attr)
     Param param[PARAM_MAX_NUM];
     memset_s(param, PARAM_MAX_NUM * sizeof(Param), 0x00, PARAM_MAX_NUM * sizeof(Param));
     if (ConvertAttributeToParams(attr, param, PARAM_MAX_NUM, actualLen) == false) {
-        printf("convert fail\n");
+        MEDIA_ERR_LOG("convert fail");
     }
 
     int32_t ret = CodecCreate(name.c_str(), param, actualLen, &codecHandle_);

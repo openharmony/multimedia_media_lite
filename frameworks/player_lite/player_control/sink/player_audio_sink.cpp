@@ -195,7 +195,7 @@ int32_t AudioSink::GetRenderFrame(OutputInfo &renderFrame, const OutputInfo &fra
     return ret;
 }
 
-void AudioSink::RelaseQueHeadFrame(void)
+void AudioSink::ReleaseQueHeadFrame(void)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (frameCacheQue_.size() != 0) {
@@ -205,7 +205,7 @@ void AudioSink::RelaseQueHeadFrame(void)
     }
 }
 
-void AudioSink::RelaseQueAllFrame(void)
+void AudioSink::ReleaseQueAllFrame(void)
 {
     size_t i;
     size_t queSize;
@@ -249,7 +249,7 @@ int32_t AudioSink::WriteToAudioDevice(OutputInfo &renderFrame)
     int32_t ret;
     uint64_t writeLen = 0;
     if ((audioRender_ == nullptr) || (renderFrame.buffers == nullptr)) {
-        RelaseQueHeadFrame();
+        ReleaseQueHeadFrame();
         return SINK_RENDER_ERROR;
     }
 
@@ -258,11 +258,11 @@ int32_t AudioSink::WriteToAudioDevice(OutputInfo &renderFrame)
     if ((unsigned long)renderFrame.buffers[0].length != writeLen) {
         return SINK_RENDER_FULL;
     } else if (ret != HI_SUCCESS) {
-        RelaseQueHeadFrame();
+        ReleaseQueHeadFrame();
         MEDIA_ERR_LOG("RenderFrame failed ret: %x", ret);
         return SINK_RENDER_ERROR;
     }
-    RelaseQueHeadFrame();
+    ReleaseQueHeadFrame();
     return HI_SUCCESS;
 }
 
@@ -302,18 +302,19 @@ int32_t AudioSink::RenderFrame(OutputInfo &frame)
     ret = (syncHdl_ != nullptr) ? syncHdl_->ProcAudFrame(crtPlayPts, syncRet) : HI_SUCCESS;
     if (ret != HI_SUCCESS) {
         MEDIA_ERR_LOG("ProcAudFrame pts: %lld failed", renderFrame.timeStamp);
+        ReleaseQueHeadFrame();
         return SINK_RENDER_ERROR;
     }
     if (syncRet == SYNC_RET_PLAY) {
         ret = WriteToAudioDevice(renderFrame);
     } else if (syncRet == SYNC_RET_DROP) {
-        RelaseQueHeadFrame();
+        ReleaseQueHeadFrame();
         ret = SINK_SUCCESS;
     } else if (syncRet == SYNC_RET_REPEAT) {
         ret = SINK_RENDER_DELAY;
     } else {
         MEDIA_ERR_LOG("aud invalid sync ret: %d", syncRet);
-        RelaseQueHeadFrame();
+        ReleaseQueHeadFrame();
         ret =  SINK_RENDER_ERROR;
     }
 
@@ -375,7 +376,7 @@ int32_t AudioSink::Stop(void)
     if (started_ && audioRender_ != nullptr) {
         audioRender_->control.Stop(reinterpret_cast<AudioHandle>(audioRender_));
     }
-    RelaseQueAllFrame();
+    ReleaseQueAllFrame();
     rendFrameCnt_ = 0;
     started_ = false;
     paused_ = false;
@@ -403,7 +404,7 @@ int32_t AudioSink::Resume(void)
 
 int32_t AudioSink::Reset(void)
 {
-    RelaseQueAllFrame();
+    ReleaseQueAllFrame();
     if (started_ && audioRender_ != nullptr) {
         audioRender_->control.Flush(reinterpret_cast<AudioHandle>(audioRender_));
     }

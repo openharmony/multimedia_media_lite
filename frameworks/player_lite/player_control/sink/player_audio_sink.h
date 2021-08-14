@@ -65,8 +65,8 @@ private:
     void SendAudioEndOfStream();
     void UpdateAudioPts(int64_t lastPts, int64_t& timestamp, OutputInfo &renderFrame);
     int GetRenderFrame(OutputInfo &renderFrame, const OutputInfo &frame);
-    void RelaseQueHeadFrame(void);
-    void RelaseQueAllFrame(void);
+    void ReleaseQueHeadFrame(void);
+    void ReleaseQueAllFrame(void);
     void RenderRptEvent(EventCbType event);
     int32_t WriteToAudioDevice(OutputInfo &renderFrame);
     void QueueRenderFrame(const OutputInfo &frame, bool cacheQueue);

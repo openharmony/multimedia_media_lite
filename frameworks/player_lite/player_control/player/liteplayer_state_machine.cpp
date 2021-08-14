@@ -100,13 +100,13 @@ int PlayerControlState::Enter()
     PlayerStatus playerStatus = StateConvert2Enum(Name());
     CHECK_NULL_RETURN(playerControlHandle_, HI_ERR_PLAYERCONTROL_NULL_PTR, "handle null");
     playerControlHandle_->StateChangeCallback(playerStatus);
-    MEDIA_INFO_LOG( "enter state: %s\n", Name().c_str());
+    MEDIA_DEBUG_LOG( "enter state: %s\n", Name().c_str());
     return HI_SUCCESS;
 }
 
 int PlayerControlState::Exit()
 {
-    MEDIA_INFO_LOG( "exit state: %s", Name().c_str());
+    MEDIA_DEBUG_LOG( "exit state: %s", Name().c_str());
     return HI_SUCCESS;
 }
 
@@ -122,7 +122,7 @@ int PlayerControlState::HandleMessage(const MsgInfo& msgInfo)
 
     CHECK_NULL_RETURN(curState_, HI_ERR_PLAYERCONTROL_NULL_PTR, "curState null");
     if (!curState_->EventValidAtCurState((PlayerControlMsgType)msgInfo.what)) {
-        MEDIA_ERR_LOG( "invalid event :%d at current state: %s \n", msgInfo.what,
+        MEDIA_ERR_LOG( "invalid event :%d at current state: %s", msgInfo.what,
                       Name().c_str());
         return HI_ERR_PLAYERCONTROL_ILLEGAL_STATE_ACTION;
     }

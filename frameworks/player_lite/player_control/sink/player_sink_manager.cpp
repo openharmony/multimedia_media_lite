@@ -19,9 +19,6 @@
 
 namespace OHOS {
 namespace Media {
-#define SS2US  1000000
-#define US2NS  1000
-#define US2MS  1000
 
 #define CHECK_FAILED_RETURN(value, target, ret, printfString) \
 do { \
@@ -31,23 +28,10 @@ do { \
     } \
 } while (0)
 
-int64_t GetCurTimeUs()
-{
-    struct timespec ts = { 0, 0 };
-    (void)clock_gettime(CLOCK_MONOTONIC, &ts);
-    return (((int64_t)ts.tv_sec) * SS2US) + (((int64_t)ts.tv_nsec) / US2NS);
-}
-
-static int64_t GetCurTimeMs()
-{
-    int64_t curTimeUs = GetCurTimeUs();
-    return (curTimeUs / US2MS);
-}
-
 SinkManager::SinkManager()
     : speed_(1.0f), direction_(TPLAY_DIRECT_BUTT),
       leftVolume_(0.0f), rightVolume_(0.0f), paused_(false), started_(false),
-      pauseAfterPlay_(false), vidRendStartTime_(-1), lastVidRendSysTimeMs_(-1), audioSinkNum_(0),
+      pauseAfterPlay_(false), audioSinkNum_(0),
       videoSinkNum_(0), sync_(nullptr), recieveAudioEos_(false), recieveVideoEos_(false)
 {
     callBack_.onEventCallback = nullptr;
@@ -168,19 +152,14 @@ int32_t SinkManager::Reset(void)
     return 0;
 }
 
-void SinkManager::ResetRendStartTime()
-{
-    vidRendStartTime_ = AV_INVALID_PTS;
-}
-
 int32_t SinkManager::Pause()
 {
     MEDIA_INFO_LOG("process in");
-    if (paused_ == true) {
-        MEDIA_ERR_LOG("avRender already paused");
+    if (paused_) {
+        MEDIA_WARNING_LOG("sink already paused");
         return HI_SUCCESS;
     }
-    if (started_ == false) {
+    if (!started_) {
         MEDIA_ERR_LOG("not in running");
         return -1;
     }
@@ -193,7 +172,6 @@ int32_t SinkManager::Pause()
         sync_->Reset(SYNC_CHN_VID);
         sync_->Reset(SYNC_CHN_AUD);
     }
-    ResetRendStartTime();
     paused_ = true;
     return 0;
 }
@@ -210,15 +188,10 @@ int32_t SinkManager::Resume()
         }
     }
     pauseAfterPlay_ = false;
-    if (paused_ == false) {
+    if (!paused_) {
         MEDIA_ERR_LOG("avRender not in pause");
         return HI_FAILURE;
     }
-    vidRendStartTime_ = GetCurTimeMs();
-    lastVidRendSysTimeMs_ = GetCurTimeMs();
-#if (defined __HI3516CV300__)
-    m_lastAudRendSysTimeMs = 0;
-#endif
     paused_ = false;
 
     return 0;

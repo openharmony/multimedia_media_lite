@@ -415,7 +415,7 @@ void PlayerControl::ClearCachePacket()
     if (cachedPacket_) {
         if (formatPacket_.data != nullptr) {
             if (playerSource_!= nullptr && playerSource_->FreeFrame(formatPacket_) != 0) {
-                MEDIA_ERR_LOG("FreeFrame failed \n");
+                MEDIA_ERR_LOG("FreeFrame failed");
             }
             formatPacket_.data = nullptr;
             formatPacket_.len = 0;
@@ -490,7 +490,9 @@ int32_t PlayerControl::PauseResume(void)
 {
     CHECK_NULL_RETURN(sinkManager_, HI_ERR_PLAYERCONTROL_NULL_PTR, "sinkManager_ nullptr");
     int32_t ret = sinkManager_->Resume();
-    CHECK_FAILED_RETURN(ret,HI_SUCCESS,ret,"resume failed");
+    if (ret != HI_SUCCESS) {
+        MEDIA_ERR_LOG("resume failed");
+    }
     pthread_mutex_lock(&schMutex_);
     paused_ = false;
     pthread_cond_signal(&schCond_);
@@ -866,6 +868,7 @@ int32_t PlayerControl::DoSetDataSource(BufferStream &stream)
 
 int32_t PlayerControl::DoPrepare(void)
 {
+    MEDIA_DEBUG_LOG("Process in");
     CHECK_NULL_RETURN(stateMachine_, HI_FAILURE, "stateMachine_ nullptr");
     PlayerStatus playerState = stateMachine_->GetCurState();
     CHECK_STATE_SAME(playerState, PLAY_STATUS_PREPARED);
@@ -879,6 +882,7 @@ int32_t PlayerControl::DoPrepare(void)
             "play postion notify interval %d ms oversize file duration, user will never receive notify",
             playerParam_.u32PlayPosNotifyIntervalMs);
     }
+    MEDIA_DEBUG_LOG("Process out");
     return HI_SUCCESS;
 }
 
@@ -1020,11 +1024,11 @@ void* PlayerControl::DataSchProcess(void *priv)
         play->RenderVideoFrame();
         pthread_mutex_unlock(&play->schMutex_);
         play->ReortRenderPosition();
-        if (play->isPlayEnd_ == true) {
+        if (play->isPlayEnd_) {
             play->DealPlayEnd();
             play->isPlayEnd_ = false;
         }
-        if (play->IsPlayEos() == true) {
+        if (play->IsPlayEos()) {
             play->renderSleepTime_ = RENDER_EOS_SLEEP_TIME_US;
         }
         if (play->renderSleepTime_ > 0) {
@@ -1042,6 +1046,7 @@ void* PlayerControl::DataSchProcess(void *priv)
 
 int32_t PlayerControl::DoPlay()
 {
+    MEDIA_DEBUG_LOG("Process in");
     CHECK_NULL_RETURN(stateMachine_, HI_ERR_PLAYERCONTROL_NULL_PTR, "stateMachine_ nullptr");
     CHECK_NULL_RETURN(playerSource_, HI_ERR_PLAYERCONTROL_NULL_PTR, "playerSource_ nullptr");
 
@@ -1083,9 +1088,12 @@ int32_t PlayerControl::DoPlay()
     } else {
         return HI_ERR_PLAYERCONTROL_ILLEGAL_STATE_ACTION;
     }
+
     strmReadEnd_ = false;
     isVidPlayEos_ = false;
     isAudPlayEos_ = false;
+    MEDIA_DEBUG_LOG("Process out");
+
     return ret;
 }
 
@@ -1104,7 +1112,7 @@ int32_t PlayerControl::ReadPacket()
         return ret;
     }
     ret = ReadFrameFromSource(formatPacket_);
-    if (ret != HI_RET_FILE_EOF && formatPacket_.data == nullptr && formatPacket_.len == 0) {
+    if (ret != HI_RET_FILE_EOF && (formatPacket_.data == nullptr || formatPacket_.len == 0)) {
         return HI_RET_NODATA;
     }
     if (ret == HI_RET_FILE_EOF) {
@@ -1191,7 +1199,7 @@ void PlayerControl::PushPacketToVDecoder(void)
         renderSleepTime_ = QUEUE_BUFFER_FULL_SLEEP_TIME_US;
         return;
     }
-    if (formatPacket_.data != nullptr || formatPacket_.len != 0) {
+    if (formatPacket_.data != nullptr && formatPacket_.len != 0) {
         lastSendVdecPts_ = formatPacket_.timestampUs;
     }
     ClearCachePacket();
@@ -1235,7 +1243,6 @@ int32_t PlayerControl::ReadPacketAndPushToDecoder()
     }
     if (formatPacket_.frameType == FRAME_TYPE_AUDIO && audioDecoder_ != nullptr) {
         PushPacketToADecoder();
-
     } else if (formatPacket_.frameType == FRAME_TYPE_VIDEO  && videoDecoder_ != nullptr) {
         PushPacketToVDecoder();
     }
@@ -1334,17 +1341,17 @@ int32_t PlayerControl::DoStop()
     return ret;
 }
 
-int32_t PlayerControl::DoPause()
+int32_t PlayerControl::DoPause(void)
 {
     CHECK_NULL_RETURN(stateMachine_, HI_ERR_PLAYERCONTROL_NULL_PTR, "stateMachine_ nullptr");
     PlayerStatus playerState = stateMachine_->GetCurState();
     CHECK_STATE_SAME(playerState, PLAY_STATUS_PAUSE);
+    CHECK_NULL_RETURN(sinkManager_, HI_FAILURE, "sinkManager_ nullptr");
 
     if (playerState == PLAY_STATUS_PLAY || (playerState == PLAY_STATUS_TPLAY)) {
         pthread_mutex_lock(&schMutex_);
         paused_ = true;
         pthread_mutex_unlock(&schMutex_);
-        CHECK_NULL_RETURN(sinkManager_, HI_FAILURE, "sinkManager_ nullptr");
         int32_t ret = sinkManager_->Pause();
         CHECK_FAILED_RETURN(ret, HI_SUCCESS, ret, "Pause failed");
     } else {
@@ -1371,7 +1378,7 @@ int32_t PlayerControl::DoSeekIfNeed(void)
     hasRenderAudioEos_ = false;
     isPlayEnd_ = false;
     seekToTimeMs_ = -1;
-    MEDIA_INFO_LOG("[%s:%d] seek end", __func__, __LINE__);
+    MEDIA_INFO_LOG("seek end");
     return HI_SUCCESS;
 }
 
@@ -1557,10 +1564,12 @@ void PlayerControl::DealPlayEnd()
 {
     CHECK_NULL_RETURN_VOID(stateMachine_, "stateMachine nullptr");
     PlayerStatus playState = stateMachine_->GetCurState();
-    if (TPLAY_DIRECT_BACKWARD == tplayAttr_.direction && playState == PLAY_STATUS_TPLAY) {
+    if (tplayAttr_.direction == TPLAY_DIRECT_BACKWARD && playState == PLAY_STATUS_TPLAY) {
         EventCallback(PLAYERCONTROL_EVENT_SOF, nullptr);
     } else {
-        EventCallback(PLAYERCONTROL_EVENT_PROGRESS, &fmtFileInfo_.s64Duration);
+        if (fmtFileInfo_.s64Duration != -1) {
+            EventCallback(PLAYERCONTROL_EVENT_PROGRESS, &fmtFileInfo_.s64Duration);
+        }
         EventCallback(PLAYERCONTROL_EVENT_EOF, nullptr);
     }
 }
@@ -1574,11 +1583,10 @@ PlayerTplayMode PlayerControl::TPlayGetPlayMode()
         return PLAYER_TPLAY_ONLY_I_FRAME;
     }
 
-    if (tplayAttr_.direction == TPLAY_DIRECT_FORWARD
-        && tplayAttr_.speed == PLAY_SPEED_2X_FAST) {
-        if ((resolution.u32Width * resolution.u32Height) <= FULL_TPLAY_RESULITON_LIMIT
-            && fmtFileInfo_.fFrameRate <= FULL_TPLAY_FRAMERATE_LIMIT
-            && fmtFileInfo_.u32Bitrate <= FULL_TPLAY_BITRATE_LIMIT) {
+    if (tplayAttr_.direction == TPLAY_DIRECT_FORWARD && tplayAttr_.speed == PLAY_SPEED_2X_FAST) {
+        if ((resolution.u32Width * resolution.u32Height) <= FULL_TPLAY_RESULITON_LIMIT &&
+            fmtFileInfo_.fFrameRate <= FULL_TPLAY_FRAMERATE_LIMIT &&
+            fmtFileInfo_.u32Bitrate <= FULL_TPLAY_BITRATE_LIMIT) {
             tplayMode = PLAYER_TPLAY_FULL_PLAY;
         }
     }
@@ -1655,7 +1663,7 @@ int32_t PlayerControl::TPlayCheckContinueLost()
 
 bool PlayerControl::TPlayIsFileReadEnd()
 {
-    if (lastReadPktPts_ == 0 && TPLAY_DIRECT_BACKWARD == tplayAttr_.direction) {
+    if (lastReadPktPts_ == 0 && tplayAttr_.direction == TPLAY_DIRECT_BACKWARD) {
         MEDIA_DEBUG_LOG( "backward last seek pts %lld", lastReadPktPts_);
         return true;
     } else if (isTplayLastFrame_ == true && (tplayAttr_.direction == TPLAY_DIRECT_FORWARD)) {

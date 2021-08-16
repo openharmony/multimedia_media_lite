@@ -190,7 +190,7 @@ void VideoSink::SetRenderMode(RenderMode mode)
 
 int32_t VideoSink::Stop()
 {
-    RelaseQueAllFrame();
+    ReleaseQueAllFrame();
     ResetRendStartTime();
     renderFrameCnt_ = 0;
     if (layerFuncs_ != nullptr) {
@@ -203,11 +203,11 @@ int32_t VideoSink::Stop()
 int32_t VideoSink::Pause()
 {
     if (paused_) {
-        MEDIA_ERR_LOG("avRender already paused");
+        MEDIA_WARNING_LOG("vsink already paused");
         return HI_SUCCESS;
     }
-    if (started_ == false) {
-        MEDIA_ERR_LOG("avRender not in running");
+    if (!started_) {
+        MEDIA_ERR_LOG("vsink not in running");
         return HI_FAILURE;
     }
 
@@ -219,8 +219,8 @@ int32_t VideoSink::Pause()
 int32_t VideoSink::Resume(void)
 {
     pauseAfterPlay_ = false;
-    if (paused_ == false) {
-        MEDIA_ERR_LOG("avRender not in pause");
+    if (!paused_) {
+        MEDIA_WARNING_LOG("vsink not in pause");
         return HI_FAILURE;
     }
 
@@ -232,8 +232,8 @@ int32_t VideoSink::Resume(void)
 
 int32_t VideoSink::Flush(void)
 {
-    if (started_ == false) {
-        MEDIA_ERR_LOG("avRender not in started");
+    if (!started_) {
+        MEDIA_ERR_LOG("vsink not in started");
         return HI_FAILURE;
     }
     return HI_SUCCESS;
@@ -248,7 +248,7 @@ void VideoSink::ResetRendStartTime()
 
 int32_t VideoSink::Reset()
 {
-    RelaseQueAllFrame();
+    ReleaseQueAllFrame();
     Flush();
     ResetRendStartTime();
     recievedEos_ = false;
@@ -290,7 +290,7 @@ int32_t VideoSink::GetRenderFrame(OutputInfo &renderFrame, OutputInfo &frame)
     return ret;
 }
 
-void VideoSink::RelaseQueHeadFrame(void)
+void VideoSink::ReleaseQueHeadFrame(void)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (frameCacheQue_.size() != 0) {
@@ -300,7 +300,7 @@ void VideoSink::RelaseQueHeadFrame(void)
     }
 }
 
-void VideoSink::RelaseQueAllFrame(void)
+void VideoSink::ReleaseQueAllFrame(void)
 {
     size_t i;
     size_t queSize;
@@ -346,7 +346,7 @@ int32_t VideoSink::WriteToVideoDevice(OutputInfo &renderFrame)
         layerBuf.data.virAddr = renderFrame.vendorPrivate;
         layerFuncs_->Flush(0, 0, &layerBuf);
     }
-    RelaseQueHeadFrame();
+    ReleaseQueHeadFrame();
     return SINK_SUCCESS;
 }
 
@@ -373,6 +373,7 @@ int32_t VideoSink::RenderFrame(OutputInfo &frame)
     crtPlayPts = renderFrame.timeStamp;
     int32_t ret = (syncHdl_ != nullptr) ? syncHdl_->ProcVidFrame(crtPlayPts, syncRet) : HI_SUCCESS;
     if (ret != HI_SUCCESS) {
+        ReleaseQueHeadFrame();
         MEDIA_ERR_LOG("ProcVidFrame pts: %llu failed", renderFrame.timeStamp);
         return SINK_RENDER_ERROR;
     }
@@ -381,13 +382,13 @@ int32_t VideoSink::RenderFrame(OutputInfo &frame)
         ret = WriteToVideoDevice(renderFrame);
         renderFrameCnt_++;
     } else if (syncRet == SYNC_RET_DROP) {
-        RelaseQueHeadFrame();
+        ReleaseQueHeadFrame();
         ret = SINK_SUCCESS;
     } else if (syncRet == SYNC_RET_REPEAT) {
         ret = SINK_RENDER_DELAY;
     } else {
         MEDIA_ERR_LOG("video invalid sync ret: %d", syncRet);
-        RelaseQueHeadFrame();
+        ReleaseQueHeadFrame();
         ret =  SINK_RENDER_ERROR;
     }
 

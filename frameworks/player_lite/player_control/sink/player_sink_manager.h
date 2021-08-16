@@ -83,7 +83,6 @@ public:
 private:
     int32_t Tplay(float speed, TplayDirect  tplayDirect);
     int32_t TplayToNormal(void);
-    void ResetRendStartTime();
 
     float speed_;
     TplayDirect  direction_;
@@ -92,8 +91,6 @@ private:
     bool paused_;
     bool started_;
     bool pauseAfterPlay_;
-    int64_t vidRendStartTime_;
-    int64_t lastVidRendSysTimeMs_;
     int32_t audioSinkNum_;
     int32_t videoSinkNum_;
     std::shared_ptr<PlayerSync> sync_;

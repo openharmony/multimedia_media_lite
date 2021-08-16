@@ -105,7 +105,7 @@ int32_t PlayerDemuxer::GetFormatDemuxer(void)
     }
     ret = FormatDemuxerCreate(&source, &demuxer_);
     if (ret != 0 || demuxer_ == nullptr) {
-        MEDIA_ERR_LOG("FormatDemuxerCreate failed\n");
+        MEDIA_ERR_LOG("FormatDemuxerCreate failed");
         return -1;
     }
     return 0;
@@ -148,8 +148,8 @@ int32_t PlayerDemuxer::SetCallBack(PlayEventCallback &callBack)
 int32_t PlayerDemuxer::Prepare(void)
 {
     CHECK_FAILED_RETURN(inited_, true, -1, "not inited");
-    CHECK_FAILED_RETURN(FormatDemuxerSetCallBack(demuxer_, &formatListener_), 0, -1, "");
-    CHECK_FAILED_RETURN(FormatDemuxerPrepare(demuxer_), 0, -1, "");
+    CHECK_FAILED_RETURN(FormatDemuxerSetCallBack(demuxer_, &formatListener_), 0, -1, "set callback failed");
+    CHECK_FAILED_RETURN(FormatDemuxerPrepare(demuxer_), 0, -1, "prepare failed");
     prepared_ = true;
     return 0;
 }

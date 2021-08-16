@@ -30,7 +30,7 @@ extern "C"
 
 #define READ_LEN  (1024)
 
-typedef struct TagIdleBuffer{
+typedef struct TagIdleBuffer {
     size_t idx;
     size_t offset;
     size_t size;
@@ -106,8 +106,7 @@ int32_t PlayerServer::PlayerServerInit()
     return 0;
 }
 
-class ServerStreamSource :public StreamSource
-{
+class ServerStreamSource : public StreamSource {
 public:
     ServerStreamSource(void);
     virtual ~ServerStreamSource(void);
@@ -199,6 +198,7 @@ static void* streamProcess(void* arg)
     SurfaceBuffer* acquireBuffer = nullptr;
     prctl(PR_SET_NAME, "StreamProc_server", 0, 0, 0);
     MEDIA_INFO_LOG("[%s %d]", __func__, __LINE__);
+    int sleepTime = 20000;
     while (true) {
         pthread_mutex_lock(&g_streamThreadControl.mutex);
         if (stream->threadRuning == false) {
@@ -208,7 +208,7 @@ static void* streamProcess(void* arg)
         pthread_mutex_unlock(&g_streamThreadControl.mutex);
         ret = stream->GetAvailableBuffer(&buffer);
         if (ret != 0) {
-            usleep(20000);
+            usleep(sleepTime);
             continue;
         }
         data = stream->GetBufferAddress(buffer.idx);
@@ -245,14 +245,16 @@ static void* streamProcess(void* arg)
                 stream->GetSurface()->ReleaseBuffer(acquireBuffer);
                 break;
             } else {
-                usleep(20000);
+                usleep(sleepTime);
                 continue;
             }
         }
         if (readLen > 0) {
-            stream->QueueBuffer(buffer.idx, buffer.offset, readLen, 0, 8);
+            int flags = 8;
+            stream->QueueBuffer(buffer.idx, buffer.offset, readLen, 0, flags);
         } else {
-            stream->QueueBuffer(buffer.idx, buffer.offset, readLen, 0, 4);
+            int flags = 4;
+            stream->QueueBuffer(buffer.idx, buffer.offset, readLen, 0, flags);
             break;
         }
     }

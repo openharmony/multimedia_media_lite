@@ -60,10 +60,10 @@ static int64_t GetCurTimeMs()
 
 VideoSink::VideoSink(void)
     :speed_(1.0f), paused_(false), started_(false), syncHdl_(nullptr),
-      renderFrameCnt_(0), renderMode_(RENDER_MODE_NORMAL), rendStartTime_(-1), lastRendPts_(AV_INVALID_PTS),
-      recievedEos_(false), EosPts_(AV_INVALID_PTS), pauseAfterPlay_(false), firstVidRend_(false),
-      lastRendCnt_(0), vidRendStartTime_(AV_INVALID_PTS), eosSended_(false), lastConfigRegionX_(-1),
-      lastConfigRegionY_(-1), lastConfigRegionW_(), lastConfigRegionH_(-1)
+    renderFrameCnt_(0), renderMode_(RENDER_MODE_NORMAL), rendStartTime_(-1), lastRendPts_(AV_INVALID_PTS),
+    recievedEos_(false), EosPts_(AV_INVALID_PTS), pauseAfterPlay_(false), firstVidRend_(false),
+    lastRendCnt_(0), vidRendStartTime_(AV_INVALID_PTS), eosSended_(false), lastConfigRegionX_(-1),
+    lastConfigRegionY_(-1), lastConfigRegionW_(), lastConfigRegionH_(-1)
 {
     ResetRendStartTime();
     attr_.sinkType = SINK_TYPE_BUT;
@@ -159,9 +159,9 @@ void VideoSink::CheckConfigVideoOutput(void)
     w = w + w % 2;
     h = h + h % 2;
     attr.x = x;
-    attr.y =y;
-    attr.w =w;
-    attr.h =h;
+    attr.y = y;
+    attr.w = w;
+    attr.h = h;
     LayerInfo lInfo;
     lInfo.width = w;
     lInfo.height = h;

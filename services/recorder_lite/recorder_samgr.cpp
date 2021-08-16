@@ -51,7 +51,7 @@ static BOOL Initialize(Service *service, Identity identity)
 static BOOL MessageHandle(Service *service, Request *msg)
 {
     MEDIA_DEBUG_LOG("MessageHandle(%s)! Request<%d, %d, %p>", service->GetName(service), msg->msgId, msg->msgValue,
-                   msg->data);
+                    msg->data);
     return FALSE;
 }
 
@@ -93,6 +93,5 @@ void RecorderServiceReg()
         return;
     }
 }
-
 } // namespace Media
 } // namespace OHOS

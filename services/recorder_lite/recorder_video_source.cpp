@@ -20,7 +20,7 @@ namespace OHOS {
 namespace Media {
 constexpr int32_t KEY_IS_SYNC_FRAME = 1; // "is-sync-frame"
 constexpr int32_t KEY_TIME_US = 2;       // "timeUs"
-Surface *g_surface=nullptr;
+Surface *g_surface = nullptr;
 
 RecorderVideoSource::RecorderVideoSource()
     : surface_(nullptr),
@@ -37,21 +37,24 @@ RecorderVideoSource::~RecorderVideoSource()
     }
 }
 
-std::shared_ptr<OHOS::Surface> RecorderVideoSource::GetSurface()
+std::shared_ptr<OHOS::Surface> RecorderVideoSource::GetSurface() 
 {
     if (surface_.get() == nullptr) {
         Surface *surface = Surface::CreateSurface();
         if (surface == nullptr) {
             return nullptr;
         }
-        surface->SetWidthAndHeight(1920,1080);
-        surface->SetQueueSize(3);
-        surface->SetSize(1024 * 1024);
+        int videoWidth = 1920;
+        int videoHeight = 1080;
+        surface->SetWidthAndHeight(videoWidth, videoHeight);
+        int queueSize = 3;
+        surface->SetQueueSize(queueSize);
+        int videoSize = 1024;
+        surface->SetSize(videoSize * videoSize);
         g_surface = surface;
         surface->RegisterConsumerListener(*this);
         surface_.reset(surface);
     }
-    
     MEDIA_INFO_LOG("Get Recorder Surface SUCCESS :%p", surface_.get());
     return surface_;
 }

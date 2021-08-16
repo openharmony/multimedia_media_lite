@@ -672,7 +672,7 @@ int32_t RecorderImpl::Prepare()
         MEDIA_ERR_LOG("PrepareAudioSource  failed Ret: %d", ret);
         return ret;
     }
-    status_ = PREPPARED;
+    status_ = PREPARED;
     MEDIA_INFO_LOG("Prepare SUCCESS");
     return SUCCESS;
 }
@@ -843,7 +843,7 @@ int32_t RecorderImpl::StopVideoSource()
 int32_t RecorderImpl::Start()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (status_ != PREPPARED &&
+    if (status_ != PREPARED &&
         status_ != PAUSED &&
         status_ != STOPPED) {
         MEDIA_ERR_LOG("Start ILLEGAL_STATE  status:%u", status_);

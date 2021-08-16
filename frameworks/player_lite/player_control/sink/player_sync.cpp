@@ -234,7 +234,6 @@ int32_t PlayerSync::SetSpeed(float speed, TplayDirect  tplayDirect)
         return HI_FAILURE;
     }
     pthread_mutex_lock(&vidSyncLock_);
-    isInTrickPlayMode_ = true;
     speed_ = speed;
     tplayDirect_ = tplayDirect;
     pthread_mutex_unlock(&vidSyncLock_);
@@ -302,12 +301,12 @@ int32_t PlayerSync::ProcVidFrame(int64_t ptsMs, SyncRet &result)
     int64_t ptsUs;
     int64_t nowUs;
 
-    if (isInited_ == false) {
+    if (!isInited_) {
         MEDIA_ERR_LOG("sync ProcVidFrame before inited");
         return HI_FAILURE;
     }
     pthread_mutex_lock(&vidSyncLock_);
-    if (isVidEnable_ == false) {
+    if (!isVidEnable_) {
         MEDIA_ERR_LOG("sync module have not enabled");
         result = SYNC_RET_DROP;
         ret = HI_FAILURE;
@@ -322,7 +321,7 @@ int32_t PlayerSync::ProcVidFrame(int64_t ptsMs, SyncRet &result)
     }
     ptsUs = ptsMs * US2MS;
     // first video frame quickoutput
-    if (isFristVidFrame_ == true) {
+    if (isFristVidFrame_) {
         result = OnVideoFirstFrame(ptsUs);
         goto UNLOCK;
     }
@@ -352,19 +351,18 @@ UNLOCK:
 
 int32_t PlayerSync::ProcAudFrame(int64_t ptsMs, SyncRet &result)
 {
-    if (isInited_ == false) {
+    if (!isInited_) {
         MEDIA_ERR_LOG("sync ProcAudFrame before inited");
         return HI_FAILURE;
     }
     pthread_mutex_lock(&audSyncLock_);
-    if (isAudEnable_ == false) {
+    result = SYNC_RET_DROP;
+    if (!isAudEnable_) {
         MEDIA_ERR_LOG("sync module have not enabled");
-        result = SYNC_RET_DROP;
         pthread_mutex_unlock(&audSyncLock_);
         return HI_FAILURE;
     }
-    if (isInTrickPlayMode_ == true) {
-        result = SYNC_RET_DROP;
+    if (isInTrickPlayMode_) {
         pthread_mutex_unlock(&audSyncLock_);
         return HI_SUCCESS;
     }
@@ -374,7 +372,7 @@ int32_t PlayerSync::ProcAudFrame(int64_t ptsMs, SyncRet &result)
     }
     int64_t timeUs = ptsMs * US2MS;
     int64_t nowUs;
-    if (isFristAudFrame_ == true) {
+    if (isFristAudFrame_) {
         // caculate pts and clock delta of first frame
         int64_t firstTimeUs = GetCurTimeUs();
         audTimeSourceDelta_ = firstTimeUs - timeUs;

@@ -35,14 +35,15 @@ using OHOS::Media::AdapterStreamCallback;
 
 namespace OHOS {
 namespace Media {
-const int DEFAULT_SEND_LEVEL = 3;
-const int INVALID_MEDIA_POSITION = -1;
-const int DEFAULT_REWIND_TIME = 0;
+const int32_t DEFAULT_SEND_LEVEL = 3;
+const int32_t INVALID_MEDIA_POSITION = -1;
+const int32_t DEFAULT_REWIND_TIME = 0;
 const float DEFAULT_MEDIA_VOLUME = 100.0f;
-const int INIT_VIDEO_SIZE = 0;
-const int DEFAULT_THREAD_ID = -1;
+const int32_t INIT_VIDEO_SIZE = 0;
+const int32_t DEFAULT_THREAD_ID = -1;
 const int32_t IDLE_QUEQUE_SLEEP_TIME_US = 5000;
 const float MAX_MEDIA_VOLUME = 300.0f;
+const int32_t POS_NOTIFY_INTERVAL_MS = 300;
 
 #define CHECK_FAILED_PRINT(value, target, printfString) \
 do { \
@@ -140,8 +141,8 @@ int32_t PlayerImpl::SetSource(const Source &source)
     std::lock_guard<std::mutex> valueLock(lock_);
     MEDIA_INFO_LOG("process in");
     CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
-    if (currentState_ != PLAYER_IDLE ) {
-        MEDIA_ERR_LOG("current state is:%d, not support SetSource\n", currentState_);
+    if (currentState_ != PLAYER_IDLE) {
+        MEDIA_ERR_LOG("failed, current state is:%d", currentState_);
         return -1;
     }
 
@@ -191,7 +192,7 @@ void PlayerImpl::UpdateState(PlayerImpl *curPlayer, PlayerStatus state)
     }
 
     curPlayer->playerControlState_ = state;
-    MEDIA_INFO_LOG("@@player UpdateState, state:%d", state);
+    MEDIA_INFO_LOG("player UpdateState, state:%d", state);
 }
 
 void PlayerImpl::PlayerControlEventCb(void* pPlayer, PlayerControlEvent enEvent, const void* pData)
@@ -364,7 +365,7 @@ bool PlayerImpl::IsPlaying()
 {
     std::lock_guard<std::mutex> valueLock(lock_);
     MEDIA_INFO_LOG("process in\n");
-    CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
+    CHECK_FAILED_RETURN(released_, false, 0, "have released or not create");
     bool isPlaying = false;
     if (player_ != nullptr) {
         isPlaying = (currentState_ != PLAYER_STARTED) ? false : true;
@@ -443,7 +444,7 @@ int32_t PlayerImpl::RewindInner(int64_t mSeconds, PlayerSeekMode mode)
     rewindMode_ = mode;
     ret = player_->Seek(mSeconds);
     if (ret != 0) {
-        MEDIA_ERR_LOG("RewindInner failed, ret is %d", ret);
+        MEDIA_ERR_LOG("do seek failed, ret is %d", ret);
     }
     MEDIA_INFO_LOG("process out");
     return ret;
@@ -482,7 +483,7 @@ int32_t PlayerImpl::Rewind(int64_t mSeconds, int32_t mode)
 
     if (isStreamSource_ == true) {
         MEDIA_ERR_LOG("Failed, streamsource not support Rewind");
-        return 0;
+        return -1;
     }
     int32_t ret = RewindInner(mSeconds, (PlayerSeekMode)mode);
     if (ret != 0) {
@@ -537,7 +538,7 @@ int32_t PlayerImpl::SetSurface(Surface *surface)
 bool PlayerImpl::IsSingleLooping()
 {
     std::lock_guard<std::mutex> valueLock(lock_);
-    CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
+    CHECK_FAILED_RETURN(released_, false, false, "have released or not create");
     bool isLoop = (player_ == nullptr) ? false : isSingleLoop_;
     return isLoop;
 }
@@ -741,26 +742,22 @@ int PlayerImpl::CreatePlayerParamCheck(PlayerControlParam &createParam)
 {
     if (createParam.u32PlayPosNotifyIntervalMs < MIN_NOTIFY_INTERVAL_MS
         && createParam.u32PlayPosNotifyIntervalMs > 0) {
-        MEDIA_ERR_LOG("notify interval small than min value %d",
-            MIN_NOTIFY_INTERVAL_MS);
+        MEDIA_ERR_LOG("notify interval small than min value %d", MIN_NOTIFY_INTERVAL_MS);
         return HI_ERR_PLAYERCONTROL_ILLEGAL_PARAM;
     }
     if ((createParam.u32VideoEsBufSize < AV_ESBUF_SIZE_MIN && createParam.u32VideoEsBufSize > 0)
         || createParam.u32VideoEsBufSize > VIDEO_ESBUF_SIZE_LIMIT) {
-        MEDIA_ERR_LOG("video esbuffer illegal %u",
-            createParam.u32VideoEsBufSize);
+        MEDIA_ERR_LOG("video esbuffer illegal %u", createParam.u32VideoEsBufSize);
         return HI_ERR_PLAYERCONTROL_ILLEGAL_PARAM;
     }
     if ((createParam.u32AudioEsBufSize < AV_ESBUF_SIZE_MIN && createParam.u32AudioEsBufSize > 0)
         || createParam.u32AudioEsBufSize > AUDIO_ESBUF_SIZE_LIMIT) {
-        MEDIA_ERR_LOG("audio esbuffer illegal %u",
-            createParam.u32VideoEsBufSize);
+        MEDIA_ERR_LOG("audio esbuffer illegal %u", createParam.u32VideoEsBufSize);
         return HI_ERR_PLAYERCONTROL_ILLEGAL_PARAM;
     }
     if ((createParam.u32VdecFrameBufCnt < VDEC_VBBUF_CONUT_MIN) &&
         (createParam.u32VdecFrameBufCnt != 0)) {
-        MEDIA_ERR_LOG("VDEC vb buffer count %u small than %d",
-            createParam.u32VdecFrameBufCnt, VDEC_VBBUF_CONUT_MIN);
+        MEDIA_ERR_LOG("VDEC vb buffer count %u small than %d", createParam.u32VdecFrameBufCnt, VDEC_VBBUF_CONUT_MIN);
         return HI_ERR_PLAYERCONTROL_ILLEGAL_PARAM;
     }
     return 0;
@@ -774,10 +771,11 @@ int PlayerImpl::GetPlayer()
         return 0;
     }
     if (memset_s(&playerParam, sizeof(PlayerControlParam), 0x00, sizeof(playerParam)) != EOK) {
+        MEDIA_INFO_LOG("memset_s playerParam failed");
         return -1;
     }
 
-    playerParam.u32PlayPosNotifyIntervalMs = 300;
+    playerParam.u32PlayPosNotifyIntervalMs = POS_NOTIFY_INTERVAL_MS;
     if (CreatePlayerParamCheck(playerParam) != 0) {
         MEDIA_ERR_LOG("CreatePlayerParamCheck failed");
         return -1;
@@ -814,7 +812,7 @@ void PlayerImpl::NotifyPlaybackComplete(PlayerImpl *curPlayer)
     }
     if (!isSingleLoop_) {
         curPlayer->currentState_ = PLAYER_PLAYBACK_COMPLETE;
-        MEDIA_INFO_LOG("OnPlayBackComplete, iscallbackNull:%d", (curPlayer->callback_ != nullptr));
+        MEDIA_INFO_LOG("OnPlayBackComplete, iscallbackNull:%d", (curPlayer->callback_ == nullptr));
         if (curPlayer != nullptr && curPlayer->callback_ != nullptr) {
             curPlayer->callback_->OnPlaybackComplete();
         }
@@ -854,7 +852,7 @@ int32_t PlayerImpl::SetUriSource(const Source &source)
 {
     MEDIA_INFO_LOG("process in");
     const std::string uri = source.GetSourceUri();
-    if (uri.empty()) {
+    if (uri.empty() || uri.c_str() == nullptr) {
         MEDIA_ERR_LOG("SetUriSource failed, uri source do not set uri parameter");
         return -1;
     }

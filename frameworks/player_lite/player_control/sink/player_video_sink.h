@@ -58,8 +58,8 @@ public:
 private:
     void ResetRendStartTime();
     int GetRenderFrame(OutputInfo &renderFrame, OutputInfo &frame);
-    void RelaseQueHeadFrame(void);
-    void RelaseQueAllFrame(void);
+    void ReleaseQueHeadFrame(void);
+    void ReleaseQueAllFrame(void);
     void RenderRptEvent(EventCbType event);
     int32_t WriteToVideoDevice(OutputInfo &renderFrame);
     void QueueRenderFrame(OutputInfo &frame, bool cacheQueue);

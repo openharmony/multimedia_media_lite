@@ -113,8 +113,7 @@ void RecorderClientMng::Dispatch(int32_t funcId, pid_t pid, IpcIo *req, IpcIo *r
         case REC_FUNC_GET_SURFACE: {
             int32_t sourceId = IpcIoPopInt32(req);
             std::shared_ptr<OHOS::Surface> surface = recorder->GetSurface(sourceId);
-            if (surface != nullptr)
-            {
+            if (surface != nullptr) {
                 dynamic_cast<OHOS::SurfaceImpl *>(surface.get())->WriteIoIpcIo(*reply);
             }
             break;
@@ -258,7 +257,8 @@ void RecorderClientMng::Dispatch(int32_t funcId, pid_t pid, IpcIo *req, IpcIo *r
     }
 }
 
-void RecorderCallbackClient::OnError(int32_t errorType, int32_t errorCode) {
+void RecorderCallbackClient::OnError(int32_t errorType, int32_t errorCode) 
+{
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
@@ -270,7 +270,8 @@ void RecorderCallbackClient::OnError(int32_t errorType, int32_t errorCode) {
     }
 }
 
-void RecorderCallbackClient::OnInfo(int32_t type, int32_t extra) {
+void RecorderCallbackClient::OnInfo(int32_t type, int32_t extra) 
+{
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);

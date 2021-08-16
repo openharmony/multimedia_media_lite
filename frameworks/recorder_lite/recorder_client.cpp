@@ -148,7 +148,6 @@ Recorder::RecorderImpl::~RecorderImpl()
 
 static int32_t SetSourceCallback(void *owner, int code, IpcIo *reply)
 {
-
     if (code != 0) {
         MEDIA_ERR_LOG("callback error, code = %d", code);
         return -1;
@@ -561,9 +560,6 @@ int32_t Recorder::RecorderImpl::SetFileSplitDuration(FileSplitType type, int64_t
     return para.ret;
 }
 
-int32_t Recorder::RecorderImpl::SetParameter(int32_t sourceId, const Format &format)
-{
-    return -1;
-}
+int32_t Recorder::RecorderImpl::SetParameter(int32_t sourceId, const Format &format) { return -1; }
 } /* namespace Media */
 } /* namespace OHOS */

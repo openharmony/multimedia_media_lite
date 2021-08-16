@@ -54,7 +54,7 @@ RecorderImpl::RecorderImpl()
     }
     recorderSink_ = new(std::nothrow) RecorderSink();
     if (recorderSink_ != nullptr) {
-        status_= INITIALIZED;
+        status_ = INITIALIZED;
     }
     MEDIA_INFO_LOG("ctor status_:%d", status_);
 }
@@ -90,13 +90,13 @@ int32_t RecorderImpl::ResetConfig()
         sourceManager_[i].audioSourcePaused = false;
         sourceManager_[i].audioTrackId = -1;
         sourceManager_[i].videoSourceConfig = {};
-        if (memset_s(&sourceManager_[i].videoSourceConfig , sizeof(RecorderVideoSourceConfig),
-                     0x00, sizeof(RecorderVideoSourceConfig)) != EOK) {
+        if (memset_s(&sourceManager_[i].videoSourceConfig, sizeof(RecorderVideoSourceConfig),
+                0x00, sizeof(RecorderVideoSourceConfig)) != EOK) {
             MEDIA_ERR_LOG("memset videoSourceConfig failed");
             return ERR_UNKNOWN;
         }
-        if (memset_s(&sourceManager_[i].audioSourceConfig , sizeof(RecorderAudioSourceConfig),
-                     0x00, sizeof(RecorderAudioSourceConfig)) != EOK) {
+        if (memset_s(&sourceManager_[i].audioSourceConfig, sizeof(RecorderAudioSourceConfig),
+                0x00, sizeof(RecorderAudioSourceConfig)) != EOK) {
             MEDIA_ERR_LOG("memset videoSourceConfig failed");
             return ERR_UNKNOWN;
         }
@@ -577,7 +577,7 @@ int32_t RecorderImpl::PrepareVideoSource()
 }
 
 int32_t RecorderImpl::GetVideoTrackSource(const RecorderVideoSourceConfig &videoSourceConfig,
-                                                    TrackSource &trackSource)
+                                          TrackSource &trackSource)
 {
     trackSource.trackSourceType = TRACK_SOURCE_TYPE_VIDEO;
     switch (videoSourceConfig.videoFormat) {
@@ -591,10 +591,11 @@ int32_t RecorderImpl::GetVideoTrackSource(const RecorderVideoSourceConfig &video
             MEDIA_ERR_LOG("unsupport videoFormat format: %d", videoSourceConfig.videoFormat);
             return ERR_INVALID_PARAM;
     }
-    if (videoSourceConfig.width <= 0 || videoSourceConfig.height <= 0 ||
-        videoSourceConfig.bitRate <= 0 || videoSourceConfig.frameRate <= 0) {
+    if (videoSourceConfig.width <= 0 || videoSourceConfig.height <= 0 || videoSourceConfig.bitRate <= 0 ||
+        videoSourceConfig.frameRate <= 0) {
         MEDIA_ERR_LOG("VideoTrackSource not prepared, width:%d, height:%d, bitRate:%d, frameRate:%d",
-        videoSourceConfig.width, videoSourceConfig.height, videoSourceConfig.bitRate, videoSourceConfig.frameRate);
+                      videoSourceConfig.width, videoSourceConfig.height, videoSourceConfig.bitRate,
+                      videoSourceConfig.frameRate);
         return ERR_INVALID_PARAM;
     }
     trackSource.trackSourceInfo.videoInfo.width = videoSourceConfig.width;
@@ -607,7 +608,7 @@ int32_t RecorderImpl::GetVideoTrackSource(const RecorderVideoSourceConfig &video
 }
 
 int32_t RecorderImpl::GetAudioTrackSource(const RecorderAudioSourceConfig &audioSourceConfig,
-                                                    TrackSource &trackSource)
+                                          TrackSource &trackSource)
 {
     trackSource.trackSourceType = TRACK_SOURCE_TYPE_AUDIO;
     switch (audioSourceConfig.audioFormat) {
@@ -638,7 +639,8 @@ int32_t RecorderImpl::GetAudioTrackSource(const RecorderAudioSourceConfig &audio
             MEDIA_ERR_LOG("unsupport sampleBitWidth: %d", audioSourceConfig.bitWidth);
             return ERR_INVALID_PARAM;
     }
-    trackSource.trackSourceInfo.audioInfo.samplesPerFrame = 1024;
+    int frame = 1024;
+    trackSource.trackSourceInfo.audioInfo.samplesPerFrame = frame;
     trackSource.trackSourceInfo.audioInfo.avgBytesPerSec = audioSourceConfig.bitRate;
     return SUCCESS;
 }
@@ -1118,4 +1120,3 @@ int32_t RecorderImpl::SetParameter(int32_t sourceId, const Format &format)
 }
 }  // namespace Media
 }  // namespace OHOS
-

@@ -909,7 +909,7 @@ static void InitOutputBuffer(OutputInfo &outInfo, CodecType type)
 
 void PlayerControl::RenderAudioFrame(void)
 {
-    if (audioDecoder_ == nullptr || sinkManager_== nullptr || hasRenderAudioEos_) {
+    if (audioDecoder_ == nullptr || sinkManager_ == nullptr || hasRenderAudioEos_) {
         return;
     }
 
@@ -954,7 +954,7 @@ void PlayerControl::ReleaseVDecoderOutputFrame(void)
 
 void PlayerControl::RenderVideoFrame(void)
 {
-    if (videoDecoder_ == nullptr || sinkManager_== nullptr || hasRenderVideoEos_) {
+    if (videoDecoder_ == nullptr || sinkManager_ == nullptr || hasRenderVideoEos_) {
         return;
     }
 

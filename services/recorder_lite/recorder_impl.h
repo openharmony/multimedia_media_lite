@@ -27,7 +27,7 @@ namespace OHOS {
 namespace Media {
 constexpr uint32_t RECORDER_SOURCE_MAX_CNT = 4;
 
-enum RecState { INITIALIZED = 0, PREPPARED, RECORDING, PAUSED, RESETED, STOPPED, RELEASED };
+enum RecState { INITIALIZED = 0, PREPARED, RECORDING, PAUSED, RESETED, STOPPED, RELEASED };
 
 struct SourceManager {
     RecorderVideoSource *videoSource;

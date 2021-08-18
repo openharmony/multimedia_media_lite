@@ -35,6 +35,7 @@ typedef struct {
 typedef struct {
     AvCodecMime mime;
     int32_t bufSize;
+    int32_t channelCnt; /* for pcm frame */
     void *priv;
 } AdecAttr;
 

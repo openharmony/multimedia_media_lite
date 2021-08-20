@@ -37,10 +37,28 @@ const uint32_t DEFAULT_AUD_BUFSIZE = 262144;
 const uint32_t GET_BUFFER_TIMEOUT_MS = 0u;
 const uint32_t RENDER_FULL_SLEEP_TIME_US = 5000u;
 const uint32_t RENDER_EOS_SLEEP_TIME_US = 3000000u;
-const uint32_t DECODER_MAX_WIDTH = 1920;
-const uint32_t DECODER_MAX_HEIGTH = 1080;
+const uint32_t DECODER_DEFAULT_WIDTH = 1920;
+const uint32_t DECODER_DEFAULT_HEIGHT = 1080;
 const uint32_t QUEUE_BUFFER_FULL_SLEEP_TIME_US = 5000u;
 const uint32_t NO_DATA_READ_SLEEP_TIME_US = 5000u;
+
+struct CodecFormatAndMimePair {
+    CodecFormat format;
+    AvCodecMime mime;
+};
+
+static CodecFormatAndMimePair g_avCodecFormatInfo[CODEC_BUT + 1] = {
+    {CODEC_H264, MEDIA_MIMETYPE_VIDEO_AVC},
+    {CODEC_H265, MEDIA_MIMETYPE_VIDEO_HEVC},
+    {CODEC_JPEG, MEDIA_MIMETYPE_IMAGE_JPEG},
+    {CODEC_AAC, MEDIA_MIMETYPE_AUDIO_AAC},
+    {CODEC_G711A, MEDIA_MIMETYPE_AUDIO_G711A},
+    {CODEC_G711U, MEDIA_MIMETYPE_AUDIO_G711U},
+    {CODEC_PCM, MEDIA_MIMETYPE_AUDIO_PCM},
+    {CODEC_MP3, MEDIA_MIMETYPE_AUDIO_MP3},
+    {CODEC_G726, MEDIA_MIMETYPE_AUDIO_G726},
+    {CODEC_BUT, MEDIA_MIMETYPE_INVALID},
+};
 
 namespace {
     /* playing position notify interval in ms */
@@ -88,22 +106,6 @@ do { \
     } while (0)
 
 const int32_t  SS2US = 1000000;
-const int32_t US2MS = 1000;
-
-static int64_t GetCurTimeUs()
-{
-    struct timeval ts;
-    ts.tv_sec = 0;
-    ts.tv_usec = 0;
-    gettimeofday(&ts, nullptr);
-    return (((int64_t)ts.tv_sec) * SS2US) + ((int64_t)ts.tv_usec);
-}
-
-static int64_t GetCurTimeMs()
-{
-    int64_t curTimeUs = GetCurTimeUs();
-    return (int64_t)(curTimeUs / US2MS);
-}
 
 static void CondTimeWait(pthread_cond_t &cond, pthread_mutex_t &mutex, uint32_t delayUs)
 {
@@ -125,6 +127,17 @@ static void CondTimeWait(pthread_cond_t &cond, pthread_mutex_t &mutex, uint32_t 
         outtime.tv_nsec = (ts.tv_usec + tmpUs) * 1000;
     }
     pthread_cond_timedwait(&cond, &mutex, &outtime);
+}
+
+static void GetCurVideoSolution(FormatFileInfo &info, uint32_t &width, uint32_t &height)
+{
+    for (int i = 0; i < HI_DEMUXER_RESOLUTION_CNT; i++) {
+        if (info.stSteamResolution[i].s32VideoStreamIndex == info.s32UsedVideoStreamIndex) {
+            width = info.stSteamResolution[i].u32Width;
+            height = info.stSteamResolution[i].u32Height;
+            break;
+        }
+    }
 }
 
 PlayerControl::PlayerControl() : stateMachine_(nullptr), observer_(nullptr), isInited_(false), isNeedPause_(false),
@@ -606,26 +619,15 @@ int32_t PlayerControl::SetDecoderAndStreamAttr(void)
 static AvCodecMime TransformCodecFormatToAvCodecMime(CodecFormat format)
 {
     AvCodecMime mime = MEDIA_MIMETYPE_INVALID;
-    switch (format) {
-        case CODEC_H264:
-            mime = MEDIA_MIMETYPE_VIDEO_AVC;
+    uint32_t size = sizeof(g_avCodecFormatInfo) / sizeof(CodecFormatAndMimePair);
+
+    for (uint32_t i = 0; i < size; i++) {
+        if (g_avCodecFormatInfo[i].format == format) {
+            mime = g_avCodecFormatInfo[i].mime;
             break;
-        case CODEC_H265:
-            mime = MEDIA_MIMETYPE_VIDEO_HEVC;
-            break;
-        case CODEC_JPEG:
-            mime = MEDIA_MIMETYPE_IMAGE_JPEG;
-            break;
-        case CODEC_AAC:
-            mime = MEDIA_MIMETYPE_AUDIO_AAC;
-            break;
-        case CODEC_MP3:
-            mime = MEDIA_MIMETYPE_AUDIO_MP3;
-            break;
-        default:
-            MEDIA_ERR_LOG("not support codec:%d", format);
-            break;
+        }
     }
+
     return mime;
 }
 
@@ -667,6 +669,7 @@ int32_t PlayerControl::DecoderStart(void)
         attr.adecAttr.mime = mime;
         attr.adecAttr.priv = nullptr;
         attr.adecAttr.bufSize = 1024;
+        attr.adecAttr.channelCnt = (mime == MEDIA_MIMETYPE_AUDIO_PCM) ? fmtFileInfo_.u32AudioChannelCnt : 0;
         const std::string audioName = GetAudioNameByAvCodecMime(mime);
         int32_t ret = audioDecoder_->CreateHandle(audioName, attr);
         CHECK_FAILED_RETURN(ret, 0, -1, "create audio decoder failed");
@@ -676,19 +679,24 @@ int32_t PlayerControl::DecoderStart(void)
     }
     if (fmtFileInfo_.s32UsedVideoStreamIndex != -1) {
         AvAttribute attr;
+        uint32_t width = DECODER_DEFAULT_WIDTH;
+        uint32_t height = DECODER_DEFAULT_HEIGHT;
+
         AvCodecMime mime = TransformCodecFormatToAvCodecMime(fmtFileInfo_.enVideoType);
         if (mime == MEDIA_MIMETYPE_INVALID) {
             MEDIA_ERR_LOG("DecoderStart not support codec:%d", fmtFileInfo_.enVideoType);
             return -1;
         }
+        GetCurVideoSolution(fmtFileInfo_, width, height);
+
         videoDecoder_ = std::make_shared<Decoder>();
         CHECK_NULL_RETURN(videoDecoder_, -1, "new decoder failed");
         attr.type = VIDEO_DECODER;
         attr.vdecAttr.mime = mime;
         attr.vdecAttr.priv = nullptr;
         attr.vdecAttr.bufSize = 0;
-        attr.vdecAttr.maxWidth = DECODER_MAX_WIDTH;
-        attr.vdecAttr.maxHeight = DECODER_MAX_HEIGTH;
+        attr.vdecAttr.maxWidth = width;
+        attr.vdecAttr.maxHeight = height;
         const std::string videoName = "codec.avc.soft.decoder";
         int32_t ret = videoDecoder_->CreateHandle(videoName, attr);
         CHECK_FAILED_RETURN(ret, 0, -1, "create video decoder failed");

@@ -59,9 +59,9 @@ static bool ConvertAdecAttributToParams(AvAttribute &attr, Param *param,
     param[index].val = (void *)&(attr.type);
     param[index].size = sizeof(attr.type);
     index++;
-    if (attr.adecAttr.priv) {
+    if (attr.adecAttr.mime == MEDIA_MIMETYPE_AUDIO_PCM) {
         param[index].key = KEY_CHANNEL_COUNT;
-        param[index].val = attr.adecAttr.priv;
+        param[index].val = (void *)&attr.adecAttr.channelCnt;
         param[index].size = sizeof(uint32_t);
         index++;
     }

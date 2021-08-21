@@ -32,6 +32,10 @@ class PlayerSource;
 class SinkManager;
 class Decoder;
 
+struct PalayControlEventItem{
+    EventCbType event;
+};
+
 class PlayerControl : public PlayerControlHandle {
 public:
     friend class PlayerControlState;
@@ -72,7 +76,7 @@ public:
 
     int32_t TPlay(TplayAttr tplayAttr);
 
-    int32_t OnPlayControlEvent(const void* priv, const EventCbType event);
+    int32_t OnPlayControlEvent(void *priv, const EventCbType event);
 
     int32_t OnSwitchTPlay2Play(void);
 
@@ -158,6 +162,8 @@ private:
     void PushPacketToVDecoder(void);
     int32_t DoSeekIfNeed(void);
     void FlushDecoder(void);
+    void EventProcess(EventCbType event);
+    void EventQueueProcess(void);
 
 private:
     PlayerControlStateMachine *stateMachine_;
@@ -207,6 +213,8 @@ private:
     pthread_cond_t schCond_;
     pthread_t schProcess_;
     int64_t seekToTimeMs_;
+    bool firstAudioFrameAfterSeek_;
+    bool firstVideoFrameAfterSeek_;
     SourceType sourceType_;
     int32_t fd_;
     std::string filePath_;
@@ -216,6 +224,7 @@ private:
     std::shared_ptr<Decoder> audioDecoder_;
     std::shared_ptr<Decoder> videoDecoder_;
     Surface *surface_;
+    std::vector<PalayControlEventItem> eventQueue;
 
 private:
     PlayerControl(const PlayerControl &);

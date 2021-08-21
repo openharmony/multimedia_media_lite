@@ -37,10 +37,12 @@ const uint32_t DEFAULT_AUD_BUFSIZE = 262144;
 const uint32_t GET_BUFFER_TIMEOUT_MS = 0u;
 const uint32_t RENDER_FULL_SLEEP_TIME_US = 5000u;
 const uint32_t RENDER_EOS_SLEEP_TIME_US = 3000000u;
+const uint32_t PAUSE_WAIT_TIME_US = 10000u;
 const uint32_t DECODER_DEFAULT_WIDTH = 1920;
 const uint32_t DECODER_DEFAULT_HEIGHT = 1080;
 const uint32_t QUEUE_BUFFER_FULL_SLEEP_TIME_US = 5000u;
 const uint32_t NO_DATA_READ_SLEEP_TIME_US = 5000u;
+const uint32_t MAX_EVENT_MESSAGE_NUM = 128;
 
 struct CodecFormatAndMimePair {
     CodecFormat format;
@@ -146,10 +148,11 @@ PlayerControl::PlayerControl() : stateMachine_(nullptr), observer_(nullptr), isI
     tplayMode_(PLAYER_TPLAY_ONLY_I_FRAME), lastReadPktStrmIdx_(-1), lastReadPktPts_(0), lastSendPktPts_(0),
     curSeekOffset_(0), isVideoStarted_(false), isAudioStarted_(false), isVidContinueLost_(false),
     strmReadEnd_(false), isPlayErr_(false), isTplayLastFrame_(false), isTplayStartRead_(false),
-    lastSendVdecPts_(AV_INVALID_PTS), lastSendAdecPts_(AV_INVALID_PTS), currentPosition_(-1), paused_(false),
+    lastSendVdecPts_(AV_INVALID_PTS), lastSendAdecPts_(AV_INVALID_PTS), currentPosition_(0), paused_(false),
     schThreadExit_(false), loop_(false), hasRenderAudioEos_(false), hasRenderVideoEos_(false), renderSleepTime_(0),
-    leftVolume_(-1.0f), rightVolume_(-1.0f), schProcess_(-1), seekToTimeMs_(-1), sourceType_(SOURCE_TYPE_BUT),
-    fd_(-1), playerSource_(nullptr), sinkManager_(nullptr), audioDecoder_(nullptr), videoDecoder_(nullptr)
+    leftVolume_(-1.0f), rightVolume_(-1.0f), schProcess_(0), seekToTimeMs_(-1), firstAudioFrameAfterSeek_(false),
+    firstVideoFrameAfterSeek_(false), sourceType_(SOURCE_TYPE_BUT), fd_(-1), playerSource_(nullptr),
+    sinkManager_(nullptr), audioDecoder_(nullptr), videoDecoder_(nullptr)
 {
     eventCallback_.player = nullptr;
     eventCallback_.callbackFun = nullptr;
@@ -180,6 +183,7 @@ PlayerControl::PlayerControl() : stateMachine_(nullptr), observer_(nullptr), isI
     stream_.GetReadableSize = nullptr;
     stream_.handle = nullptr;
     surface_ = nullptr;
+    eventQueue.clear();
 }
 
 PlayerControl::~PlayerControl()
@@ -193,6 +197,7 @@ PlayerControl::~PlayerControl()
         delete observer_;
         observer_ = nullptr;
     }
+    eventQueue.clear();
 }
 
 PlayerStatus PlayerControl::GetState(void)
@@ -451,7 +456,7 @@ void PlayerControl::OnVideoEndOfStream()
     isPlayEnd_ = IsPlayEos() ? true : isPlayEnd_;
 }
 
-int32_t PlayerControl::OnPlayControlEvent(const void *priv, const EventCbType event)
+void PlayerControl::EventProcess(EventCbType event)
 {
     PlayerControlError playerError;
     MEDIA_DEBUG_LOG( "handleEvent %d", event);
@@ -464,7 +469,7 @@ int32_t PlayerControl::OnPlayControlEvent(const void *priv, const EventCbType ev
             MEDIA_INFO_LOG( "video sos recv");
             break;
         case EVNET_AUDIO_PLAY_EOS:
-            CHECK_NULL_RETURN(stateMachine_, HI_ERR_PLAYERCONTROL_NULL_PTR, "stateMachine_ nullptr");
+            CHECK_NULL_RETURN_VOID(stateMachine_, "stateMachine_ nullptr");
             if (stateMachine_->GetCurState() != PLAY_STATUS_TPLAY) {
                 isAudPlayEos_ = true;
                 isPlayEnd_ = IsPlayEos() ? true : isPlayEnd_;
@@ -496,6 +501,31 @@ int32_t PlayerControl::OnPlayControlEvent(const void *priv, const EventCbType ev
         default:
             break;
     }
+}
+
+void PlayerControl::EventQueueProcess(void)
+{
+    size_t queSize;
+    PalayControlEventItem *item = nullptr;
+
+    queSize = eventQueue.size();
+    if (queSize > MAX_EVENT_MESSAGE_NUM) {
+        MEDIA_WARNING_LOG( "mesaage except, num:%u", queSize);
+    }
+    for (size_t i = 0; i < queSize && i < MAX_EVENT_MESSAGE_NUM; i++) {
+        item = &eventQueue[i];
+        EventProcess(item->event);
+    }
+    eventQueue.clear();
+}
+
+int32_t PlayerControl::OnPlayControlEvent(void *priv, const EventCbType event)
+{
+    PalayControlEventItem item;
+    PlayerControl *player = reinterpret_cast<PlayerControl *>(priv);
+
+    item.event = event;
+    player->eventQueue.push_back(item);
     return HI_SUCCESS;
 }
 
@@ -1020,10 +1050,12 @@ void* PlayerControl::DataSchProcess(void *priv)
             pthread_mutex_unlock(&play->schMutex_);
             break;
         }
-        if (play->paused_ == true) {
-            pthread_cond_wait(&play->schCond_, &play->schMutex_);
-        }
         play->DoSeekIfNeed();
+        if (play->paused_) {
+            CondTimeWait(play->schCond_, play->schMutex_, PAUSE_WAIT_TIME_US);
+            pthread_mutex_unlock(&play->schMutex_);
+            continue;
+        }
         play->renderSleepTime_ = 0;
         play->ReadPacketAndPushToDecoder();
 
@@ -1031,6 +1063,7 @@ void* PlayerControl::DataSchProcess(void *priv)
         play->RenderAudioFrame();
         play->RenderVideoFrame();
         pthread_mutex_unlock(&play->schMutex_);
+        play->EventQueueProcess();
         play->ReortRenderPosition();
         if (play->isPlayEnd_) {
             play->DealPlayEnd();
@@ -1097,11 +1130,7 @@ int32_t PlayerControl::DoPlay()
         return HI_ERR_PLAYERCONTROL_ILLEGAL_STATE_ACTION;
     }
 
-    strmReadEnd_ = false;
-    isVidPlayEos_ = false;
-    isAudPlayEos_ = false;
     MEDIA_DEBUG_LOG("Process out");
-
     return ret;
 }
 
@@ -1143,6 +1172,11 @@ int32_t PlayerControl::ReadPacket()
     return ret;
 }
 
+inline static bool IsValidPacket(FormatFrame &packet)
+{
+    return (packet.data != nullptr && packet.len != 0) ? true : false;
+}
+
 void PlayerControl::PushPacketToADecoder(void)
 {
     InputInfo inputData;
@@ -1171,6 +1205,10 @@ void PlayerControl::PushPacketToADecoder(void)
     if (ret == CODEC_ERR_STREAM_BUF_FULL) {
         renderSleepTime_ = QUEUE_BUFFER_FULL_SLEEP_TIME_US;
         return;
+    }
+    if (firstAudioFrameAfterSeek_ && IsValidPacket(formatPacket_)) {
+        firstAudioFrameAfterSeek_ = false;
+        MEDIA_INFO_LOG("push firstAudioFrameAfterSeek_ success, pts:%lld", inputData.pts);
     }
     if (formatPacket_.data != nullptr || formatPacket_.len != 0) {
         lastSendAdecPts_ = formatPacket_.timestampUs;
@@ -1206,6 +1244,10 @@ void PlayerControl::PushPacketToVDecoder(void)
     if (ret == CODEC_ERR_STREAM_BUF_FULL) {
         renderSleepTime_ = QUEUE_BUFFER_FULL_SLEEP_TIME_US;
         return;
+    }
+    if (firstVideoFrameAfterSeek_ && IsValidPacket(formatPacket_)) {
+        firstVideoFrameAfterSeek_ = false;
+        MEDIA_INFO_LOG("push firstVideoFrameAfterSeek_ success, pts:%lld", inputData.pts);
     }
     if (formatPacket_.data != nullptr && formatPacket_.len != 0) {
         lastSendVdecPts_ = formatPacket_.timestampUs;
@@ -1317,7 +1359,7 @@ int32_t PlayerControl::DoStop()
     }
     msgInfo.what = PLAYERCONTROL_MSG_SEEK;
     (void)stateMachine_->RemoveEvent(msgInfo);
-    if (schProcess_ != -1) {
+    if (schProcess_ != 0) {
         pthread_mutex_lock(&schMutex_);
         schThreadExit_ = true;
         pthread_cond_signal(&schCond_);
@@ -1386,6 +1428,8 @@ int32_t PlayerControl::DoSeekIfNeed(void)
     hasRenderAudioEos_ = false;
     isPlayEnd_ = false;
     seekToTimeMs_ = -1;
+    firstAudioFrameAfterSeek_ = true;
+    firstVideoFrameAfterSeek_ = true;
     MEDIA_INFO_LOG("seek end");
     return HI_SUCCESS;
 }
@@ -1816,6 +1860,8 @@ int32_t PlayerControl::AyncSeek(int64_t seekTime)
             seekTimeInMs = lastRendPos_;
         }
     }
+    currentPosition_ = seekTimeInMs;
+    EventCallback(PLAYERCONTROL_EVENT_PROGRESS, &currentPosition_);
     EventCallback(PLAYERCONTROL_EVENT_SEEK_END, reinterpret_cast<void *>(&seekTimeInMs));
     return HI_SUCCESS;
 }

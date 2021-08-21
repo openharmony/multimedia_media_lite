@@ -83,7 +83,8 @@ PlayerImpl::PlayerImpl()
       released_(false),
       isStreamSource_(false),
       bufferSource_(nullptr),
-      streamCallback_(nullptr)
+      streamCallback_(nullptr),
+      extraRewind_(false)
 {
     (void)memset_s(&formatFileInfo_, sizeof(formatFileInfo_), 0, sizeof(FormatFileInfo));
     formatFileInfo_.s32UsedVideoStreamIndex = -1;
@@ -239,7 +240,7 @@ void PlayerImpl::PlayerControlEventCb(void* pPlayer, PlayerControlEvent enEvent,
                 return;
             }
             MEDIA_INFO_LOG("seek action end, time is %lld",  *reinterpret_cast<const int64_t *>(pData));
-            curPlayer->NotifySeekComplete(curPlayer);
+            curPlayer->NotifySeekComplete(curPlayer, *reinterpret_cast<const int64_t *>(pData));
             break;
         default:
             break;
@@ -437,6 +438,8 @@ int32_t PlayerImpl::RewindInner(int64_t mSeconds, PlayerSeekMode mode)
     }
     currentRewindMode_ = mode;
     if (rewindPosition_ >= DEFAULT_REWIND_TIME) {
+        rewindPosition_ = mSeconds;
+        MEDIA_WARNING_LOG("is deal last rewind time:%lld", mSeconds);
         return 0;
     }
 
@@ -485,11 +488,14 @@ int32_t PlayerImpl::Rewind(int64_t mSeconds, int32_t mode)
         MEDIA_ERR_LOG("Failed, streamsource not support Rewind");
         return -1;
     }
+
+    std::lock_guard<std::mutex> rewindLock(rewindLock_);
     int32_t ret = RewindInner(mSeconds, (PlayerSeekMode)mode);
     if (ret != 0) {
         MEDIA_ERR_LOG("ReWind failed, ret is %d", ret);
     } else {
         currentPosition_ = mSeconds;
+        extraRewind_ = true;
     }
     MEDIA_INFO_LOG("process out");
     return ret;
@@ -699,14 +705,15 @@ void PlayerImpl::ResetInner(void)
     isSingleLoop_ = false;
     speed_ = 1.0;
     currentPosition_ = 0;
+    extraRewind_ = false;
     playerControlState_ = PLAY_STATUS_IDLE;
     isStreamSource_ = false;
-    (void)memset_s(&formatFileInfo_, sizeof (FormatFileInfo), 0, sizeof(FormatFileInfo));
+    (void)memset_s(&formatFileInfo_, sizeof(FormatFileInfo), 0, sizeof(FormatFileInfo));
     formatFileInfo_.s32UsedVideoStreamIndex = -1;
     formatFileInfo_.s32UsedAudioStreamIndex = -1;
     formatFileInfo_.s64Duration = -1;
-    (void)memset_s(&mediaAttr_, sizeof (PlayerControlStreamAttr), 0, sizeof(PlayerControlStreamAttr));
-    (void)memset_s(&buffer_, sizeof (QueBuffer), 0, sizeof(QueBuffer));
+    (void)memset_s(&mediaAttr_, sizeof(PlayerControlStreamAttr), 0, sizeof(PlayerControlStreamAttr));
+    (void)memset_s(&buffer_, sizeof(QueBuffer), 0, sizeof(QueBuffer));
     buffer_.idx = -1;
 }
 
@@ -807,10 +814,10 @@ void PlayerImpl::SetPlayerCallback(const std::shared_ptr<PlayerCallback> &cb)
 
 void PlayerImpl::NotifyPlaybackComplete(PlayerImpl *curPlayer)
 {
-    if (curPlayer == nullptr) {
-        return;
-    }
-    if (!isSingleLoop_) {
+    if (!isSingleLoop_ || speed_ != 1.0f) {
+        if (curPlayer->formatFileInfo_.s64Duration == -1) {
+            curPlayer->formatFileInfo_.s64Duration = curPlayer->currentPosition_;
+        }
         curPlayer->currentState_ = PLAYER_PLAYBACK_COMPLETE;
         MEDIA_INFO_LOG("OnPlayBackComplete, iscallbackNull:%d", (curPlayer->callback_ == nullptr));
         if (curPlayer != nullptr && curPlayer->callback_ != nullptr) {
@@ -818,23 +825,28 @@ void PlayerImpl::NotifyPlaybackComplete(PlayerImpl *curPlayer)
         }
         return;
     }
-    curPlayer->Rewind(0, PLAYER_SEEK_PREVIOUS_SYNC);
+    std::lock_guard<std::mutex> valueLock(curPlayer->rewindLock_);
+    (void)curPlayer->RewindInner(0, PLAYER_SEEK_PREVIOUS_SYNC);
+    curPlayer->currentPosition_ = 0;
+    curPlayer->extraRewind_ = false;
 }
 
-void PlayerImpl::NotifySeekComplete(PlayerImpl *curPlayer)
+void PlayerImpl::NotifySeekComplete(PlayerImpl *curPlayer, int64_t seekToMs)
 {
-    if (curPlayer == nullptr) {
+    std::lock_guard<std::mutex> valueLock(curPlayer->rewindLock_);
+
+    if (curPlayer->rewindPosition_ != -1 && curPlayer->rewindPosition_ != seekToMs) {
+        int64_t seekTime = curPlayer->rewindPosition_;
+        curPlayer->rewindMode_ = PLAYER_SEEK_PREVIOUS_SYNC;
+        curPlayer->rewindPosition_ = -1;
+        curPlayer->RewindInner(seekTime, curPlayer->currentRewindMode_);
         return;
     }
-    if (curPlayer->rewindMode_ != curPlayer->currentRewindMode_) {
-        curPlayer->rewindPosition_ = -1;
-        curPlayer->rewindMode_ = PLAYER_SEEK_PREVIOUS_SYNC;
-        curPlayer->RewindInner(curPlayer->currentPosition_, curPlayer->currentRewindMode_);
-    } else {
-        curPlayer->rewindPosition_ = -1;
-        curPlayer->currentRewindMode_ = curPlayer->rewindMode_ = PLAYER_SEEK_PREVIOUS_SYNC;
-    }
-    if (curPlayer->callback_ != nullptr) {
+
+    curPlayer->currentRewindMode_ = curPlayer->rewindMode_ = PLAYER_SEEK_PREVIOUS_SYNC;
+    curPlayer->rewindPosition_ = -1;
+    if (curPlayer->callback_ != nullptr && extraRewind_) {
+        extraRewind_ = false;
         curPlayer->callback_->OnRewindToComplete();
     }
 }
@@ -889,7 +901,7 @@ AdapterStreamCallback::~AdapterStreamCallback(void)
     MEDIA_INFO_LOG("process out");
 }
 
-void* AdapterStreamCallback::IdleBufferProcess(void* arg)
+void *AdapterStreamCallback::IdleBufferProcess(void *arg)
 {
     int ret;
     QueBuffer buffer;
@@ -966,7 +978,7 @@ void AdapterStreamCallback::DeInit(void)
     pthread_mutex_destroy(&mutex_);
 }
 
-uint8_t* AdapterStreamCallback::GetBuffer(size_t index)
+uint8_t *AdapterStreamCallback::GetBuffer(size_t index)
 {
     BufferInfo info;
     if (bufferSource_ == nullptr) {

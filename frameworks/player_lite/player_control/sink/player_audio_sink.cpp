@@ -410,6 +410,7 @@ int32_t AudioSink::Reset(void)
     }
 
     ResetRendStartTime();
+    receivedEos_ = false;
     renderDelay_ = 0;
     return SINK_SUCCESS;
 }

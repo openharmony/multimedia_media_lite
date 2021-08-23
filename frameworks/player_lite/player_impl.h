@@ -94,7 +94,7 @@ public:
     int32_t Init(void);
     int32_t DeInit(void);
 private:
-    void NotifySeekComplete(PlayerImpl *curPlayer);
+    void NotifySeekComplete(PlayerImpl *curPlayer, int64_t seekToMs);
     void NotifyPlaybackComplete(PlayerImpl *curPlayer);
     int32_t SetUriSource(const Source &source);
     int SetStreamSource(const Source &source);
@@ -124,6 +124,7 @@ private:
     PlayerSeekMode currentRewindMode_;
     int audioStreamType_;
     std::mutex lock_;
+    std::mutex rewindLock_;
     std::shared_ptr<PlayerCallback> callback_;
     bool inited_;
     bool released_;
@@ -131,6 +132,7 @@ private:
     QueBuffer buffer_;
     std::shared_ptr<BufferSource> bufferSource_;
     std::shared_ptr<AdapterStreamCallback> streamCallback_;
+    bool extraRewind_;
 };
 }  // namespace Media
 }  // namespace OHOS

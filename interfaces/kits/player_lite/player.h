@@ -361,6 +361,16 @@ public:
      */
     void SetPlayerCallback(const std::shared_ptr<PlayerCallback> &cb);
 
+    /**
+     * @brief Obtains the player state.
+     *
+     * @param state Indicates the player state. For details, see {@link PlayerStates}.
+     * @return Returns <b>0</b> if the player state is obtained; returns <b>-1</b> otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    int32_t GetPlayerState(int32_t &state) const;
+
 private:
     class PlayerClient;
     PlayerClient* player_;

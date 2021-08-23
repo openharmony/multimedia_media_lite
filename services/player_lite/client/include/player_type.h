@@ -34,6 +34,7 @@ typedef enum {
     PLAYER_SERVER_RESET,
     PLAYER_SERVER_RELEASE,
     PLAYER_SERVER_SET_PLAYER_CALLBACK,
+    PLAYER_SERVER_GET_STATE,
 } PlayerServerCall;
 
 typedef enum {

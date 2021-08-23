@@ -95,6 +95,9 @@ void PlayerServer::PlayerServerRequestHandle(int funcId, void *origin, IpcIo *re
         case PLAYER_SERVER_SET_PLAYER_CALLBACK:
             PlayerServer::GetInstance()->SetPlayerCallback(req, reply);
             break;
+        case PLAYER_SERVER_GET_STATE:
+            PlayerServer::GetInstance()->GetPlayerState(req, reply);
+            break;
         default:
             MEDIA_ERR_LOG("code not support: %d", funcId);
             break;
@@ -557,6 +560,19 @@ void PlayerServer::SetPlayerCallback(IpcIo *req, IpcIo *reply)
             return;
         }
     }
+}
+
+void PlayerServer::GetPlayerState(IpcIo *req, IpcIo *reply)
+{
+    MEDIA_INFO_LOG("process in");
+    int32_t state = 0;
+    if (player_ != nullptr) {
+        IpcIoPushInt32(reply, player_->GetPlayerState(state));
+        IpcIoPushInt32(reply, state);
+        return;
+    }
+    IpcIoPushInt32(reply, -1);
+    IpcIoPushInt32(reply, state);
 }
 
 void PalyerCallbackImpl::OnPlaybackComplete()

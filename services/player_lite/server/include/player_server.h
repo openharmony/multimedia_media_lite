@@ -70,6 +70,8 @@ private:
     void Reset(IpcIo *req, IpcIo *reply);
     void Release(IpcIo *req, IpcIo *reply);
     void SetPlayerCallback(IpcIo *req, IpcIo *reply);
+    void GetPlayerState(IpcIo *req, IpcIo *reply);
+
 };
 }
 }

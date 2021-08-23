@@ -183,5 +183,12 @@ int32_t Player::EnableSingleLooping(bool loop)
     CHK_NULL_RETURN(player_);
     return player_->SetLoop(loop);
 }
+
+int32_t Player::GetPlayerState(int32_t &state) const
+{
+    MEDIA_INFO_LOG("process in");
+    CHK_NULL_RETURN(player_);
+    return player_->GetPlayerState(state);
+}
 }  // namespace Media
 }  // namespace OHOS

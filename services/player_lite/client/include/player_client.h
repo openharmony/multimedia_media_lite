@@ -65,6 +65,7 @@ public:
     int32_t Reset();
     int32_t Release();
     void SetPlayerCallback(const std::shared_ptr<PlayerCallback> &cb);
+    int32_t GetPlayerState(int32_t &state) const;
 
 private:
     PlayerClient() : proxy_(nullptr), sid_(nullptr) {}

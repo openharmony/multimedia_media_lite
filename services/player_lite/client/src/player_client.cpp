@@ -178,6 +178,13 @@ int Player::PlayerClient::Callback(void* owner, int code, IpcIo *reply)
         case PLAYER_SERVER_SET_PLAYER_CALLBACK: {
             break;
         }
+        case PLAYER_SERVER_GET_STATE: {
+            int32_t* ret = static_cast<int32_t*>(para->ret);
+            *ret = IpcIoPopInt32(reply);
+            int32_t* data = static_cast<int32_t*>(para->data);
+            *data = IpcIoPopInt32(reply);
+            break;
+        }
         default:
             break;
     }
@@ -574,6 +581,23 @@ void Player::PlayerClient::SetPlayerCallback(const std::shared_ptr<PlayerCallbac
     if (ans != 0) {
         MEDIA_ERR_LOG("SetPlayerCallback : Invoke failed, ret=%d\n", ans);
     }
+}
+
+int32_t Player::PlayerClient::GetPlayerState(int32_t &state) const
+{
+    IpcIo io;
+    uint8_t tmpData[DEFAULT_IPC_SIZE];
+    IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
+    int32_t ans = -1;
+    CallBackPara para = {};
+    para.funcId = PLAYER_SERVER_GET_STATE;
+    para.ret = &ans;
+    para.data = &state;
+    uint32_t ret = proxy_->Invoke(proxy_, PLAYER_SERVER_GET_STATE, &io, &para, Callback);
+    if (ret != 0) {
+        MEDIA_ERR_LOG("GetPlayerState failed, ret=%d\n", ret);
+    }
+    return ans;
 }
 }
 }

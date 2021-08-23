@@ -371,6 +371,21 @@ public:
      */
     int32_t GetPlayerState(int32_t &state) const;
 
+    /**
+     * Sets the playback speed.
+     *
+     * @param speed Indicates the playback speed to set, which support {-128/-64/-32/-16/-8/-4/-2/1/2/4/8/16/32/64/128}
+     * @return Returns {@code 0} if the playback speed is set; returns {@code -1} otherwise.
+     */
+    int32_t SetPlaybackSpeed(float speed);
+
+    /**
+     * Obtains the playback speed.
+     *
+     * @param speed Indicates the playback speed.
+     * @return Returns {@code 0} if the playback speed is set; returns {@code -1} otherwise.
+     */
+    int32_t GetPlaybackSpeed(float &speed);
 private:
     class PlayerClient;
     PlayerClient* player_;

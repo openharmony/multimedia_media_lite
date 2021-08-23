@@ -84,6 +84,8 @@ public:
     int32_t GetDuration(int64_t &duration);
     int32_t GetVideoWidth(int32_t &videoWidth);
     int32_t GetVideoHeight(int32_t &videoHeight);
+    int32_t SetPlaybackSpeed(float speed);
+    int32_t GetPlaybackSpeed(float &speed);
     int32_t SetAudioStreamType(int32_t type);
     void GetAudioStreamType(int32_t &type);
     int32_t Reset(void);
@@ -108,6 +110,7 @@ private:
     int CreatePlayerParamCheck(PlayerControlParam &createParam);
     void GetDurationInner(int64_t &durationMs);
     void ResetInner(void);
+    int32_t SetMediaStream(void);
 
     std::shared_ptr<PlayerControl> player_;
     float speed_;

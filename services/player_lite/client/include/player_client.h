@@ -66,6 +66,8 @@ public:
     int32_t Release();
     void SetPlayerCallback(const std::shared_ptr<PlayerCallback> &cb);
     int32_t GetPlayerState(int32_t &state) const;
+    int32_t SetPlaybackSpeed(float speed);
+    int32_t GetPlaybackSpeed(float &speed);
 
 private:
     PlayerClient() : proxy_(nullptr), sid_(nullptr) {}

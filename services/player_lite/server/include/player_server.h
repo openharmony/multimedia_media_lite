@@ -71,7 +71,8 @@ private:
     void Release(IpcIo *req, IpcIo *reply);
     void SetPlayerCallback(IpcIo *req, IpcIo *reply);
     void GetPlayerState(IpcIo *req, IpcIo *reply);
-
+    void SetPlaybackSpeed(IpcIo *req, IpcIo *reply);
+    void GetPlaybackSpeed(IpcIo *req, IpcIo *reply);
 };
 }
 }

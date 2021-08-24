@@ -235,6 +235,7 @@ int32_t PlayerSync::SetSpeed(float speed, TplayDirect  tplayDirect)
     }
     pthread_mutex_lock(&vidSyncLock_);
     speed_ = speed;
+    isInTrickPlayMode_ = (speed_ != 1.0) ? true : false;
     tplayDirect_ = tplayDirect;
     pthread_mutex_unlock(&vidSyncLock_);
     return HI_SUCCESS;
@@ -249,6 +250,7 @@ int32_t PlayerSync::Resume()
     }
     pthread_mutex_lock(&vidSyncLock_);
     isInTrickPlayMode_ = false;
+    speed_ = 1.0;
     pthread_mutex_unlock(&vidSyncLock_);
     return HI_SUCCESS;
 }

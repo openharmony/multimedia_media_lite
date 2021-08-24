@@ -554,16 +554,33 @@ int32_t PlayerControl::TPlayResume(void)
 int32_t PlayerControl::OnSwitchTPlay2Play()
 {
     int32_t ret;
+    CHECK_NULL_RETURN(playerSource_, HI_FAILURE, "playerSource_ nullptr");
 
+    pthread_mutex_lock(&schMutex_);
     if (tplayMode_ != PLAYER_TPLAY_FULL_PLAY) {
         ret = TPlayResetBuffer();
-        CHECK_FAILED_RETURN(ret,HI_SUCCESS,ret,"TPlayResetBuffer failed");
-        CHECK_NULL_RETURN(playerSource_, HI_FAILURE, "playerSource_ nullptr");
+        if (ret != HI_SUCCESS) {
+            MEDIA_ERR_LOG("TPlayResetBuffer failed", ret);
+            pthread_mutex_unlock(&schMutex_);
+            return ret;
+        }
         ret = playerSource_->Seek(fmtFileInfo_.s32UsedVideoStreamIndex, lastReadPktPts_, FORMAT_SEEK_MODE_FORWARD_KEY);
-        CHECK_FAILED_RETURN(ret,HI_SUCCESS,ret,"playerSource_ seek failed");
+        if (ret != HI_SUCCESS) {
+            MEDIA_ERR_LOG("playerSource_ seek failed", ret);
+            pthread_mutex_unlock(&schMutex_);
+            return ret;
+        }
         strmReadEnd_ = false;
+        isVidPlayEos_ = false;
+        isAudPlayEos_ = false;
+        hasRenderVideoEos_ = false;
+        hasRenderAudioEos_ = false;
     }
+    firstAudioFrameAfterSeek_ = true;
+    firstVideoFrameAfterSeek_ = true;
+
     ret = TPlayResume();
+    pthread_mutex_unlock(&schMutex_);
     CHECK_FAILED_RETURN(ret,HI_SUCCESS,ret,"TPlayResume failed");
     return HI_SUCCESS;
 }
@@ -1534,11 +1551,18 @@ int32_t PlayerControl::DoTPlay(TplayAttr &trickPlayAttr)
         MEDIA_ERR_LOG("copy tplayAttr_ fail");
         return HI_FAILURE;
     }
+    pthread_mutex_lock(&schMutex_);
     ret = TPlayResetBuffer();
-    CHECK_FAILED_RETURN(ret, HI_SUCCESS, ret, "TPlayResetBuffer failed");
+    if (ret != HI_SUCCESS) {
+        MEDIA_ERR_LOG("TPlayResetBuffer failed", ret);
+        pthread_mutex_unlock(&schMutex_);
+        return ret;
+    }
     isVidContinueLost_ = false;
     ret = sinkManager_->SetSpeed(tplayAttr_.speed, tplayAttr_.direction);
-    CHECK_FAILED_RETURN(ret, HI_SUCCESS, ret, "SetSpeed failed");
+    if (ret != HI_SUCCESS) {
+        MEDIA_ERR_LOG("TPlayResetBuffer failed", ret);
+    }
     curSeekOffset_ = TPlayGetSeekOffset(tplayAttr_.speed, tplayAttr_.direction);
     tplayMode_ = TPlayGetPlayMode();
     if (strmReadEnd_ == true) {
@@ -1547,7 +1571,10 @@ int32_t PlayerControl::DoTPlay(TplayAttr &trickPlayAttr)
     strmReadEnd_ = false;
     isVidPlayEos_ = false;
     isAudPlayEos_ = false;
+    hasRenderVideoEos_ = false;
+    hasRenderAudioEos_ = false;
     lastSendAdecPts_ = AV_INVALID_PTS;
+    pthread_mutex_unlock(&schMutex_);
     return HI_SUCCESS;
 }
 

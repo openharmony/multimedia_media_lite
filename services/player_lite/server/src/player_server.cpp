@@ -98,6 +98,12 @@ void PlayerServer::PlayerServerRequestHandle(int funcId, void *origin, IpcIo *re
         case PLAYER_SERVER_GET_STATE:
             PlayerServer::GetInstance()->GetPlayerState(req, reply);
             break;
+        case PLAYER_SERVER_SET_SPEED:
+            PlayerServer::GetInstance()->SetPlaybackSpeed(req, reply);
+            break;
+        case PLAYER_SERVER_GET_SPEED:
+            PlayerServer::GetInstance()->GetPlaybackSpeed(req, reply);
+            break;
         default:
             MEDIA_ERR_LOG("code not support: %d", funcId);
             break;
@@ -573,6 +579,30 @@ void PlayerServer::GetPlayerState(IpcIo *req, IpcIo *reply)
     }
     IpcIoPushInt32(reply, -1);
     IpcIoPushInt32(reply, state);
+}
+
+void PlayerServer::SetPlaybackSpeed(IpcIo *req, IpcIo *reply)
+{
+    MEDIA_INFO_LOG("process in");
+    float speed = IpcIoPopFloat(req);
+    if (player_ != nullptr) {
+        IpcIoPushInt32(reply, player_->SetPlaybackSpeed(speed));
+        return;
+    }
+    IpcIoPushInt32(reply, -1);
+}
+
+void PlayerServer::GetPlaybackSpeed(IpcIo *req, IpcIo *reply)
+{
+    MEDIA_INFO_LOG("process in");
+    float speed = 1.0;
+    if (player_ != nullptr) {
+        IpcIoPushInt32(reply, player_->GetPlaybackSpeed(speed));
+        IpcIoPushFloat(reply, speed);
+        return;
+    }
+    IpcIoPushInt32(reply, -1);
+    IpcIoPushFloat(reply, 1.0);
 }
 
 void PalyerCallbackImpl::OnPlaybackComplete()

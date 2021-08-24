@@ -307,33 +307,10 @@ int32_t PlayerImpl::Prepare()
     return 0;
 }
 
-int32_t PlayerImpl::Play()
+int32_t PlayerImpl::SetMediaStream(void)
 {
-    std::lock_guard<std::mutex> valueLock(lock_);
-    int ret;
-    MEDIA_INFO_LOG("PlayerImpl::%s process in\n", __func__);
-    CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
-    if (player_ == nullptr) {
-        MEDIA_ERR_LOG("Play failed, player_ is null");
-        return -1;
-    }
-    if (currentState_ == PLAYER_STARTED) {
-        MEDIA_ERR_LOG("Can not Play, currentState_ is MEDIA_PLAYER_STARTED");
-        return 0;
-    }
+    int32_t ret;
 
-    if (currentState_ != PLAYER_PREPARED && currentState_ != PLAYER_PLAYBACK_COMPLETE &&
-        currentState_ != PLAYER_PAUSED) {
-        MEDIA_ERR_LOG("Can not Play, currentState is %d", currentState_);
-        return -1;
-    }
-    if (currentState_ == PLAYER_PAUSED) {
-        goto play;
-    }
-    if (currentState_ == PLAYER_PLAYBACK_COMPLETE) {
-        MEDIA_ERR_LOG("Can not Play, currentState_ is PLAYER_PLAYBACK_COMPLETE");
-        return 0;
-    }
     mediaAttr_.s32VidStreamId = formatFileInfo_.s32UsedVideoStreamIndex;
     mediaAttr_.s32AudStreamId = formatFileInfo_.s32UsedAudioStreamIndex;
     ret = player_->SetMedia(mediaAttr_);
@@ -350,7 +327,30 @@ int32_t PlayerImpl::Play()
             break;
         }
     }
+    return 0;
+}
 
+int32_t PlayerImpl::Play()
+{
+    std::lock_guard<std::mutex> valueLock(lock_);
+    int ret;
+    MEDIA_INFO_LOG("process in");
+    CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
+    CHK_NULL_RETURN(player_);
+    if (currentState_ == PLAYER_STARTED) {
+        MEDIA_INFO_LOG("no need to repeat operation");
+        return 0;
+    }
+    if (currentState_ != PLAYER_PREPARED && currentState_ != PLAYER_PAUSED) {
+        MEDIA_ERR_LOG("Can not Play, currentState is %d", currentState_);
+        return -1;
+    }
+    if (currentState_ == PLAYER_PAUSED) {
+        goto play;
+    }
+
+    ret = SetMediaStream();
+    CHECK_FAILED_RETURN(ret, 0, ret, "SetMeidaStream failed");
 play:
     ret = player_->Play();
     if (ret != 0) {
@@ -365,7 +365,7 @@ play:
 bool PlayerImpl::IsPlaying()
 {
     std::lock_guard<std::mutex> valueLock(lock_);
-    MEDIA_INFO_LOG("process in\n");
+    MEDIA_INFO_LOG("process in");
     CHECK_FAILED_RETURN(released_, false, 0, "have released or not create");
     bool isPlaying = false;
     if (player_ != nullptr) {
@@ -384,7 +384,10 @@ int32_t PlayerImpl::Pause()
         MEDIA_ERR_LOG("currentState_ is %d", currentState_);
         return 0;
     }
-
+    if (speed_ != 1.0) {
+        MEDIA_ERR_LOG("failed, currentState_ speed is %f", speed_);
+        return -1;
+    }
     if (currentState_ != PLAYER_STARTED) {
         MEDIA_ERR_LOG("Can not Pause, currentState_ is %d", currentState_);
         return -1;
@@ -476,6 +479,10 @@ int32_t PlayerImpl::Rewind(int64_t mSeconds, int32_t mode)
     CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
     if (currentState_ != PLAYER_STARTED && currentState_ != PLAYER_PAUSED) {
         MEDIA_ERR_LOG("Can not Rewind, currentState_ is %d", currentState_);
+        return -1;
+    }
+    if (speed_ != 1.0) {
+        MEDIA_ERR_LOG("Can not Rewind, currentState_ speed is %f", speed_);
         return -1;
     }
 
@@ -653,6 +660,82 @@ int32_t PlayerImpl::GetVideoHeight(int32_t &videoHeight)
         }
     }
     return ret;
+}
+
+static int32_t PlayerControlCheckTPlayAttr(const float speed, TplayDirect direction)
+{
+    if ((direction != TPLAY_DIRECT_BACKWARD) && (direction != TPLAY_DIRECT_FORWARD)) {
+        return HI_FAILURE;
+    }
+
+    if (speed != PLAY_SPEED_2X_FAST &&
+        speed != PLAY_SPEED_4X_FAST &&
+        speed != PLAY_SPEED_8X_FAST &&
+        speed != PLAY_SPEED_16X_FAST &&
+        speed != PLAY_SPEED_32X_FAST &&
+        speed != PLAY_SPEED_64X_FAST &&
+        speed != PLAY_SPEED_128X_FAST) {
+        return HI_FAILURE;
+    }
+
+    return HI_SUCCESS;
+}
+
+int32_t PlayerImpl::SetPlaybackSpeed(float speed)
+{
+    std::lock_guard<std::mutex> valueLock(lock_);
+    CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
+    if (speed <= 0.f) {
+        return -1;
+    }
+    CHK_NULL_RETURN(player_);
+    if (currentState_ != PLAYER_STARTED/* && currentState_ != PLAYER_PAUSED*/) {
+        MEDIA_ERR_LOG(" currentState_ is %d", currentState_);
+        return -1;
+    }
+    if (speed == speed_) {
+        return 0;
+    }
+    if ((isStreamSource_ == true) && (speed != 1.0f)) {
+        MEDIA_ERR_LOG("Failed, streamsource not support abnormal speed");
+        return -1;
+    }
+
+    if (formatFileInfo_.s32UsedVideoStreamIndex == -1) {
+        MEDIA_ERR_LOG("audio movie not support abnormal speed");
+        return -1;
+    }
+
+    if (speed_ > 1 && speed == 1) { // tplay  ---> play
+        CHECK_FAILED_PRINT(player_->Play(), 0, "player failed");
+    } else { // normal/tplay -->tplay
+        TplayAttr tplayAttr;
+        TplayDirect direction = (speed > 0) ? TPLAY_DIRECT_FORWARD : TPLAY_DIRECT_BACKWARD;
+        float speedTmp = (speed > 0) ? speed : -speed;
+        tplayAttr.direction = direction;
+        tplayAttr.speed = speedTmp;
+        if (PlayerControlCheckTPlayAttr(speedTmp, direction) != 0) {
+            MEDIA_ERR_LOG("not support speed:%f", speed);
+            return -1;
+        }
+        CHECK_FAILED_PRINT(player_->TPlay(tplayAttr), 0, "tplayer failed");
+    }
+
+    if (speed == 0.f && currentState_ == PLAYER_STARTED) {
+        currentState_ = PLAYER_PAUSED;
+    } else if (speed != 0.f && (currentState_ == PLAYER_PREPARED || currentState_ == PLAYER_PAUSED)) {
+        currentState_ = PLAYER_STARTED;
+    }
+    speed_ = speed;
+    return 0;
+}
+
+int32_t PlayerImpl::GetPlaybackSpeed(float &speed)
+{
+    std::lock_guard<std::mutex> valueLock(lock_);
+    CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
+    speed = (currentState_ != PLAYER_PAUSED) ? speed_ : 0;
+    return 0;
 }
 
 int32_t PlayerImpl::SetAudioStreamType(int32_t type)

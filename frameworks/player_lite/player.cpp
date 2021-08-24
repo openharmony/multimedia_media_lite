@@ -190,5 +190,19 @@ int32_t Player::GetPlayerState(int32_t &state) const
     CHK_NULL_RETURN(player_);
     return player_->GetPlayerState(state);
 }
+
+int32_t Player::SetPlaybackSpeed(float speed)
+{
+    MEDIA_INFO_LOG("process in");
+    CHK_NULL_RETURN(player_);
+    return player_->SetPlaybackSpeed(speed);
+}
+
+int32_t Player::GetPlaybackSpeed(float &speed)
+{
+    MEDIA_INFO_LOG("process in");
+    CHK_NULL_RETURN(player_);
+    return player_->GetPlaybackSpeed(speed);
+}
 }  // namespace Media
 }  // namespace OHOS

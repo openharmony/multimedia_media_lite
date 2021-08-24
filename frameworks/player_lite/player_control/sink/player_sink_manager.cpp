@@ -95,25 +95,22 @@ int32_t SinkManager::AddNewSink(SinkAttr &attr)
 
 int32_t SinkManager::Start(void)
 {
-    int32_t i;
-
-    for (i = 0; i < MAX_PIPELINE_SINK_NUM; i++) {
-        if (videoSinkInfo_[i].sink != nullptr) {
-            int32_t ret = videoSinkInfo_[i].sink->Start();
-            CHECK_FAILED_RETURN(ret, SINK_SUCCESS, ret, "videoSinkInfo_ start failed");
+    if (videoSinkInfo_[0].sink != nullptr) {
+        int32_t ret = videoSinkInfo_[0].sink->Start();
+        CHECK_FAILED_RETURN(ret, SINK_SUCCESS, ret, "videoSinkInfo_ start failed");
+        if (sync_ != nullptr) {
+            sync_->Start(SYNC_CHN_VID);
         }
     }
 
-    for (i = 0; i < MAX_PIPELINE_SINK_NUM; i++) {
-        if (audioSinkInfo_[i].sink != nullptr) {
-            int32_t ret = audioSinkInfo_[i].sink->Start();
-            CHECK_FAILED_RETURN(ret, SINK_SUCCESS, ret, "audioSinkInfo_ start failed");
+    if (audioSinkInfo_[0].sink != nullptr) {
+        int32_t ret = audioSinkInfo_[0].sink->Start();
+        CHECK_FAILED_RETURN(ret, SINK_SUCCESS, ret, "audioSinkInfo_ start failed");
+        if (sync_ != nullptr) {
+            sync_->Start(SYNC_CHN_AUD);
         }
     }
-    if (sync_ != nullptr) {
-        sync_->Start(SYNC_CHN_VID);
-        sync_->Start(SYNC_CHN_AUD);
-    }
+
     started_ = true;
     return HI_SUCCESS;
 }
@@ -149,12 +146,19 @@ int32_t SinkManager::Reset(void)
             audioSinkInfo_[i].sink->Reset();
         }
     }
+
+    recieveAudioEos_ = false;
+    recieveVideoEos_ = false;
+    if (sync_ != nullptr) {
+        sync_->Reset(SYNC_CHN_VID);
+        sync_->Reset(SYNC_CHN_AUD);
+    }
+
     return 0;
 }
 
 int32_t SinkManager::Pause()
 {
-    MEDIA_INFO_LOG("process in");
     if (paused_) {
         MEDIA_WARNING_LOG("sink already paused");
         return HI_SUCCESS;
@@ -163,13 +167,19 @@ int32_t SinkManager::Pause()
         MEDIA_ERR_LOG("not in running");
         return -1;
     }
-    for (int32_t i = 0; i < MAX_PIPELINE_SINK_NUM; i++) {
-        if (audioSinkInfo_[i].sink != nullptr) {
-            audioSinkInfo_[i].sink->Pause();
-        }
+
+    if (audioSinkInfo_[0].sink != nullptr) {
+        audioSinkInfo_[0].sink->Pause();
     }
-    if (sync_ != nullptr) {
+    if (videoSinkInfo_[0].sink != nullptr) {
+        videoSinkInfo_[0].sink->Pause();
+    }
+
+    if ((audioSinkInfo_[0].sink == nullptr || recieveAudioEos_ || speed_ != 1.0) &&
+        (sync_ != nullptr)) {
         sync_->Reset(SYNC_CHN_VID);
+    }
+    if ((audioSinkInfo_[0].sink != nullptr) && (sync_ != nullptr)) {
         sync_->Reset(SYNC_CHN_AUD);
     }
     paused_ = true;
@@ -178,20 +188,19 @@ int32_t SinkManager::Pause()
 
 int32_t SinkManager::Resume()
 {
-    MEDIA_INFO_LOG("process in");
-    if (sync_ != nullptr) {
-        sync_->Resume();
-    }
-    for (int32_t i = 0; i < MAX_PIPELINE_SINK_NUM; i++) {
-        if (audioSinkInfo_[i].sink != nullptr) {
-            audioSinkInfo_[i].sink->Resume();
-        }
-    }
-    pauseAfterPlay_ = false;
     if (!paused_) {
-        MEDIA_ERR_LOG("avRender not in pause");
+        MEDIA_WARNING_LOG("sink not in pause");
         return HI_FAILURE;
     }
+
+    if (audioSinkInfo_[0].sink != nullptr) {
+        audioSinkInfo_[0].sink->Resume();
+    }
+    if (videoSinkInfo_[0].sink != nullptr) {
+        videoSinkInfo_[0].sink->Resume();
+    }
+
+    pauseAfterPlay_ = false;
     paused_ = false;
 
     return 0;
@@ -246,6 +255,13 @@ int32_t SinkManager::Tplay(float speed, TplayDirect  tplayDirect)
         MEDIA_ERR_LOG("m_syncHdl  TPlay Ret: %d", ret);
         return ret;
     }
+
+    ret = sync_->Reset(SYNC_CHN_VID);
+    if (ret != HI_SUCCESS) {
+        MEDIA_ERR_LOG("m_syncHdl  Reset vid Ret: %d", ret);
+        return ret;
+    }
+
     ret = Resume();
     if (ret != 0) {
         MEDIA_ERR_LOG("m_render resume  failed Ret: %d", ret);
@@ -258,10 +274,10 @@ int32_t SinkManager::Tplay(float speed, TplayDirect  tplayDirect)
 
 int32_t SinkManager::SetSpeed(float speed, TplayDirect  tplayDirect)
 {
-    if (speed_ == speed) {
+    if (speed_ == speed && tplayDirect == direction_) {
         return 0;
     }
-    if (speed == 1) { /* tplay ---> normal */
+    if (speed == 1.0) { /* tplay ---> normal */
         TplayToNormal();
     } else { /* tplay / ormal ---> tplay */
         Tplay(speed, tplayDirect);
@@ -418,17 +434,27 @@ int32_t SinkManager::DequeReleaseFrame(bool audioSink, OutputInfo &frame)
 
 void SinkManager::GetRenderPosition(int64_t &position)
 {
-    if (audioSinkInfo_[0].sink != nullptr && (recieveAudioEos_ != true || videoSinkInfo_[0].sink == nullptr)) {
-        audioSinkInfo_[0].sink->GetRenderPosition(position);
-    } else if (videoSinkInfo_[0].sink != nullptr && (recieveVideoEos_ != true || audioSinkInfo_[0].sink == nullptr)) {
-        videoSinkInfo_[0].sink->GetRenderPosition(position);
-    } else if (recieveVideoEos_ == true && recieveAudioEos_ == true) {
-        int64_t audioPos;
-        int64_t videoPos;
-        audioSinkInfo_[0].sink->GetRenderPosition(audioPos);
-        videoSinkInfo_[0].sink->GetRenderPosition(videoPos);
-        position = (audioPos >= videoPos) ? audioPos : videoPos;
+    if (audioSinkInfo_[0].sink == nullptr && videoSinkInfo_[0].sink == nullptr) {
+        return;
     }
+
+    /* use video position, if tplay or no audio */
+    if ((speed_ != 1.0 && videoSinkInfo_[0].sink != nullptr) || audioSinkInfo_[0].sink == nullptr) {
+        videoSinkInfo_[0].sink->GetRenderPosition(position);
+        return;
+    }
+    /* audio not recieve eos, use audio position */
+    if (!recieveAudioEos_ || videoSinkInfo_[0].sink == nullptr) {
+        audioSinkInfo_[0].sink->GetRenderPosition(position);
+        return;
+    }
+
+    /* use the max position of audio and video sink, if have recieved auduo eos */
+    int64_t audioPos;
+    int64_t videoPos;
+    audioSinkInfo_[0].sink->GetRenderPosition(audioPos);
+    videoSinkInfo_[0].sink->GetRenderPosition(videoPos);
+    position = (audioPos >= videoPos) ? audioPos : videoPos;
 }
 }
 }

@@ -46,7 +46,7 @@ public:
     int32_t GetSpeed(float &speed);
     int32_t GetState(int32_t &state);
     int32_t RenderFrame(OutputInfo &frame);
-    int32_t SetRenderMode();
+    void SetRenderMode(RenderMode mode);
     int32_t SetVolume(float left, float right);
     int32_t GetVolume(float &left, float &right);
     int32_t SetMute(bool mute);
@@ -79,7 +79,7 @@ private:
     bool pauseAfterPlay_;
     SinkAttr attr_;
     PlayerSync *syncHdl_;
-    RenderMode playMode_;
+    RenderMode renderMode_;
     int64_t rendStartTime_;
     int64_t lastRendPts_;
     int64_t lastRendSysTimeMs_;
@@ -96,6 +96,7 @@ private:
     struct AudioAdapter *audioAdapter_;
     struct AudioRender *audioRender_;
     AudioPort renderPort_;
+    bool reportedFirstFrame;
 };
 }  // namespace Media
 }  // namespace OHOS

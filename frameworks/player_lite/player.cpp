@@ -204,5 +204,12 @@ int32_t Player::GetPlaybackSpeed(float &speed)
     CHK_NULL_RETURN(player_);
     return player_->GetPlaybackSpeed(speed);
 }
+
+int32_t Player::SetParameter(const Format &params)
+{
+    MEDIA_INFO_LOG("process in");
+    CHK_NULL_RETURN(player_);
+    return player_->SetParameter(params);
+}
 }  // namespace Media
 }  // namespace OHOS

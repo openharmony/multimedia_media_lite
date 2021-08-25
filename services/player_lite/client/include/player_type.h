@@ -37,6 +37,7 @@ typedef enum {
     PLAYER_SERVER_GET_STATE,
     PLAYER_SERVER_SET_SPEED,
     PLAYER_SERVER_GET_SPEED,
+    PLAYER_SERVER_SET_PARAMETER,
 } PlayerServerCall;
 
 typedef enum {

@@ -21,6 +21,7 @@
 #include <iunknown.h>
 #include <iproxy_server.h>
 #include <iproxy_client.h>
+#include "format.h"
 #include "media_log.h"
 #include "player_type.h"
 #include "liteipc_adapter.h"
@@ -68,6 +69,7 @@ public:
     int32_t GetPlayerState(int32_t &state) const;
     int32_t SetPlaybackSpeed(float speed);
     int32_t GetPlaybackSpeed(float &speed);
+    int32_t SetParameter(const Format &params);
 
 private:
     PlayerClient() : proxy_(nullptr), sid_(nullptr) {}

@@ -218,7 +218,7 @@ int32_t VideoSink::Pause()
 
 int32_t VideoSink::Resume(void)
 {
-    pauseAfterPlay_ = false;
+    renderMode_ = RENDER_MODE_NORMAL;
     if (!paused_) {
         MEDIA_WARNING_LOG("vsink not in pause");
         return HI_FAILURE;
@@ -357,7 +357,7 @@ int32_t VideoSink::RenderFrame(OutputInfo &frame)
     OutputInfo renderFrame;
 
     /* the frame should be save to queue at state paused and none-started */
-    if (!started_ || paused_) {
+    if (!started_ || paused_ || (renderMode_ == RENDER_MODE_PAUSE_AFTER_PLAY && renderFrameCnt_ == 1)) {
         QueueRenderFrame(frame, started_ ? true : false);
         return SINK_SUCCESS;
     }
@@ -380,8 +380,12 @@ int32_t VideoSink::RenderFrame(OutputInfo &frame)
 
     if (syncRet == SYNC_RET_PLAY) {
         ret = WriteToVideoDevice(renderFrame);
+        if (renderFrameCnt_ == 0) {
+            callBack_.onEventCallback(callBack_.priv, EVNET_FIRST_VIDEO_REND, 0, 0);
+        }
         renderFrameCnt_++;
     } else if (syncRet == SYNC_RET_DROP) {
+        MEDIA_INFO_LOG("too late, drop, pts: %lld", renderFrame.timeStamp);
         ReleaseQueHeadFrame();
         ret = SINK_SUCCESS;
     } else if (syncRet == SYNC_RET_REPEAT) {

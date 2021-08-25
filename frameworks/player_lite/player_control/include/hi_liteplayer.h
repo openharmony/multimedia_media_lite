@@ -48,6 +48,8 @@ enum PlayerControlEvent {
                                               the additional value that in the unit of ms is current playing time */
     PLAYERCONTROL_EVENT_SEEK_END,   /* seek time jump, the additional value is the seek value */
     PLAYERCONTROL_EVENT_ERROR,               /* play error */
+    PLAYERCONTROL_FIRST_VIDEO_FRAME,
+    PLAYERCONTROL_FIRST_AUDIO_FRAME,
     PLAYERCONTROL_EVENT_BUTT
 };
 

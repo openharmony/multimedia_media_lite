@@ -84,6 +84,7 @@ PlayerImpl::PlayerImpl()
       isStreamSource_(false),
       bufferSource_(nullptr),
       streamCallback_(nullptr),
+      pauseAfterPlay_(false),
       extraRewind_(false)
 {
     (void)memset_s(&formatFileInfo_, sizeof(formatFileInfo_), 0, sizeof(FormatFileInfo));
@@ -242,6 +243,17 @@ void PlayerImpl::PlayerControlEventCb(void* pPlayer, PlayerControlEvent enEvent,
             MEDIA_INFO_LOG("seek action end, time is %lld",  *reinterpret_cast<const int64_t *>(pData));
             curPlayer->NotifySeekComplete(curPlayer, *reinterpret_cast<const int64_t *>(pData));
             break;
+        case PLAYERCONTROL_FIRST_VIDEO_FRAME:
+            MEDIA_INFO_LOG("render FirstVideoFrame");
+            if (curPlayer->pauseAfterPlay_) {
+                curPlayer->player_->Pause();
+            }
+            break;
+        case PLAYERCONTROL_FIRST_AUDIO_FRAME:
+            if (curPlayer->pauseAfterPlay_ && curPlayer->formatFileInfo_.s32UsedVideoStreamIndex == -1) {
+                curPlayer->player_->Pause();
+            }
+            break;
         default:
             break;
     }
@@ -387,6 +399,15 @@ int32_t PlayerImpl::Pause()
     if (speed_ != 1.0) {
         MEDIA_ERR_LOG("failed, currentState_ speed is %f", speed_);
         return -1;
+    }
+    if (pauseAfterPlay_ && currentState_ == PLAYER_PREPARED) {
+        int32_t ret;
+        ret = SetMediaStream();
+        CHECK_FAILED_RETURN(ret, 0, ret, "SetMeidaStream failed");
+        ret = player_->Play();
+        CHECK_FAILED_RETURN(ret, 0, ret, "Play failed");
+        currentState_ = PLAYER_PAUSED;
+        return 0;
     }
     if (currentState_ != PLAYER_STARTED) {
         MEDIA_ERR_LOG("Can not Pause, currentState_ is %d", currentState_);
@@ -788,6 +809,7 @@ void PlayerImpl::ResetInner(void)
     isSingleLoop_ = false;
     speed_ = 1.0;
     currentPosition_ = 0;
+    pauseAfterPlay_ = false;
     extraRewind_ = false;
     playerControlState_ = PLAY_STATUS_IDLE;
     isStreamSource_ = false;
@@ -1205,6 +1227,41 @@ int32_t PlayerImpl::SetStreamSource(const Source &source)
         return -1;
     }
     return 0;
+}
+
+int32_t PlayerImpl::EnablePauseAfterPlay(bool isPauseAfterPlay)
+{
+    if (currentState_ != PLAYER_IDLE && currentState_ != PLAYER_INITIALIZED) {
+        MEDIA_ERR_LOG(" currentState_ is %d", currentState_);
+        return -1;
+    }
+    if (pauseAfterPlay_ == isPauseAfterPlay) {
+        return 0;
+    }
+
+    pauseAfterPlay_ = isPauseAfterPlay;
+    if (player_ != NULL) {
+        return player_->Invoke(INVOKE_ENABLE_PAUSE_AFTER_PLAYER, &pauseAfterPlay_);
+    }
+    MEDIA_INFO_LOG(" isPauseAfterPlay:%d", isPauseAfterPlay);
+    return 0;
+}
+
+int32_t PlayerImpl::SetParameter(const Format &params)
+{
+    int32_t value;
+    std::lock_guard<std::mutex> valueLock(lock_);
+
+    if (params.GetIntValue(PAUSE_AFTER_PLAY, value) != true) {
+        MEDIA_ERR_LOG("get pause after play failed");
+        return -1;
+    }
+    if (value != 0 && value != 1) {
+        MEDIA_ERR_LOG("pause after play flag error:%d", value);
+        return -1;
+    }
+
+    return EnablePauseAfterPlay(value);
 }
 }  // namespace Media
 }  // namespace OHOS

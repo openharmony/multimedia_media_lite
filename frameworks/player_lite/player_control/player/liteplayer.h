@@ -76,6 +76,8 @@ public:
 
     int32_t TPlay(TplayAttr tplayAttr);
 
+    int32_t Invoke(PlayerInvoke invokeId, void *param);
+
     int32_t OnPlayControlEvent(void *priv, const EventCbType event);
 
     int32_t OnSwitchTPlay2Play(void);
@@ -108,6 +110,8 @@ protected:
     int32_t DoSetMedia(PlayerControlStreamAttr &mediaAttr) override;
 
     int32_t DoTPlay(TplayAttr& trickPlayAttr) override;
+
+    int32_t DoInvoke(InvokeParameter& invokeParam) override;
 
     void ClearCachePacket(void);
 
@@ -162,6 +166,7 @@ private:
     void PushPacketToVDecoder(void);
     int32_t DoSeekIfNeed(void);
     void FlushDecoder(void);
+    int32_t EnablePauseAfterPlay(bool pauseAfterPlay);
     void EventProcess(EventCbType event);
     void EventQueueProcess(void);
 

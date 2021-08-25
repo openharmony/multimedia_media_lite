@@ -386,6 +386,16 @@ public:
      * @return Returns {@code 0} if the playback speed is set; returns {@code -1} otherwise.
      */
     int32_t GetPlaybackSpeed(float &speed);
+
+    /**
+     * set parameter through format, extended interface.
+     *
+     * @param params Indicates the extended-informations. Format see {@link Format}
+     * @return Returns {@code 0} if set parameter successfully; returns {@code -1} otherwise.
+     * @note not support on current version
+     */
+    int32_t SetParameter(const Format &params);
+
 private:
     class PlayerClient;
     PlayerClient* player_;

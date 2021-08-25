@@ -45,10 +45,10 @@ const int32_t AUDIO_SAMPLE_WIDTH_BYTE = 2;
 
 AudioSink::AudioSink()
     : started_(false), paused_(false), eosSended_(false), rendFrameCnt_(0), lastRendFrameCnt_(0),
-      pauseAfterPlay_(false), syncHdl_(nullptr), playMode_(RENDER_MODE_NORMAL),
+      pauseAfterPlay_(false), syncHdl_(nullptr), renderMode_(RENDER_MODE_NORMAL),
       rendStartTime_(-1), lastRendPts_(AV_INVALID_PTS), lastRendSysTimeMs_(-1), renderDelay_(0),
       leftVolume_(0.0f), rightVolume_(0.0f), eosPts_(AV_INVALID_PTS), receivedEos_(false), audioManager_(nullptr),
-      audioAdapter_(nullptr), audioRender_(nullptr)
+      audioAdapter_(nullptr), audioRender_(nullptr), reportedFirstFrame(false)
 {
     ResetRendStartTime();
     frameCacheQue_.clear();
@@ -274,7 +274,13 @@ int32_t AudioSink::RenderFrame(OutputInfo &frame)
     OutputInfo renderFrame;
     struct AudioTimeStamp timestamp;
 
-    if (paused_) {
+    if (!reportedFirstFrame && renderMode_ == RENDER_MODE_PAUSE_AFTER_PLAY) {
+        callBack_.onEventCallback(callBack_.priv, EVNET_FIRST_AUDIO_REND, 0, 0);
+        reportedFirstFrame = true;
+        MEDIA_INFO_LOG("report first audio frame");
+    }
+
+    if (paused_ || renderMode_ == RENDER_MODE_PAUSE_AFTER_PLAY) {
         QueueRenderFrame(frame, true);
         return SINK_SUCCESS;
     }
@@ -290,6 +296,9 @@ int32_t AudioSink::RenderFrame(OutputInfo &frame)
             return SINK_RENDER_EOS;
         }
         return SINK_QUE_EMPTY;
+    }
+    if (pauseAfterPlay_) {
+        return SINK_SUCCESS;
     }
 
     int32_t ret = audioRender_->GetRenderPosition(audioRender_, &frameCnt, &timestamp);
@@ -374,7 +383,7 @@ int32_t AudioSink::GetVolume(float &left, float &right)
 int32_t AudioSink::Stop(void)
 {
     if (started_ && audioRender_ != nullptr) {
-        audioRender_->control.Stop(reinterpret_cast<AudioHandle>(audioRender_));
+        (void)audioRender_->control.Stop(reinterpret_cast<AudioHandle>(audioRender_));
     }
     ReleaseQueAllFrame();
     rendFrameCnt_ = 0;
@@ -387,7 +396,7 @@ int32_t AudioSink::Stop(void)
 int32_t AudioSink::Pause(void)
 {
     if (started_ && audioRender_ != nullptr) {
-        audioRender_->control.Pause(reinterpret_cast<AudioHandle>(audioRender_));
+        (void)audioRender_->control.Pause(reinterpret_cast<AudioHandle>(audioRender_));
     }
     paused_ = true;
     return SINK_SUCCESS;
@@ -397,8 +406,9 @@ int32_t AudioSink::Resume(void)
 {
     CHECK_FAILED_RETURN(paused_, true, -1, "not paused");
     CHECK_NULL_RETURN(audioRender_, -1, "audioRender_ is null");
-    audioRender_->control.Resume(reinterpret_cast<AudioHandle>(audioRender_));
+    (void)audioRender_->control.Resume(reinterpret_cast<AudioHandle>(audioRender_));
     paused_ = false;
+    renderMode_ = RENDER_MODE_NORMAL;
     return SINK_SUCCESS;
 }
 
@@ -429,7 +439,7 @@ void AudioSink::SetSync(PlayerSync *sync)
 int32_t AudioSink::Flush(void)
 {
     if (started_ && audioRender_ != nullptr) {
-        audioRender_->control.Flush(reinterpret_cast<AudioHandle>(audioRender_));
+        (void)audioRender_->control.Flush(reinterpret_cast<AudioHandle>(audioRender_));
     }
     renderDelay_ = 0;
     return 0;
@@ -438,6 +448,11 @@ int32_t AudioSink::Flush(void)
 void AudioSink::GetRenderPosition(int64_t &position)
 {
     position = lastRendPts_;
+}
+
+void AudioSink::SetRenderMode(RenderMode mode)
+{
+    renderMode_ = mode;
 }
 }
 }

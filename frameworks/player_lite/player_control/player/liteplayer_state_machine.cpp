@@ -42,6 +42,7 @@ namespace {
         { true,  false, false, true,  true,  true,  false }, /* handledata */
         { true,  true,  true,  true,  true,  true,  true },  /* Error */
         { false,  false,  true,  true,  true,  true,  true },  /* setVolume */
+        { true,  true,  true,  true,  true,  true,  true },  /* invoke */
     };
 
     struct PlayerControlStatusMap {
@@ -178,6 +179,10 @@ int PlayerControlState::HandleMessage(const MsgInfo& msgInfo)
         case PLAYERCONTROL_MSG_GETFILEINFO:
             CHECK_NULL_RETURN(msgInfo.msgData, HI_ERR_PLAYERCONTROL_NULL_PTR, "msgData null");
             ret = playerControlHandle_->DoGetFileInfo(*reinterpret_cast<FormatFileInfo *>(msgInfo.msgData));
+            break;
+        case PLAYERCONTROL_MSG_INVOKE:
+            CHECK_NULL_RETURN(msgInfo.msgData, HI_ERR_PLAYERCONTROL_NULL_PTR, "msgData null");
+            ret = playerControlHandle_->DoInvoke(*reinterpret_cast<InvokeParameter *>(msgInfo.msgData));
             break;
         default:
             ret = HI_ERR_PLAYERCONTROL_ILLEGAL_PARAM;

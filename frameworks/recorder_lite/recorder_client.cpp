@@ -413,7 +413,7 @@ int32_t Recorder::RecorderImpl::SetOutputFile(int32_t fd)
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 1);
     IpcIoPushFd(&io, fd);
-    CallBackPara para = {.funcId = REC_FUNC_SET_OUTPUTFILE};
+    CallBackPara para = {.funcId = REC_FUNC_SET_OUTPUTFILE, .ret = MEDIA_IPC_FAILED};
     int32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_OUTPUTFILE, &io, &para, SimpleCallback);
     if (ret != 0) {
         MEDIA_ERR_LOG("SetOutputFile failed, ret=%d", ret);
@@ -428,7 +428,7 @@ int32_t Recorder::RecorderImpl::SetNextOutputFile(int32_t fd)
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 1);
     IpcIoPushFd(&io, fd);
-    CallBackPara para = {.funcId = REC_FUNC_SET_NEXTOUTPUTFILE};
+    CallBackPara para = {.funcId = REC_FUNC_SET_NEXTOUTPUTFILE, .ret = MEDIA_IPC_FAILED};
     int32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_NEXTOUTPUTFILE, &io, &para, SimpleCallback);
     if (ret != 0) {
         MEDIA_ERR_LOG("SetNextOutputFile failed, ret=%d", ret);

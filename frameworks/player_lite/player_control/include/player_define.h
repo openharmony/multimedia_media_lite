@@ -62,6 +62,7 @@ typedef enum {
     EVNET_AUDIO_PLAY_EOS,
     EVNET_ON_JPEG_FRAME_RENDED,
     EVNET_FRAME_CONTINUE_LOST,
+    EVNET_FIRST_AUDIO_REND,
     EVNET_BUTT
 } EventCbType;
 
@@ -179,6 +180,15 @@ enum PlaySpeed {
     PLAY_SPEED_64X_FAST = 64,   /* 64 x speed fast */
     PLAY_SPEED_128X_FAST = 128, /* 128 x speed fast */
     PLAY_SPEED_BUTT             /* Invalid speed value */
+};
+
+enum PlayerInvoke{
+    INVOKE_ENABLE_PAUSE_AFTER_PLAYER = 0x100,
+};
+
+struct InvokeParameter{
+    PlayerInvoke id;
+    void* param;
 };
 
 typedef int32_t (*OnEventCallback)(void* priv, EventCbType event, int32_t ext1, int32_t ext2);

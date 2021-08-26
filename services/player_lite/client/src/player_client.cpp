@@ -197,6 +197,11 @@ int Player::PlayerClient::Callback(void* owner, int code, IpcIo *reply)
             *data = IpcIoPopFloat(reply);
             break;
         }
+        case PLAYER_SERVER_SET_PARAMETER: {
+            int32_t *ret = static_cast<int32_t *>(para->ret);
+            *ret = IpcIoPopInt32(reply);
+            break;
+        }
         default:
             break;
     }
@@ -642,6 +647,60 @@ int32_t Player::PlayerClient::GetPlaybackSpeed(float &speed)
     uint32_t ret = proxy_->Invoke(proxy_, PLAYER_SERVER_GET_SPEED, &io, &para, Callback);
     if (ret != 0) {
         MEDIA_ERR_LOG("GetPlaybackSpeed failed, ret=%d\n", ret);
+    }
+    return ans;
+}
+
+int32_t Player::PlayerClient::SetParameter(const Format &params)
+{
+    IpcIo io;
+    uint8_t tmpData[DEFAULT_IPC_SIZE];
+    IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
+    
+    std::map<std::string, FormatData *> formatParam = params.GetFormatMap();
+    IpcIoPushInt32(&io, formatParam.size()); /* count */
+
+    std::map<std::string, FormatData *>::iterator iter;  
+    for (iter = formatParam.begin(); iter != formatParam.end(); iter++) {
+        IpcIoPushString(&io, iter->first.c_str()); /* key */
+        FormatData *data = iter->second;
+        FormatDataType type = data->GetType();
+        IpcIoPushInt32(&io, type); /* type */
+
+        /* value */
+        if (type == FORMAT_TYPE_INT32) {
+            int32_t value;
+            data->GetInt32Value(value);
+            IpcIoPushInt32(&io, value);
+        } else if (type == FORMAT_TYPE_INT64) {
+            int64_t value;
+            data->GetInt64Value(value);
+            IpcIoPushInt64(&io, value);
+        } else if (type == FORMAT_TYPE_FLOAT) {
+            float value;
+            data->GetFloatValue(value);
+            IpcIoPushFloat(&io, value);
+        } else if (type == FORMAT_TYPE_DOUBLE) {
+            double value;
+            data->GetDoubleValue(value);
+            IpcIoPushDouble(&io, value);
+        } else if (type == FORMAT_TYPE_STRING) {
+            std::string value;
+            data->GetStringValue(value);
+            IpcIoPushString(&io, value.c_str());
+        } else {
+            MEDIA_ERR_LOG("SetParameter failed, type:%d\n", type);
+            return -1;
+        }
+    }
+
+    int32_t ans = -1;
+    CallBackPara para = {};
+    para.funcId = PLAYER_SERVER_SET_PARAMETER;
+    para.ret = &ans;
+    uint32_t ret = proxy_->Invoke(proxy_, PLAYER_SERVER_SET_PARAMETER, &io, &para, Callback);
+    if (ret != 0) {
+        MEDIA_ERR_LOG("PlayerClient::SetParameter failed, ret=%d\n", ret);
     }
     return ans;
 }

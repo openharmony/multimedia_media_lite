@@ -104,6 +104,9 @@ void PlayerServer::PlayerServerRequestHandle(int funcId, void *origin, IpcIo *re
         case PLAYER_SERVER_GET_SPEED:
             PlayerServer::GetInstance()->GetPlaybackSpeed(req, reply);
             break;
+        case PLAYER_SERVER_SET_PARAMETER:
+            PlayerServer::GetInstance()->SetParameter(req, reply);
+            break;
         default:
             MEDIA_ERR_LOG("code not support: %d", funcId);
             break;
@@ -603,6 +606,46 @@ void PlayerServer::GetPlaybackSpeed(IpcIo *req, IpcIo *reply)
     }
     IpcIoPushInt32(reply, -1);
     IpcIoPushFloat(reply, 1.0);
+}
+
+void PlayerServer::SetParameter(IpcIo *req, IpcIo *reply)
+{
+    MEDIA_INFO_LOG("process in");
+    Format formats;
+    if (player_ == nullptr) {
+        IpcIoPushInt32(reply, -1);
+        return;
+    }
+
+    int32_t count = IpcIoPopInt32(req);
+    for (int32_t i = 0; i < count; i++) {
+        uint32_t size;
+        char *key = (char *)IpcIoPopString(req, &size);
+
+        FormatDataType type = (FormatDataType)IpcIoPopInt32(req);
+        if (type == FORMAT_TYPE_INT32) {
+            int32_t value = IpcIoPopInt32(req);
+            formats.PutIntValue(key, value);
+        } else if (type == FORMAT_TYPE_INT64) {
+            int64_t value = IpcIoPopInt64(req);
+            formats.PutLongValue(key, value);
+        } else if (type == FORMAT_TYPE_FLOAT) {
+            float value = IpcIoPopFloat(req);
+            formats.PutFloatValue(key, value);
+        } else if (type == FORMAT_TYPE_DOUBLE) {
+            double value = IpcIoPopFloat(req);
+            formats.PutDoubleValue(key, value);
+        } else if (type == FORMAT_TYPE_STRING) {
+            char *value = (char *)IpcIoPopString(req, &size);
+            formats.PutStringValue(key, value);
+        } else {
+            MEDIA_ERR_LOG("SetParameter failed, type:%d\n", type);
+            IpcIoPushInt32(reply, -1);
+            return;
+        }
+    }
+
+    IpcIoPushInt32(reply, player_->SetParameter(formats));
 }
 
 void PalyerCallbackImpl::OnPlaybackComplete()

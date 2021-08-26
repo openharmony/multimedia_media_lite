@@ -495,9 +495,16 @@ void PlayerControl::EventProcess(EventCbType event)
             if (pauseMode_) {
                 MEDIA_INFO_LOG( "first video rended");
                 isNeedPause_ = true;
+                EventCallback(PLAYERCONTROL_FIRST_VIDEO_FRAME, NULL);
             }
             break;
-
+        case EVNET_FIRST_AUDIO_REND:
+            if (pauseMode_ && fmtFileInfo_.s32UsedVideoStreamIndex == -1) {
+                MEDIA_INFO_LOG( "first audio rended");
+                isNeedPause_ = true;
+                EventCallback(PLAYERCONTROL_FIRST_AUDIO_FRAME, NULL);
+            }
+            break;
         default:
             break;
     }
@@ -848,6 +855,7 @@ int32_t PlayerControl::SinkStart(void)
     GetPlayElementEventCallBack(callback);
     ret = sinkManager_->RegisterCallBack(callback);
     CHECK_FAILED_RETURN(ret, HI_SUCCESS, ret, "RegisterCallBack failed");
+    sinkManager_->SetRenderMode((pauseMode_ == true) ? RENDER_MODE_PAUSE_AFTER_PLAY : RENDER_MODE_NORMAL);
     ret = sinkManager_->Start();
     CHECK_FAILED_RETURN(ret, HI_SUCCESS, ret, "sinkManager_ Start failed");
 
@@ -1953,6 +1961,49 @@ int32_t PlayerControl::CheckMediaType(FormatFileInfo &fmtFileInfo)
     }
     MEDIA_ERR_LOG("video type: %d not supported", fmtFileInfo.enVideoType);
     return HI_ERR_PLAYERCONTROL_NOT_SUPPORT;
+}
+
+int32_t PlayerControl::Invoke(PlayerInvoke invokeId, void *param)
+{
+    CHECK_NULL_RETURN(stateMachine_, HI_ERR_PLAYERCONTROL_NULL_PTR, "stateMachine_ nullptr");
+    MsgInfo msg;
+    InvokeParameter invokeParam;
+    invokeParam.id = invokeId;
+    invokeParam.param = param;
+
+    msg.what = PLAYERCONTROL_MSG_INVOKE;
+    msg.msgData = &invokeParam;
+    msg.msgDataLen = sizeof(InvokeParameter);
+    return stateMachine_->Send(msg);
+}
+
+int32_t PlayerControl::EnablePauseAfterPlay(bool pauseAfterPlay)
+{
+    PlayerStatus playerState = stateMachine_->GetCurState();
+    if (playerState != PLAY_STATUS_IDLE && playerState != PLAY_STATUS_INIT) {
+        MEDIA_ERR_LOG("unsupport set play mode, state:%d\n", playerState);
+        return -1;
+    }
+    pauseMode_ = pauseAfterPlay;
+    return 0;
+}
+
+int32_t PlayerControl::DoInvoke(InvokeParameter& invokeParam)
+{
+    int32_t ret = -1;
+
+    switch(invokeParam.id) {
+        case INVOKE_ENABLE_PAUSE_AFTER_PLAYER:
+            if (invokeParam.param == nullptr) {
+                break;
+            }
+            ret = EnablePauseAfterPlay((*((uint32_t *)invokeParam.param)) > 0 ? true : false);
+            break;
+        default:
+            MEDIA_ERR_LOG("unsupport invoke:0x%x\n", invokeParam.id);
+            break;
+    }
+    return ret;
 }
 }
 }

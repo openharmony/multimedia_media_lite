@@ -95,6 +95,7 @@ public:
     int32_t SetVideoScaleType(int32_t type);
     int32_t Init(void);
     int32_t DeInit(void);
+    int32_t SetParameter(const Format &params);
 private:
     void NotifySeekComplete(PlayerImpl *curPlayer, int64_t seekToMs);
     void NotifyPlaybackComplete(PlayerImpl *curPlayer);
@@ -110,6 +111,7 @@ private:
     int CreatePlayerParamCheck(PlayerControlParam &createParam);
     void GetDurationInner(int64_t &durationMs);
     void ResetInner(void);
+    int32_t EnablePauseAfterPlay(bool isPauseAfterPlay);
     int32_t SetMediaStream(void);
 
     std::shared_ptr<PlayerControl> player_;
@@ -135,6 +137,7 @@ private:
     QueBuffer buffer_;
     std::shared_ptr<BufferSource> bufferSource_;
     std::shared_ptr<AdapterStreamCallback> streamCallback_;
+    bool pauseAfterPlay_;
     bool extraRewind_;
 };
 }  // namespace Media

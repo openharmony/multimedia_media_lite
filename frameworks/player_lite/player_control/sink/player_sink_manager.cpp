@@ -311,6 +311,10 @@ void SinkManager::SetRenderMode(RenderMode mode)
     if (videoSinkInfo_[0].sink != nullptr) {
         videoSinkInfo_[0].sink->SetRenderMode(mode);
     }
+    if (audioSinkInfo_[0].sink != nullptr) {
+        audioSinkInfo_[0].sink->SetRenderMode(mode);
+    }
+    pauseAfterPlay_ = (mode == RENDER_MODE_PAUSE_AFTER_PLAY) ? true : false;
 }
 
 int32_t SinkManager::SetVolume(float left, float right)

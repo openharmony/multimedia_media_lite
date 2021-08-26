@@ -595,12 +595,7 @@ int32_t PlayerImpl::GetCurrentPosition(int64_t &position)
 
 void PlayerImpl::GetDurationInner(int64_t &durationMs)
 {
-    FormatFileInfo formatInfo;
-    int32_t ret = player_->GetFileInfo(formatInfo);
-    if (ret != 0) {
-        MEDIA_ERR_LOG("GetDuration failed, ret is %d", ret);
-    }
-    durationMs = (ret == 0) ? formatInfo.s64Duration : -1;
+    durationMs = formatFileInfo_.s64Duration;
 }
 
 int32_t PlayerImpl::GetDuration(int64_t &durationMs)
@@ -608,12 +603,9 @@ int32_t PlayerImpl::GetDuration(int64_t &durationMs)
     std::lock_guard<std::mutex> valueLock(lock_);
     MEDIA_INFO_LOG("process in");
     CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
-    CHK_NULL_RETURN(player_);
-    if (currentState_ != PLAYER_PREPARED && currentState_ != PLAYER_STARTED && currentState_ != PLAYER_PAUSED &&
-        currentState_ != PLAYER_STOPPED && currentState_ != PLAYER_PLAYBACK_COMPLETE) {
-        durationMs = -1;
-        MEDIA_ERR_LOG("Can not GetDuration, currentState_ is %d", currentState_);
-        return -1;
+    if (currentState_ == PLAYER_IDLE || currentState_ == PLAYER_INITIALIZED) {
+        durationMs = 0;
+        return 0;
     }
     GetDurationInner(durationMs);
     return 0;
@@ -624,21 +616,14 @@ int32_t PlayerImpl::GetVideoWidth(int32_t &videoWidth)
     std::lock_guard<std::mutex> valueLock(lock_);
     MEDIA_INFO_LOG("process in");
     CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
-    CHK_NULL_RETURN(player_);
-    FormatFileInfo formatInfo;
-    int32_t ret;
+
     videoWidth = 0;
     if (currentState_ != PLAYER_PREPARED && currentState_ != PLAYER_STARTED && currentState_ != PLAYER_PAUSED &&
         currentState_ != PLAYER_STOPPED && currentState_ != PLAYER_PLAYBACK_COMPLETE) {
         MEDIA_ERR_LOG("Can not GetVideoWidth, currentState_ is %d", currentState_);
         return -1;
     }
-    CHECK_FAILED_PRINT(memset_s(&formatInfo, sizeof(formatInfo), 0, sizeof(FormatFileInfo)), 0, "memset failed");
-    ret = player_->GetFileInfo(formatInfo);
-    if (ret != 0) {
-        MEDIA_ERR_LOG("GetFileInfo failed, ret is %d", ret);
-        return ret;
-    }
+
     if (formatFileInfo_.s32UsedVideoStreamIndex == -1) {
         return -1;
     }
@@ -656,31 +641,24 @@ int32_t PlayerImpl::GetVideoHeight(int32_t &videoHeight)
     std::lock_guard<std::mutex> valueLock(lock_);
     MEDIA_INFO_LOG("process in");
     CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
-    CHK_NULL_RETURN(player_);
-    FormatFileInfo formatInfo;
-    int32_t ret;
+
     videoHeight = 0;
     if (currentState_ != PLAYER_PREPARED && currentState_ != PLAYER_STARTED && currentState_ != PLAYER_PAUSED &&
         currentState_ != PLAYER_STOPPED && currentState_ != PLAYER_PLAYBACK_COMPLETE) {
         MEDIA_ERR_LOG("Can not GetVideoHeight, currentState_ is %d", currentState_);
         return -1;
     }
-    CHECK_FAILED_PRINT(memset_s(&formatInfo, sizeof(formatInfo), 0, sizeof(FormatFileInfo)), 0, "memset failed");
-    ret = player_->GetFileInfo(formatInfo);
-    if (ret != 0) {
-        MEDIA_ERR_LOG("GetFileInfo failed, ret is %d", ret);
-        return ret;
-    }
     if (formatFileInfo_.s32UsedVideoStreamIndex == -1) {
         return -1;
     }
+
     for (int i = 0; i < HI_DEMUXER_RESOLUTION_CNT; i++) {
         if (formatFileInfo_.stSteamResolution[i].s32VideoStreamIndex == formatFileInfo_.s32UsedVideoStreamIndex) {
             videoHeight = formatFileInfo_.stSteamResolution[i].u32Height;
             break;
         }
     }
-    return ret;
+    return 0;
 }
 
 static int32_t PlayerControlCheckTPlayAttr(const float speed, TplayDirect direction)
@@ -960,7 +938,7 @@ int32_t PlayerImpl::SetLoop(bool loop)
 {
     std::lock_guard<std::mutex> valueLock(lock_);
     CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
-    CHK_NULL_RETURN(player_);
+    CHECK_FAILED_RETURN(isStreamSource_, false, -1, "stream source not support loop player");
     isSingleLoop_ = loop;
     return 0;
 }
@@ -1123,10 +1101,7 @@ void AdapterStreamCallback::SetParameters(const Format &params)
 int32_t PlayerImpl::GetReadableSize(const void *handle)
 {
     const PlayerImpl *playImpl = (const PlayerImpl*)handle;
-    if (playImpl == nullptr) {
-        MEDIA_ERR_LOG("handle null");
-        return -1;
-    }
+    CHK_NULL_RETURN(playImpl);
     if (playImpl->bufferSource_ == nullptr) {
         MEDIA_ERR_LOG("bufferSource null");
         return -1;

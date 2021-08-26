@@ -135,7 +135,7 @@ int PlayerControlState::HandleMessage(const MsgInfo& msgInfo)
             break;
         case PLAYERCONTROL_MSG_SET_DATASOURCE_URI:
             CHECK_NULL_RETURN(msgInfo.msgData, HI_ERR_PLAYERCONTROL_NULL_PTR, "msgData null");
-            ret = playerControlHandle_->DoSetDataSource(*reinterpret_cast<const std::string *>(msgInfo.msgData));
+            ret = playerControlHandle_->DoSetDataSource(reinterpret_cast<const char *>(msgInfo.msgData));
             break;
         case PLAYERCONTROL_MSG_SET_DATASOURCE_FD:
             CHECK_NULL_RETURN(msgInfo.msgData, HI_ERR_PLAYERCONTROL_NULL_PTR, "msgData null");

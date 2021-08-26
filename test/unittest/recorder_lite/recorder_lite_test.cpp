@@ -1679,8 +1679,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetMaxFileSize_test_002, Level1)
 HWTEST_F(RecoderLiteTest, medialite_recorder_SetOutputFile_test_001, Level1)
 {
     Recorder *recorder = new Recorder();
-    int32_t ret = recorder->SetOutputFile(1);
-    EXPECT_EQ(ERR_INVALID_PARAM, ret);
+    int32_t ret = recorder->SetOutputFile(-1);
+    EXPECT_EQ(-5, ret);
     delete recorder;
     recorder = NULL;
 }
@@ -1696,8 +1696,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetOutputFile_test_001, Level1)
 HWTEST_F(RecoderLiteTest, medialite_recorder_SetNextOutputFile_test_001, Level1)
 {
     Recorder *recorder = new Recorder();
-    int32_t ret = recorder->SetNextOutputFile(1);
-    EXPECT_EQ(ERR_INVALID_PARAM, ret);
+    int32_t ret = recorder->SetNextOutputFile(-1);
+    EXPECT_EQ(-5, ret);
     delete recorder;
     recorder = NULL;
 }

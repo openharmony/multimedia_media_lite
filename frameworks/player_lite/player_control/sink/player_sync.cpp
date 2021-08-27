@@ -26,7 +26,8 @@ const int32_t SYNC_STOP_PLUS_MS = 3000;
 const int32_t SYNC_START_NEGATIVE_MS = 100;
 const int32_t SYNC_START_PLUS_MS = 50;
 const int32_t MAX_VID_LOST_FRAMENUM = 10;
-
+const int32_t FIRST_VID_RENDER_WAIT_TIME_WHEN_NO_AUDIO = 50000;
+const int32_t FIRST_AUDIO_RENDER_WAIT_VID_TIME = 10000000; /* audio wait first video frame time */
 const int32_t SS2US = 1000000;
 const int32_t US2MS = 1000;
 const int64_t INT64_MAX_VALUE = 0x7fffffffffffffff;
@@ -107,6 +108,7 @@ int32_t PlayerSync::Reset(SyncChn syncChn)
         lastAudioTsUs_ = AV_INVALID_PTS;
         lastAudioRealTsUs_ = AV_INVALID_PTS;
         firstAudFrameTs_ = AV_INVALID_PTS;
+        firstAudFrameTime_ = 0;
         pthread_mutex_unlock(&audSyncLock_);
     } else {
         MEDIA_ERR_LOG("invalid sync chn: %d", syncChn);
@@ -144,15 +146,16 @@ PlayerSync::PlayerSync()
     isAudEnable_ = false;
     isFristVidFrame_ = false;
     vidTimeSourceDelta_ = 0;
-    lastVideoTsUs_ = 0;
+    lastVideoTsUs_ = AV_INVALID_PTS;
     firstVidFrameTs_ = 0;
     frstVidFrameTime_ = 0;
     continousVidLost_ = 0;
     isFristAudFrame_ = false;
     audTimeSourceDelta_ = 0;
-    lastAudioTsUs_ = 0;
+    lastAudioTsUs_ = AV_INVALID_PTS;
     lastAudioRealTsUs_ = 0;
-    firstAudFrameTs_ = 0;
+    firstAudFrameTs_ = AV_INVALID_PTS;
+    firstAudFrameTime_ = 0;
     isInTrickPlayMode_ = false;
     speed_ = 1.0;
     tplayDirect_ = TPLAY_DIRECT_BUTT;
@@ -324,6 +327,15 @@ int32_t PlayerSync::ProcVidFrame(int64_t ptsMs, SyncRet &result)
     ptsUs = ptsMs * US2MS;
     // first video frame quickoutput
     if (isFristVidFrame_) {
+        if (!isAudEnable_) {
+            if (frstVidFrameTime_ == 0) {
+                frstVidFrameTime_ = GetCurTimeUs();
+            }
+            if (GetCurTimeUs() - frstVidFrameTime_ < FIRST_VID_RENDER_WAIT_TIME_WHEN_NO_AUDIO) {
+                result = SYNC_RET_REPEAT;
+                goto UNLOCK;
+            }
+        }
         result = OnVideoFirstFrame(ptsUs);
         goto UNLOCK;
     }
@@ -372,9 +384,25 @@ int32_t PlayerSync::ProcAudFrame(int64_t ptsMs, SyncRet &result)
         pthread_mutex_unlock(&audSyncLock_);
         return HI_SUCCESS;
     }
+    /* video stream exist, and wait for first video frame. video out first */
+    if (isFristVidFrame_ && isVidEnable_) {
+        if (firstAudFrameTime_ == 0) {
+            firstAudFrameTime_ = GetCurTimeUs();
+        }
+        if (GetCurTimeUs() - firstAudFrameTime_ <= FIRST_AUDIO_RENDER_WAIT_VID_TIME) {
+            result = SYNC_RET_REPEAT;
+            pthread_mutex_unlock(&audSyncLock_);
+            return HI_SUCCESS;
+        }
+    }
     int64_t timeUs = ptsMs * US2MS;
     int64_t nowUs;
     if (isFristAudFrame_) {
+        if (lastVideoTsUs_ != AV_INVALID_PTS && (lastVideoTsUs_ < timeUs)) {
+            result = SYNC_RET_REPEAT;
+            pthread_mutex_unlock(&audSyncLock_);
+            return HI_SUCCESS;
+        }
         // caculate pts and clock delta of first frame
         int64_t firstTimeUs = GetCurTimeUs();
         audTimeSourceDelta_ = firstTimeUs - timeUs;

@@ -307,10 +307,9 @@ int32_t PlayerControl::RegCallback(PlayerCtrlCallbackParam &eventObserver)
 int32_t PlayerControl::SetDataSource(const std::string filePath)
 {
     CHECK_NULL_RETURN(stateMachine_, HI_ERR_PLAYERCONTROL_NULL_PTR, "stateMachine_ nullptr");
-    std::string mediafile = filePath;
     MsgInfo msg;
     msg.what = PLAYERCONTROL_MSG_SET_DATASOURCE_URI;
-    msg.msgData = reinterpret_cast<void *>(&mediafile);
+    msg.msgData = const_cast<void *>(reinterpret_cast<const void *>(filePath.c_str()));
     msg.msgDataLen = 0;
     return stateMachine_->Send(msg);
 }

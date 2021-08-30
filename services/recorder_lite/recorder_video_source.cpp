@@ -67,7 +67,7 @@ void RecorderVideoSource::OnBufferAvailable()
     }
 
     if (!started_) {
-        MEDIA_ERR_LOG("Recorder source is not started");
+        MEDIA_ERR_LOG("video source is not started");
         acquireBuffer_ = surface_->AcquireBuffer();
         if (acquireBuffer_ == nullptr) {
             MEDIA_INFO_LOG("Acquire buffer failed.");
@@ -76,6 +76,7 @@ void RecorderVideoSource::OnBufferAvailable()
         surface_->ReleaseBuffer(acquireBuffer_);
         return;
     }
+
     std::unique_lock<std::mutex> lock(lock_);
     if (frameAvailableCount_ == 0) {
         frameAvailableCondition_.notify_one();
@@ -117,7 +118,7 @@ int32_t RecorderVideoSource::AcquireBuffer(RecorderSourceBuffer &buffer, bool is
     }
     void *pBase = acquireBuffer_->GetVirAddr();
     if (pBase == nullptr) {
-        MEDIA_ERR_LOG("GetVirAddr pBase is nullptr");
+        MEDIA_ERR_LOG("GetVirAddr is nullptr");
         return ERR_READ_BUFFER;
     }
     buffer.dataAddr = (uint8_t *)pBase;
@@ -143,6 +144,11 @@ int32_t RecorderVideoSource::Stop()
     started_ = false;
     std::unique_lock<std::mutex> lock(lock_);
     frameAvailableCondition_.notify_all();
+    return SUCCESS;
+}
+
+int32_t RecorderVideoSource::Resume()
+{
     return SUCCESS;
 }
 

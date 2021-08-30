@@ -82,7 +82,6 @@ void AudioSink::DeInit()
         audioAdapter_->DestroyRender(audioAdapter_, audioRender_);
     }
     if (audioManager_ != nullptr) {
-        MEDIA_ERR_LOG("audioAdapter_ UnloadModule not null");
         audioManager_->UnloadAdapter(audioManager_, audioAdapter_);
     }
     frameCacheQue_.clear();
@@ -416,7 +415,7 @@ int32_t AudioSink::Reset(void)
 {
     ReleaseQueAllFrame();
     if (started_ && audioRender_ != nullptr) {
-        audioRender_->control.Flush(reinterpret_cast<AudioHandle>(audioRender_));
+        (void)audioRender_->control.Flush(reinterpret_cast<AudioHandle>(audioRender_));
     }
 
     ResetRendStartTime();

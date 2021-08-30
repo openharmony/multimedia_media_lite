@@ -108,6 +108,7 @@ private:
     int64_t lastAudioTsUs_;      // pts in us
     int64_t lastAudioRealTsUs_;  // clock time in us
     int64_t firstAudFrameTs_;
+    int64_t firstAudFrameTime_;
     bool  isInTrickPlayMode_;
     float speed_;
     TplayDirect  tplayDirect_;

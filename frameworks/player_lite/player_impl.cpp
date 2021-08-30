@@ -392,7 +392,7 @@ int32_t PlayerImpl::Pause()
     MEDIA_INFO_LOG("process in");
     CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
     CHK_NULL_RETURN(player_);
-    if (currentState_ == PLAYER_PAUSED || currentState_ == PLAYER_PLAYBACK_COMPLETE) {
+    if (currentState_ == PLAYER_PAUSED) {
         MEDIA_ERR_LOG("currentState_ is %d", currentState_);
         return 0;
     }
@@ -498,7 +498,7 @@ int32_t PlayerImpl::Rewind(int64_t mSeconds, int32_t mode)
     std::lock_guard<std::mutex> valueLock(lock_);
     MEDIA_INFO_LOG("process in");
     CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
-    if (currentState_ != PLAYER_STARTED && currentState_ != PLAYER_PAUSED) {
+    if (currentState_ != PLAYER_STARTED && currentState_ != PLAYER_PAUSED && currentState_ != PLAYER_PREPARED) {
         MEDIA_ERR_LOG("Can not Rewind, currentState_ is %d", currentState_);
         return -1;
     }
@@ -537,7 +537,7 @@ int32_t PlayerImpl::SetVolume(float leftVolume, float rightVolume)
     CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
     CHK_NULL_RETURN(player_);
     if ((currentState_ != PLAYER_STARTED) && (currentState_ != PLAYER_PAUSED) &&
-        (currentState_ != PLAYER_PREPARED)) {
+        (currentState_ != PLAYER_PREPARED) && (currentState_ != PLAYER_INITIALIZED)) {
         MEDIA_ERR_LOG("SetVolume failed, currentState_ is %d", currentState_);
         return -1;
     }
@@ -560,7 +560,7 @@ int32_t PlayerImpl::SetSurface(Surface *surface)
     std::lock_guard<std::mutex> valueLock(lock_);
     MEDIA_INFO_LOG("process in");
     CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
-    if (currentState_ != PLAYER_PREPARED) {
+    if ((currentState_ != PLAYER_PREPARED) && (currentState_ != PLAYER_INITIALIZED)) {
         MEDIA_ERR_LOG("SetSurface failed, currentState_ is %d", currentState_);
         return -1;
     }

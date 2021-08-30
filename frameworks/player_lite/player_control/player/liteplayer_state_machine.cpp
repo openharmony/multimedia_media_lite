@@ -34,14 +34,14 @@ namespace {
         { true,  true,  false, false, false, false, false }, /* setsrc_stream */
         { false, true,  true,  false, false, false, false }, /* prepare */
         { false, false, true,  true,  true,  true,  false }, /* play */
-        { false, false, false, true,  false, true,  false }, /* seek */
+        { false, false, true,  true,  false, true,  false }, /* seek */
         { false, false, false, true,  false, true,  false }, /* pause */
         { false, false, false, true,  true,  false, false }, /* tplay */
         { true,  true,  true,  true,  true,  true,  true },  /* stop */
         { false, false, true,  true,  true,  true,  false }, /* getInfo */
         { true,  false, false, true,  true,  true,  false }, /* handledata */
         { true,  true,  true,  true,  true,  true,  true },  /* Error */
-        { false,  false,  true,  true,  true,  true,  true },  /* setVolume */
+        { false, true,  true,  true,  true,  true,  false },  /* setVolume */
         { true,  true,  true,  true,  true,  true,  true },  /* invoke */
     };
 

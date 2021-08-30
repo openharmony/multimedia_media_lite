@@ -52,6 +52,8 @@ public:
 
     virtual int32_t Stop() override;
 
+    virtual int32_t Resume() override;
+
     virtual int32_t Pause() override;
 
     virtual int32_t Release() override;

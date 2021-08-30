@@ -18,12 +18,19 @@
 
 namespace OHOS {
 namespace Media {
+#define CHK_NULL_RETURN(ptr) \
+do { \
+    if (ptr == nullptr) { \
+        MEDIA_ERR_LOG("ptr null"); \
+        return -1; \
+    } \
+} while (0)
+
 const int64_t AUDIO_SOURCE_TIME_US_S = 1000000ULL;   /* us to s */
 const int64_t AUDIO_SOURCE_TIME_NS_US = 1000ULL;     /* ns  to us */
 
-
 RecorderAudioSource::RecorderAudioSource()
-    :audioCap_(new AudioCapturer()),
+    :audioCap_(new(std::nothrow) AudioCapturer()),
      framesize_(0),
      buffer_(nullptr),
      frameSeq_(0)
@@ -40,6 +47,7 @@ RecorderAudioSource::~RecorderAudioSource()
 
 int32_t RecorderAudioSource::Init(const RecorderAudioSourceConfig &sourceConfig)
 {
+    CHK_NULL_RETURN(audioCap_);
     int32_t ret = 0;
     AudioCapturerInfo info;
     info.inputSource = sourceConfig.inputSource;
@@ -70,7 +78,7 @@ int32_t RecorderAudioSource::Init(const RecorderAudioSourceConfig &sourceConfig)
 
 int32_t RecorderAudioSource::Start()
 {
-    if (!audioCap_->Start()) {
+    if (audioCap_ == nullptr || !audioCap_->Start()) {
         MEDIA_ERR_LOG("AudioCapturer Can't Start");
         return ERR_UNKNOWN;
     }
@@ -94,6 +102,7 @@ static int32_t Int64Multiple(int64_t firstNumber, int64_t secondNumber, int64_t 
 
 int32_t RecorderAudioSource::AcquireBuffer(RecorderSourceBuffer &buffer, bool isBlocking)
 {
+    CHK_NULL_RETURN(audioCap_);
     int32_t readLen = audioCap_->Read(buffer_, framesize_, isBlocking);
     if (readLen <= SUCCESS || readLen > static_cast<int32_t>(framesize_)) {
         MEDIA_ERR_LOG("audioCap Read failed ret:0x%x", readLen);
@@ -126,10 +135,15 @@ int32_t RecorderAudioSource::ReleaseBuffer(RecorderSourceBuffer &buffer)
 
 int32_t RecorderAudioSource::Stop()
 {
-    if (!audioCap_->Stop()) {
+    if (audioCap_ == nullptr || !audioCap_->Stop()) {
         MEDIA_ERR_LOG("AudioCapturer Can't Stop");
         return ERR_UNKNOWN;
     }
+    return SUCCESS;
+}
+
+int32_t RecorderAudioSource::Resume()
+{
     return SUCCESS;
 }
 
@@ -140,7 +154,7 @@ int32_t RecorderAudioSource::Pause()
 
 int32_t RecorderAudioSource::Release()
 {
-    if (!audioCap_->Release()) {
+    if (audioCap_ == nullptr || !audioCap_->Release()) {
         MEDIA_ERR_LOG("AudioCapturer Can't Release");
         return ERR_UNKNOWN;
     }

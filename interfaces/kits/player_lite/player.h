@@ -388,6 +388,22 @@ public:
     int32_t GetPlaybackSpeed(float &speed);
 
     /**
+     * Sets the audio type.
+     *
+     * @param type Indicates the audio type.
+     * @return Returns {@code 0} if the setting is successful; returns {@code -1} otherwise.
+     */
+    int32_t SetAudioStreamType(int32_t type);
+
+    /**
+     * Obtains the audio type.
+     *
+     * @param type Indicates the audio type.
+     * @return Returns {@code 0} if the playback speed is set; returns {@code -1} otherwise.
+     */
+    void GetAudioStreamType(int32_t &type);
+
+    /**
      * set parameter through format, extended interface.
      *
      * @param params Indicates the extended-informations. Format see {@link Format}

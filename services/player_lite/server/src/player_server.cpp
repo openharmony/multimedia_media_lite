@@ -14,9 +14,10 @@
  */
 
 #include "player_server.h"
+#include "media_info.h"
 #include "media_log.h"
-#include "player_type.h"
 #include "format.h"
+#include "player_type.h"
 #include "source.h"
 #include "surface.h"
 #include "surface_impl.h"
@@ -106,6 +107,12 @@ void PlayerServer::PlayerServerRequestHandle(int funcId, void *origin, IpcIo *re
             break;
         case PLAYER_SERVER_SET_PARAMETER:
             PlayerServer::GetInstance()->SetParameter(req, reply);
+            break;
+        case PLAYER_SERVER_SET_AUDIO_STREAM_TYPE:
+            PlayerServer::GetInstance()->SetAudioStreamType(req, reply);
+            break;
+        case PLAYER_SERVER_GET_AUDIO_STREAM_TYPE:
+            PlayerServer::GetInstance()->GetAudioStreamType(req, reply);
             break;
         default:
             MEDIA_ERR_LOG("code not support: %d", funcId);
@@ -646,6 +653,31 @@ void PlayerServer::SetParameter(IpcIo *req, IpcIo *reply)
     }
 
     IpcIoPushInt32(reply, player_->SetParameter(formats));
+}
+
+void PlayerServer::SetAudioStreamType(IpcIo *req, IpcIo *reply)
+{
+    MEDIA_INFO_LOG("process in");
+    int32_t type = IpcIoPopInt32(req);
+    if (player_ != nullptr) {
+        IpcIoPushInt32(reply, player_->SetAudioStreamType(type));
+        return;
+    }
+    IpcIoPushInt32(reply, -1);
+}
+
+void PlayerServer::GetAudioStreamType(IpcIo *req, IpcIo *reply)
+{
+    MEDIA_INFO_LOG("process in");
+    int32_t type = TYPE_MEDIA;
+    if (player_ != nullptr) {
+        player_->GetAudioStreamType(type);
+        IpcIoPushInt32(reply, 0);
+        IpcIoPushFloat(reply, type);
+        return;
+    }
+    IpcIoPushInt32(reply, -1);
+    IpcIoPushFloat(reply, type);
 }
 
 void PalyerCallbackImpl::OnPlaybackComplete()

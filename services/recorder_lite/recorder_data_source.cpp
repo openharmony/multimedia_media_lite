@@ -13,17 +13,19 @@
  * limitations under the License.
  */
 
-#include "recorder_video_source.h"
+#include "recorder_data_source.h"
 #include "media_log.h"
 
 namespace OHOS {
 namespace Media {
 constexpr int32_t KEY_IS_SYNC_FRAME = 1; // "is-sync-frame"
-constexpr int32_t KEY_TIME_US = 2;       // "timeUs"
+constexpr int32_t KEY_TIME_US = 2; // "timeUs"
 constexpr int32_t SURFACE_QUEUE_SIZE = 3;
-Surface *g_surface = nullptr;
+constexpr int32_t SURFACE_SIZE = 1024 * 1024; // 1M for surface
+constexpr int32_t SURFACE_DEFAULT_HEIGHT = 1920; // 1M for surface
+constexpr int32_t SURFACE_DEFAULT_WIDTH = 1080; // 1M for surface
 
-RecorderVideoSource::RecorderVideoSource()
+RecorderDataSource::RecorderDataSource()
     : surface_(nullptr),
       frameAvailableCount_(0),
       acquireBuffer_(nullptr),
@@ -31,57 +33,32 @@ RecorderVideoSource::RecorderVideoSource()
 {
 }
 
-RecorderVideoSource::~RecorderVideoSource()
+RecorderDataSource::~RecorderDataSource()
 {
     if (surface_ != nullptr) {
         surface_->UnregisterConsumerListener();
     }
 }
 
-std::shared_ptr<OHOS::Surface> RecorderVideoSource::GetSurface()
+std::shared_ptr<OHOS::Surface> RecorderDataSource::GetSurface()
 {
     if (surface_.get() == nullptr) {
         Surface *surface = Surface::CreateSurface();
         if (surface == nullptr) {
             return nullptr;
         }
-        int videoWidth = 1920;
-        int videoHeight = 1080;
-        surface->SetWidthAndHeight(videoWidth, videoHeight);
-        int queueSize = 3;
-        surface->SetQueueSize(queueSize);
-        int videoSize = 1024;
-        surface->SetSize(videoSize * videoSize);
-        g_surface = surface;
+        surface->SetWidthAndHeight(SURFACE_DEFAULT_HEIGHT, SURFACE_DEFAULT_WIDTH);
+        surface->SetQueueSize(SURFACE_QUEUE_SIZE);
+        surface->SetSize(SURFACE_SIZE);
         surface->RegisterConsumerListener(*this);
         surface_.reset(surface);
     }
-    MEDIA_INFO_LOG("Get Recorder Surface SUCCESS :%p", surface_.get());
+    MEDIA_INFO_LOG("Get Recorder data Surface SUCCESS");
+
     return surface_;
 }
 
-int32_t RecorderVideoSource::SetSurfaceSize(int32_t width, int32_t height)
-{
-    if (surface_.get() == nullptr) {
-        Surface *surface = Surface::CreateSurface();
-        if (surface == nullptr) {
-            return ERR_UNKNOWN;
-        }
-
-        g_surface = surface;
-        surface->RegisterConsumerListener(*this);
-        surface_.reset(surface);
-    }
-    Surface *surface = surface_.get();
-    MEDIA_INFO_LOG("Get Recorder Surface SUCCESS");
-    surface->SetWidthAndHeight(width, height);
-    surface->SetQueueSize(SURFACE_QUEUE_SIZE);
-    /* 3/4 is the worst case of compression provide by encoder. */
-    surface->SetSize(width * height * 3 / 4);
-    return SUCCESS;
-}
-
-void RecorderVideoSource::OnBufferAvailable()
+void RecorderDataSource::OnBufferAvailable()
 {
     if (surface_ == nullptr) {
         MEDIA_ERR_LOG("surface is NULL");
@@ -89,10 +66,10 @@ void RecorderVideoSource::OnBufferAvailable()
     }
 
     if (!started_) {
-        MEDIA_ERR_LOG("video source is not started");
+        MEDIA_ERR_LOG("data source is not started");
         acquireBuffer_ = surface_->AcquireBuffer();
         if (acquireBuffer_ == nullptr) {
-            MEDIA_INFO_LOG("Acquire buffer failed.");
+            MEDIA_ERR_LOG("Acquire buffer failed.");
             return;
         }
         surface_->ReleaseBuffer(acquireBuffer_);
@@ -106,14 +83,14 @@ void RecorderVideoSource::OnBufferAvailable()
     frameAvailableCount_++;
 }
 
-int32_t RecorderVideoSource::Start()
+int32_t RecorderDataSource::Start()
 {
     started_ = true;
-    MEDIA_INFO_LOG("Start Recorder Video Source SUCCESS");
+    MEDIA_INFO_LOG("Start data source SUCCESS");
     return SUCCESS;
 }
 
-int32_t RecorderVideoSource::AcquireBuffer(RecorderSourceBuffer &buffer, bool isBlocking)
+int32_t RecorderDataSource::AcquireBuffer(RecorderSourceBuffer &buffer, bool isBlocking)
 {
     if (!started_) {
         return ERR_NOT_STARTED;
@@ -123,12 +100,11 @@ int32_t RecorderVideoSource::AcquireBuffer(RecorderSourceBuffer &buffer, bool is
         if (frameAvailableCount_ <= 0) {
             frameAvailableCondition_.wait(lock);
             if (!started_) {
-                return ERR_READ_BUFFER;
+                return SUCCESS;
             }
         }
         frameAvailableCount_--;
     }
-
     if (surface_ == nullptr) {
         MEDIA_ERR_LOG("surface is NULL");
         return ERR_READ_BUFFER;
@@ -140,7 +116,7 @@ int32_t RecorderVideoSource::AcquireBuffer(RecorderSourceBuffer &buffer, bool is
     }
     void *pBase = acquireBuffer_->GetVirAddr();
     if (pBase == nullptr) {
-        MEDIA_ERR_LOG("GetVirAddr is nullptr");
+        MEDIA_ERR_LOG("GetVirAddr nullptr");
         return ERR_READ_BUFFER;
     }
     buffer.dataAddr = (uint8_t *)pBase;
@@ -155,13 +131,13 @@ int32_t RecorderVideoSource::AcquireBuffer(RecorderSourceBuffer &buffer, bool is
     return SUCCESS;
 }
 
-int32_t RecorderVideoSource::ReleaseBuffer(RecorderSourceBuffer &buffer)
+int32_t RecorderDataSource::ReleaseBuffer(RecorderSourceBuffer &buffer)
 {
     surface_->ReleaseBuffer(acquireBuffer_);
     return SUCCESS;
 }
 
-int32_t RecorderVideoSource::Stop()
+int32_t RecorderDataSource::Stop()
 {
     started_ = false;
     std::unique_lock<std::mutex> lock(lock_);
@@ -169,17 +145,17 @@ int32_t RecorderVideoSource::Stop()
     return SUCCESS;
 }
 
-int32_t RecorderVideoSource::Resume()
+int32_t RecorderDataSource::Resume()
 {
     return SUCCESS;
 }
 
-int32_t RecorderVideoSource::Pause()
+int32_t RecorderDataSource::Pause()
 {
     return SUCCESS;
 }
 
-int32_t RecorderVideoSource::Release()
+int32_t RecorderDataSource::Release()
 {
     return SUCCESS;
 }

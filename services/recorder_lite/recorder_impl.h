@@ -16,18 +16,19 @@
 #ifndef RECORDER_IMPL_H
 #define RECORDER_IMPL_H
 
+#include <vector>
 #include "recorder.h"
 #include "recorder_audio_source.h"
+#include "recorder_data_source.h"
 #include "recorder_sink.h"
 #include "recorder_video_source.h"
 #include "serializer.h"
-#include <vector>
 
 namespace OHOS {
 namespace Media {
 constexpr uint32_t RECORDER_SOURCE_MAX_CNT = 4;
 
-enum RecState { INITIALIZED = 0, PREPARED, RECORDING, PAUSED, RESETED, STOPPED, RELEASED };
+enum RecState {INITIALIZED = 0, PREPARED, RECORDING, PAUSED, STOPPED, RELEASED};
 
 struct SourceManager {
     RecorderVideoSource *videoSource;
@@ -40,8 +41,14 @@ struct SourceManager {
     bool audioSourcePaused;
     int32_t audioTrackId;
     std::thread audioProcessThread;
+    RecorderDataSource *dataSource;
+    bool dataSourceStarted;
+    bool dataSourcePaused;
+    int32_t dataTrackId;
+    std::thread dataProcessThread;
     RecorderVideoSourceConfig videoSourceConfig;
     RecorderAudioSourceConfig audioSourceConfig;
+    RecorderDataSourceConfig dataSourceConfig;
 };
 
 class RecorderImpl {
@@ -62,6 +69,8 @@ public:
     int32_t SetAudioSampleRate(int32_t sourceId, int32_t rate);
     int32_t SetAudioChannels(int32_t sourceId, int32_t num);
     int32_t SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRate);
+
+    int32_t SetDataSource(DataSourceType source, int32_t &sourceId);
 
     int32_t SetLocation(int32_t latitude, int32_t longitude);
     int32_t SetMaxDuration(int32_t duration);
@@ -85,24 +94,33 @@ public:
 private:
     int32_t InitCheck();
     int32_t ResetConfig();
-    int32_t GetFreeVideoSourceID(int32_t &sourceId);
-    int32_t GetFreeAudioSourceID(int32_t &sourceId);
-    bool IsValidSourceID(int32_t sourceId);
+    int32_t GetFreeVideoSourceID(int32_t &sourceId, uint32_t &freeIndex);
+    int32_t GetFreeAudioSourceID(int32_t &sourceId, uint32_t &freeIndex);
+    int32_t GetFreeDataSourceID(int32_t &sourceId, uint32_t &freeIndex);
+    bool GetIndexBySourceID(int32_t sourceId, uint32_t &validIndex);
     bool IsValidAudioSource(AudioSourceType source);
+    bool IsPrepared();
     int32_t IsValidFileFd(int32_t fd);
     int32_t GetVideoTrackSource(const RecorderVideoSourceConfig &videoSourceConfig, TrackSource &trackSource);
     int32_t GetAudioTrackSource(const RecorderAudioSourceConfig &audioSourceConfig, TrackSource &trackSource);
+    int32_t GetDataTrackSource(TrackSource &trackSource);
     int32_t PrepareAudioSource();
     int32_t PrepareVideoSource();
+    int32_t PrepareDataSource();
     int32_t StartAudioSource();
     int32_t StartVideoSource();
+    int32_t StartDataSource();
     int32_t PauseAudioSource();
     int32_t PauseVideoSource();
+    int32_t PauseDataSource();
     int32_t ResumeAudioSource();
     int32_t ResumeVideoSource();
+    int32_t ResumeDataSource();
     int32_t StopAudioSource();
     int32_t StopVideoSource();
+    int32_t StopDataSource();
     int32_t PrepareRecorderSink();
+    int32_t StopInternal(bool block);
 
 private:
     SourceManager sourceManager_[RECORDER_SOURCE_MAX_CNT];

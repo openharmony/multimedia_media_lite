@@ -197,6 +197,18 @@ int Player::PlayerClient::Callback(void* owner, int code, IpcIo *reply)
             *data = IpcIoPopFloat(reply);
             break;
         }
+        case PLAYER_SERVER_SET_AUDIO_STREAM_TYPE: {
+            int32_t *ret = static_cast<int32_t *>(para->ret);
+            *ret = IpcIoPopInt32(reply);
+            break;
+        }
+        case PLAYER_SERVER_GET_AUDIO_STREAM_TYPE: {
+            int32_t *ret = static_cast<int32_t *>(para->ret);
+            *ret = IpcIoPopInt32(reply);
+            int32_t *data = static_cast<int32_t *>(para->data);
+            *data = IpcIoPopInt32(reply);
+            break;
+        }
         case PLAYER_SERVER_SET_PARAMETER: {
             int32_t *ret = static_cast<int32_t *>(para->ret);
             *ret = IpcIoPopInt32(reply);
@@ -703,6 +715,39 @@ int32_t Player::PlayerClient::SetParameter(const Format &params)
         MEDIA_ERR_LOG("PlayerClient::SetParameter failed, ret=%d\n", ret);
     }
     return ans;
+}
+
+int32_t Player::PlayerClient::SetAudioStreamType(int32_t type)
+{
+    IpcIo io;
+    uint8_t tmpData[DEFAULT_IPC_SIZE];
+    IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
+    IpcIoPushInt32(&io, type);
+    int32_t ans = -1;
+    CallBackPara para = {};
+    para.funcId = PLAYER_SERVER_SET_AUDIO_STREAM_TYPE;
+    para.ret = &ans;
+    uint32_t ret = proxy_->Invoke(proxy_, PLAYER_SERVER_SET_AUDIO_STREAM_TYPE, &io, &para, Callback);
+    if (ret != 0) {
+        MEDIA_ERR_LOG("SetPlaybackSpeed failed, ret=%d\n", ret);
+    }
+    return ans;
+}
+
+void Player::PlayerClient::GetAudioStreamType(int32_t &type)
+{
+    IpcIo io;
+    uint8_t tmpData[DEFAULT_IPC_SIZE];
+    IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
+    int32_t ans = -1;
+    CallBackPara para = {};
+    para.funcId = PLAYER_SERVER_GET_AUDIO_STREAM_TYPE;
+    para.ret = &ans;
+    para.data = &type;
+    uint32_t ret = proxy_->Invoke(proxy_, PLAYER_SERVER_GET_AUDIO_STREAM_TYPE, &io, &para, Callback);
+    if (ret != 0) {
+        MEDIA_ERR_LOG("GetPlaybackSpeed failed, ret=%d\n", ret);
+    }
 }
 }
 }

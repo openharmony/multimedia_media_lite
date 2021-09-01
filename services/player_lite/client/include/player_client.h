@@ -70,6 +70,8 @@ public:
     int32_t SetPlaybackSpeed(float speed);
     int32_t GetPlaybackSpeed(float &speed);
     int32_t SetParameter(const Format &params);
+    int32_t SetAudioStreamType(int32_t type);
+    void GetAudioStreamType(int32_t &type);
 
 private:
     PlayerClient() : proxy_(nullptr), sid_(nullptr) {}

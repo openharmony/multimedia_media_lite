@@ -74,6 +74,8 @@ private:
     void SetPlaybackSpeed(IpcIo *req, IpcIo *reply);
     void GetPlaybackSpeed(IpcIo *req, IpcIo *reply);
     void SetParameter(IpcIo *req, IpcIo *reply);
+    void SetAudioStreamType(IpcIo *req, IpcIo *reply);
+    void GetAudioStreamType(IpcIo *req, IpcIo *reply);
 };
 }
 }

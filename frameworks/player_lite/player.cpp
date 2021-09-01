@@ -205,6 +205,23 @@ int32_t Player::GetPlaybackSpeed(float &speed)
     return player_->GetPlaybackSpeed(speed);
 }
 
+int32_t Player::SetAudioStreamType(int32_t type)
+{
+    MEDIA_INFO_LOG("process in");
+    CHK_NULL_RETURN(player_);
+    return player_->SetAudioStreamType(type);
+}
+
+void Player::GetAudioStreamType(int32_t &type)
+{
+    MEDIA_INFO_LOG("process in");
+    if (player_ == nullptr) {
+        MEDIA_ERR_LOG("player_ null");
+        return;
+    }
+    player_->GetAudioStreamType(type);
+}
+
 int32_t Player::SetParameter(const Format &params)
 {
     MEDIA_INFO_LOG("process in");

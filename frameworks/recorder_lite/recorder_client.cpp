@@ -284,7 +284,7 @@ std::shared_ptr<OHOS::Surface> Recorder::RecorderImpl::GetSurface(int32_t source
     if (ret != 0) {
         MEDIA_ERR_LOG("SetSource failed, ret=%d", ret);
     }
-    printf("Recorder::RecorderImpl::GetSurface surface=0x%x", surface);
+    printf("Recorder::RecorderImpl::GetSurface surface=%p", surface);
     return std::shared_ptr<OHOS::Surface>(surface);
 }
 
@@ -561,5 +561,22 @@ int32_t Recorder::RecorderImpl::SetFileSplitDuration(FileSplitType type, int64_t
 }
 
 int32_t Recorder::RecorderImpl::SetParameter(int32_t sourceId, const Format &format) { return -1; }
+
+int32_t Recorder::RecorderImpl::SetDataSource(DataSourceType source, int32_t &sourceId)
+{
+    IpcIo io;
+    uint8_t tmpData[DEFAULT_IPC_SIZE];
+    IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
+    IpcIoPushFlatObj(&io, &source, sizeof(source));
+    CallBackPara para = {.funcId = REC_FUNC_SET_DATASOURCE, .ret = MEDIA_IPC_FAILED};
+    uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_DATASOURCE, &io, &para, SetSourceCallback);
+    if (ret != 0) {
+        MEDIA_ERR_LOG("SetDataSource failed, ret=%d", ret);
+    }
+    if (para.ret == 0) {
+        sourceId = para.data;
+    };
+    return para.ret;
+}
 } /* namespace Media */
 } /* namespace OHOS */

@@ -82,8 +82,8 @@ enum VideoSourceType : int32_t {
  * @version 1.0
  */
 enum DataSourceType : int32_t {
-    /** Image data source */
-    IMAGE = 0
+    /** meta data source */
+    METADATA = 0
 };
 
 /**
@@ -372,6 +372,20 @@ public:
      * @version 1.0
      */
     int32_t SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRate);
+
+    /**
+     * @brief Sets a data source for recording.
+     *
+     * If this function is not called, the output file does not contain the data track.
+     *
+     * @param sourceId Indicates the data source ID. The value <b>-1</b> indicates an invalid ID and the setting fails.
+     *
+     * @return Returns {@link SUCCESS} if the setting is successful; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    int32_t SetDataSource(DataSourceType dataType, int32_t &sourceId);
 
     /**
      * @brief Sets the maximum duration of a recorded file, in seconds.

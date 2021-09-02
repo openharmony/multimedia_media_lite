@@ -893,40 +893,49 @@ void PlayerControl::ReleaseADecoderOutputFrame(void)
             break;
         }
         audioDecoder_->QueueOutputBuffer(outInfo, GET_BUFFER_TIMEOUT_MS);
-        if (strmReadEnd_ == true && hasRenderAudioEos_ == false && outInfo.timeStamp == lastSendAdecPts_) {
-            sinkManager_->RenderEos(true);
-            hasRenderAudioEos_ = true;
-            MEDIA_INFO_LOG("[%lld] have render audio eos", GetCurTimeMs());
-            if (IsPlayEos() == true) {
-                isPlayEnd_ = true;
-            }
-        }
     }
+}
+
+static void InitOutputBuffer(OutputInfo &outInfo, CodecType type)
+{
+    outInfo.bufferCnt = 0;
+    outInfo.buffers = nullptr;
+    outInfo.timeStamp = -1;
+    outInfo.sequence = 0;
+    outInfo.flag = 0;
+    outInfo.type = type;
+    outInfo.vendorPrivate = nullptr;
 }
 
 void PlayerControl::RenderAudioFrame(void)
 {
-    if (audioDecoder_ == nullptr || sinkManager_== nullptr){
+    if (audioDecoder_ == nullptr || sinkManager_== nullptr || hasRenderAudioEos_) {
         return;
     }
+
     OutputInfo outInfo;
-    if (memset_s(&outInfo, sizeof(outInfo), 0, sizeof(OutputInfo)) != EOK) {
-        return;
-    }
     int ret = audioDecoder_->DequeueOutputBuffer(outInfo, GET_BUFFER_TIMEOUT_MS);
     if (ret != 0) {
-        outInfo.bufferCnt = 0;
-        outInfo.type = AUDIO_DECODER;
-        outInfo.vendorPrivate = nullptr;
-        outInfo.buffers = nullptr;
+        InitOutputBuffer(outInfo, AUDIO_DECODER);
+        if (ret == CODEC_RECEIVE_EOS && strmReadEnd_) {
+            sinkManager_->RenderEos(true);  /* all frame have been send to audio sink */
+        }
     }
     ret = sinkManager_->RenderFrame(outInfo);
     if (ret == SINK_RENDER_FULL || ret == SINK_RENDER_DELAY) {
         renderSleepTime_ = RENDER_FULL_SLEEP_TIME_US;
-    } else {
+    } else if (ret == SINK_QUE_EMPTY) {
         renderSleepTime_ = 0;
     }
     ReleaseADecoderOutputFrame();
+    /* fuction RenderFrame will return SINK_RENDER_EOS when all frame in queue that have been processed */
+    if (ret == SINK_RENDER_EOS) {
+        hasRenderAudioEos_ = true;
+        MEDIA_INFO_LOG("have render audio eos");
+        if (IsPlayEos() == true) {
+            isPlayEnd_ = true;
+        }
+    }
 }
 
 void PlayerControl::ReleaseVDecoderOutputFrame(void)
@@ -940,40 +949,39 @@ void PlayerControl::ReleaseVDecoderOutputFrame(void)
             break;
         }
         videoDecoder_->QueueOutputBuffer(outInfo, GET_BUFFER_TIMEOUT_MS);
-        if (strmReadEnd_ == true && hasRenderVideoEos_ == false && outInfo.timeStamp == lastSendVdecPts_) {
-            sinkManager_->RenderEos(false);
-            hasRenderVideoEos_ = true;
-            MEDIA_INFO_LOG("[%lld] have render video eos", GetCurTimeMs());
-            if (IsPlayEos() == true) {
-                isPlayEnd_ = true;
-            }
-        }
     }
 }
 
 void PlayerControl::RenderVideoFrame(void)
 {
-    if (videoDecoder_ == nullptr || sinkManager_== nullptr){
+    if (videoDecoder_ == nullptr || sinkManager_== nullptr || hasRenderVideoEos_) {
         return;
     }
+
     OutputInfo outInfo;
-    if (memset_s(&outInfo, sizeof(outInfo), 0, sizeof(OutputInfo)) != EOK) {
-        return;
-    }
     int ret = videoDecoder_->DequeueOutputBuffer(outInfo, GET_BUFFER_TIMEOUT_MS);
     if (ret != 0) {
-        outInfo.bufferCnt = 0;
-        outInfo.type = VIDEO_DECODER;
-        outInfo.vendorPrivate = nullptr;
-        outInfo.buffers = nullptr;
+        InitOutputBuffer(outInfo, VIDEO_DECODER);
+        if (ret == CODEC_RECEIVE_EOS) {
+            sinkManager_->RenderEos(false); /* all frame have been send to video sink */
+        }
     }
+
     ret = sinkManager_->RenderFrame(outInfo);
     if (ret == SINK_RENDER_FULL || ret == SINK_RENDER_DELAY) {
         renderSleepTime_ = RENDER_FULL_SLEEP_TIME_US;
-    } else {
+    } else if (ret == SINK_QUE_EMPTY) {
         renderSleepTime_ = 0;
     }
     ReleaseVDecoderOutputFrame();
+    /* fuction RenderFrame will return SINK_RENDER_EOS when all frame in queue that have been processed */
+    if (ret == SINK_RENDER_EOS) {
+        hasRenderVideoEos_ = true;
+        MEDIA_INFO_LOG("have rendered video eos");
+        if (IsPlayEos()) {
+            isPlayEnd_ = true;
+        }
+    }
 }
 
 void PlayerControl::ReortRenderPosition(void)
@@ -981,7 +989,7 @@ void PlayerControl::ReortRenderPosition(void)
     int64_t position = -1;
     CHECK_NULL_RETURN_VOID(sinkManager_, "sinkManager_ nullptr");
     sinkManager_->GetRenderPosition(position);
-    if (position != -1 && currentPosition_ != position) {
+    if (position >= 0 && currentPosition_ != position) {
         currentPosition_ = position;
         EventCallback(PLAYERCONTROL_EVENT_PROGRESS, &currentPosition_);
     }

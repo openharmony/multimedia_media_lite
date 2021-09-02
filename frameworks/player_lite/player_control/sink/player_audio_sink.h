@@ -63,12 +63,13 @@ public:
 private:
     void ResetRendStartTime();
     void SendAudioEndOfStream();
-    void UpdateAudioPts(int64_t& timestamp, int64_t currentPts);
-    int GetRenderFrame(OutputInfo &renderFrame, OutputInfo &frame);
+    void UpdateAudioPts(int64_t lastPts, int64_t& timestamp, OutputInfo &renderFrame);
+    int GetRenderFrame(OutputInfo &renderFrame, const OutputInfo &frame);
     void RelaseQueHeadFrame(void);
     void RelaseQueAllFrame(void);
     void RenderRptEvent(EventCbType event);
     int32_t WriteToAudioDevice(OutputInfo &renderFrame);
+    void QueueRenderFrame(const OutputInfo &frame, bool cacheQueue);
 
     bool started_;
     bool paused_;
@@ -82,6 +83,7 @@ private:
     int64_t rendStartTime_;
     int64_t lastRendPts_;
     int64_t lastRendSysTimeMs_;
+    uint32_t renderDelay_;
     PlayEventCallback callBack_;
     float leftVolume_;
     float rightVolume_;

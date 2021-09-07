@@ -14,10 +14,10 @@
  */
 
 #include "recorder_sink.h"
+#include <unistd.h>
 #include "format_interface.h"
 #include "media_log.h"
 #include "securec.h"
-
 namespace OHOS {
 namespace Media {
 constexpr uint32_t RECORDER_PARAMS_CNT = 2;
@@ -39,6 +39,9 @@ RecorderSink::RecorderSink()
 RecorderSink::~RecorderSink()
 {
     FormatDeInit();
+    if (outputFd_ > 0) {
+        close(outputFd_);
+    }
 }
 
 int32_t RecorderSink::CheckPrepared()

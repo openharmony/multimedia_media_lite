@@ -132,6 +132,11 @@ int32_t RecorderAudioSource::Stop()
     return SUCCESS;
 }
 
+int32_t RecorderAudioSource::Resume()
+{
+    return SUCCESS;
+}
+
 int32_t RecorderAudioSource::Pause()
 {
     return SUCCESS;

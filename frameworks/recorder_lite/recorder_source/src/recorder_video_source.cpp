@@ -137,6 +137,11 @@ int32_t RecorderVideoSource::Stop()
     return SUCCESS;
 }
 
+int32_t RecorderVideoSource::Resume()
+{
+    return SUCCESS;
+}
+
 int32_t RecorderVideoSource::Pause()
 {
     return SUCCESS;

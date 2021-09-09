@@ -906,9 +906,9 @@ int32_t Recorder::RecorderImpl::ResumeAudioSource()
     int32_t ret = 0;
     for (uint32_t i = 0; i < RECORDER_SOURCE_MAX_CNT; i++) {
         if (sourceManager_[i].audioSource != nullptr) {
-            ret = sourceManager_[i].audioSource->Start();
+            ret = sourceManager_[i].audioSource->Resume();
             if (ret != SUCCESS) {
-                MEDIA_ERR_LOG("audioSource Pause  failed Ret: 0x%x", ret);
+                MEDIA_ERR_LOG("audioSource Resume failed: 0x%x", ret);
                 return ret;
             }
             sourceManager_[i].audioSourcePaused = false;
@@ -922,9 +922,9 @@ int32_t Recorder::RecorderImpl::ResumeVideoSource()
     int32_t ret = 0;
     for (uint32_t i = 0; i < RECORDER_SOURCE_MAX_CNT; i++) {
         if (sourceManager_[i].videoSource != nullptr) {
-            ret = sourceManager_[i].videoSource->Start();
+            ret = sourceManager_[i].videoSource->Resume();
             if (ret != SUCCESS) {
-                MEDIA_ERR_LOG("videoSource->Start  failed Ret: 0x%x", ret);
+                MEDIA_ERR_LOG("videoSource->Resume failed: 0x%x", ret);
                 return ret;
             }
             sourceManager_[i].videoSourcePaused = false;

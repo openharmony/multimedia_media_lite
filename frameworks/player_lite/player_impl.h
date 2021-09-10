@@ -80,8 +80,8 @@ public:
     int32_t SetSurface(Surface *surface);
     bool IsSingleLooping();
     int32_t GetPlayerState(int32_t &state);
-    int32_t GetCurrentPosition(int64_t &currentPosition);
-    int32_t GetDuration(int64_t &duration);
+    int32_t GetCurrentPosition(int64_t &position);
+    int32_t GetDuration(int64_t &durationMs);
     int32_t GetVideoWidth(int32_t &videoWidth);
     int32_t GetVideoHeight(int32_t &videoHeight);
     int32_t SetPlaybackSpeed(float speed);
@@ -107,6 +107,7 @@ private:
     static void PlayerControlEventCb(void* pPlayer, PlayerControlEvent enEvent, const void* pData);
     int GetPlayer();
     static int32_t GetReadableSize(const void *handle);
+    int32_t ReadDataPro(uint8_t *data, int32_t size, DataFlags &flags);
     static int32_t ReadData(void *handle, uint8_t *data, int32_t size, int32_t timeOutMs, DataFlags *flags);
     int CreatePlayerParamCheck(PlayerControlParam &createParam);
     void GetDurationInner(int64_t &durationMs);

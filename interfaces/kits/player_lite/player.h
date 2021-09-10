@@ -61,8 +61,6 @@ enum PlayerSeekMode : int32_t {
     PLAYER_SEEK_CLOSEST_SYNC,
     /** Moves the media position to the latest frame located before or after the given time position. */
     PLAYER_SEEK_CLOSEST,
-    /** Moves the media position to a given frame index. */
-    PLAYER_SEEK_FRAME_INDEX,
 };
 
 /**

@@ -92,7 +92,6 @@ public:
     int32_t SetParameter(int32_t sourceId, const Format &format);
 
 private:
-    int32_t InitCheck();
     int32_t ResetConfig();
     int32_t GetFreeVideoSourceID(int32_t &sourceId, uint32_t &freeIndex);
     int32_t GetFreeAudioSourceID(int32_t &sourceId, uint32_t &freeIndex);

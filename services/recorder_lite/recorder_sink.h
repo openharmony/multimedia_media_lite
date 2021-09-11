@@ -18,8 +18,11 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <time.h>
 #include <memory>
+#include <pthread.h>
+#include <queue>
+#include <semaphore.h>
+#include <time.h>
 
 #include "media_errors.h"
 #include "media_info.h"
@@ -30,6 +33,12 @@
 namespace OHOS {
 namespace Media {
 using namespace std;
+
+struct MessageData {
+    int32_t event;
+    int32_t extra;
+    bool isInfo;
+};
 
 class RecorderSink {
 public:
@@ -58,6 +67,10 @@ public:
 
     int32_t SendCallbackInfo(int32_t type, int32_t extra);
     int32_t SendCallbackError(int32_t errorType, int32_t errorCode);
+    bool threadRunning = false;
+    queue<MessageData> messageQueue;
+    sem_t sem;
+    pthread_t threadId = 0;
 
 private:
     int32_t CheckPrepared();

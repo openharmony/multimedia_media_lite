@@ -21,51 +21,87 @@
 
 namespace OHOS {
 namespace Media {
-Recorder::Recorder() : impl_(new RecorderImpl()) {}
+Recorder::Recorder() : impl_(new (std::nothrow) RecorderImpl()) {}
 
 Recorder::~Recorder() {}
 
 int32_t Recorder::SetVideoSource(VideoSourceType source, int32_t &sourceId)
 {
+    if (impl_ == nullptr) {
+        MEDIA_ERR_LOG("impl_ null");
+        return -1;
+    }
     return impl_->SetVideoSource(source, sourceId);
 }
 
 int32_t Recorder::SetVideoEncoder(int32_t sourceId, VideoCodecFormat encoder)
 {
+    if (impl_ == nullptr) {
+        MEDIA_ERR_LOG("impl_ null");
+        return -1;
+    }
     return impl_->SetVideoEncoder(sourceId, encoder);
 }
 
 int32_t Recorder::SetVideoSize(int32_t sourceId, int32_t width, int32_t height)
 {
+    if (impl_ == nullptr) {
+        MEDIA_ERR_LOG("impl_ null");
+        return -1;
+    }
     return impl_->SetVideoSize(sourceId, width, height);
 }
 int32_t Recorder::SetVideoFrameRate(int32_t sourceId, int32_t frameRate)
 {
+    if (impl_ == nullptr) {
+        MEDIA_ERR_LOG("impl_ null");
+        return -1;
+    }
     return impl_->SetVideoFrameRate(sourceId, frameRate);
 }
 
 int32_t Recorder::SetVideoEncodingBitRate(int32_t sourceId, int32_t rate)
 {
+    if (impl_ == nullptr) {
+        MEDIA_ERR_LOG("impl_ null");
+        return -1;
+    }
     return impl_->SetVideoEncodingBitRate(sourceId, rate);
 }
 
 int32_t Recorder::SetCaptureRate(int32_t sourceId, double fps)
 {
+    if (impl_ == nullptr) {
+        MEDIA_ERR_LOG("impl_ null");
+        return -1;
+    }
     return impl_->SetCaptureRate(sourceId, fps);
 }
 
 std::shared_ptr<OHOS::Surface> Recorder::GetSurface(int32_t sourceId)
 {
+    if (impl_ == nullptr) {
+        MEDIA_ERR_LOG("impl_ null");
+        return nullptr;
+    }
     return impl_->GetSurface(sourceId);
 }
 
 int32_t Recorder::SetAudioSource(AudioSourceType source, int32_t &sourceId)
 {
+    if (impl_ == nullptr) {
+        MEDIA_ERR_LOG("impl_ null");
+        return -1;
+    }
     return impl_->SetAudioSource(source, sourceId);
 }
 
 int32_t Recorder::SetAudioEncoder(int32_t sourceId, AudioCodecFormat encoder)
 {
+    if (impl_ == nullptr) {
+        MEDIA_ERR_LOG("impl_ null");
+        return -1;
+    }
     return impl_->SetAudioEncoder(sourceId, encoder);
 }
 
@@ -76,56 +112,100 @@ int32_t Recorder::SetAudioSampleRate(int32_t sourceId, int32_t rate)
 
 int32_t Recorder::SetAudioChannels(int32_t sourceId, int32_t num)
 {
+    if (impl_ == nullptr) {
+        MEDIA_ERR_LOG("impl_ null");
+        return -1;
+    }
     return impl_->SetAudioChannels(sourceId, num);
 }
 
 int32_t Recorder::SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRate)
 {
+    if (impl_ == nullptr) {
+        MEDIA_ERR_LOG("impl_ null");
+        return -1;
+    }
     return impl_->SetAudioEncodingBitRate(sourceId, bitRate);
 }
 
 int32_t Recorder::SetDataSource(DataSourceType dataType, int32_t &sourceId)
 {
+    if (impl_ == nullptr) {
+        MEDIA_ERR_LOG("impl_ null");
+        return -1;
+    }
     return impl_->SetDataSource(dataType, sourceId);
 }
 
 int32_t Recorder::SetMaxDuration(int32_t duration)
 {
+    if (impl_ == nullptr) {
+        MEDIA_ERR_LOG("impl_ null");
+        return -1;
+    }
     return impl_->SetMaxDuration(duration);
 }
 
 int32_t Recorder::SetOutputFormat(OutputFormatType format)
 {
+    if (impl_ == nullptr) {
+        MEDIA_ERR_LOG("impl_ null");
+        return -1;
+    }
     return impl_->SetOutputFormat(format);
 }
 
 int32_t Recorder::SetOutputPath(const string &path)
 {
+    if (impl_ == nullptr) {
+        MEDIA_ERR_LOG("impl_ null");
+        return -1;
+    }
     return impl_->SetOutputPath(path);
 }
 
 int32_t Recorder::SetOutputFile(int32_t fd)
 {
+    if (impl_ == nullptr) {
+        MEDIA_ERR_LOG("impl_ null");
+        return -1;
+    }
     return impl_->SetOutputFile(fd);
 }
 
 int32_t Recorder::SetNextOutputFile(int32_t fd)
 {
+    if (impl_ == nullptr) {
+        MEDIA_ERR_LOG("impl_ null");
+        return -1;
+    }
     return impl_->SetNextOutputFile(fd);
 }
 
 int32_t Recorder::SetMaxFileSize(int64_t size)
 {
+    if (impl_ == nullptr) {
+        MEDIA_ERR_LOG("impl_ null");
+        return -1;
+    }
     return impl_->SetMaxFileSize(size);
 }
 
 int32_t Recorder::SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback)
 {
+    if (impl_ == nullptr) {
+        MEDIA_ERR_LOG("impl_ null");
+        return -1;
+    }
     return impl_->SetRecorderCallback(callback);
 }
 
 int32_t Recorder::Prepare()
 {
+    if (impl_ == nullptr) {
+        MEDIA_ERR_LOG("impl_ null");
+        return -1;
+    }
     if (CheckSelfPermission("ohos.permission.MICROPHONE") != GRANTED) {
         MEDIA_WARNING_LOG("Process can not access microphone.");
         return MEDIA_PERMISSION_DENIED;
@@ -139,43 +219,74 @@ int32_t Recorder::Prepare()
 
 int32_t Recorder::Start()
 {
+    if (impl_ == nullptr) {
+        MEDIA_ERR_LOG("impl_ null");
+        return -1;
+    }
     return impl_->Start();
 }
 
 int32_t Recorder::Pause()
 {
+    if (impl_ == nullptr) {
+        MEDIA_ERR_LOG("impl_ null");
+        return -1;
+    }
     return impl_->Pause();
 }
 
 int32_t Recorder::Resume()
 {
+    if (impl_ == nullptr) {
+        MEDIA_ERR_LOG("impl_ null");
+        return -1;
+    }
     return impl_->Resume();
 }
 
 int32_t Recorder::Stop(bool block)
 {
+    if (impl_ == nullptr) {
+        MEDIA_ERR_LOG("impl_ null");
+        return -1;
+    }
     return impl_->Stop(block);
 }
 
 int32_t Recorder::Reset()
 {
+    if (impl_ == nullptr) {
+        MEDIA_ERR_LOG("impl_ null");
+        return -1;
+    }
     return impl_->Reset();
 }
 
 int32_t Recorder::Release()
 {
+    if (impl_ == nullptr) {
+        MEDIA_ERR_LOG("impl_ null");
+        return -1;
+    }
     return impl_->Release();
 }
 
 int32_t Recorder::SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration)
 {
+    if (impl_ == nullptr) {
+        MEDIA_ERR_LOG("impl_ null");
+        return -1;
+    }
     return impl_->SetFileSplitDuration(type, timestamp, duration);
 }
 
 int32_t Recorder::SetParameter(int32_t sourceId, const Format &format)
 {
+    if (impl_ == nullptr) {
+        MEDIA_ERR_LOG("impl_ null");
+        return -1;
+    }
     return impl_->SetParameter(sourceId, format);
 }
-
 } /* namespace Media */
 } /* namespace OHOS */

@@ -387,7 +387,7 @@ int32_t PlayerControl::Seek(int64_t timeInMs)
         return HI_ERR_PLAYERCONTROL_ILLEGAL_STATE_ACTION;
     }
     seekToTimeMs_ = timeInMs;
-    MEDIA_INFO_LOG( "seek out %lld", seekToTimeMs_);
+    MEDIA_INFO_LOG("seek out %lld", seekToTimeMs_);
     return HI_SUCCESS;
 }
 
@@ -458,14 +458,14 @@ void PlayerControl::OnVideoEndOfStream()
 void PlayerControl::EventProcess(EventCbType event)
 {
     PlayerControlError playerError;
-    MEDIA_DEBUG_LOG( "handleEvent %d", event);
+    MEDIA_DEBUG_LOG("handleEvent %d", event);
 
     switch (event) {
         case EVNET_VIDEO_PLAY_EOS:
             OnVideoEndOfStream();
             break;
         case EVNET_VIDEO_PLAY_SOS:
-            MEDIA_INFO_LOG( "video sos recv");
+            MEDIA_INFO_LOG("video sos recv");
             break;
         case EVNET_AUDIO_PLAY_EOS:
             CHECK_NULL_RETURN_VOID(stateMachine_, "stateMachine_ nullptr");
@@ -485,21 +485,20 @@ void PlayerControl::EventProcess(EventCbType event)
             break;
         case EVNET_FRAME_CONTINUE_LOST:
             isVidContinueLost_ = true;
-            MEDIA_INFO_LOG( "receive frame continue lost");
+            MEDIA_INFO_LOG("receive frame continue lost");
             break;
         case EVNET_ON_JPEG_FRAME_RENDED:
-            MEDIA_INFO_LOG( " video rended");
             break;
         case EVNET_FIRST_VIDEO_REND:
             if (pauseMode_) {
-                MEDIA_INFO_LOG( "first video rended");
+                MEDIA_INFO_LOG("first video rended");
                 isNeedPause_ = true;
                 EventCallback(PLAYERCONTROL_FIRST_VIDEO_FRAME, NULL);
             }
             break;
         case EVNET_FIRST_AUDIO_REND:
             if (pauseMode_ && fmtFileInfo_.s32UsedVideoStreamIndex == -1) {
-                MEDIA_INFO_LOG( "first audio rended");
+                MEDIA_INFO_LOG("first audio rended");
                 isNeedPause_ = true;
                 EventCallback(PLAYERCONTROL_FIRST_AUDIO_FRAME, NULL);
             }
@@ -516,7 +515,7 @@ void PlayerControl::EventQueueProcess(void)
 
     queSize = eventQueue.size();
     if (queSize > MAX_EVENT_MESSAGE_NUM) {
-        MEDIA_WARNING_LOG( "mesaage except, num:%u", queSize);
+        MEDIA_WARNING_LOG("mesaage except, num:%u", queSize);
     }
     for (size_t i = 0; i < queSize && i < MAX_EVENT_MESSAGE_NUM; i++) {
         item = &eventQueue[i];
@@ -553,7 +552,7 @@ int32_t PlayerControl::TPlayResume(void)
 {
     CHECK_NULL_RETURN(sinkManager_, HI_ERR_PLAYERCONTROL_NULL_PTR, "sinkManager_ nullptr");
     int32_t ret = sinkManager_->SetSpeed(1.0, tplayAttr_.direction);
-    CHECK_FAILED_RETURN(ret,HI_SUCCESS,ret,"SetSpeed failed");
+    CHECK_FAILED_RETURN(ret, HI_SUCCESS, ret, "SetSpeed failed");
     return HI_SUCCESS;
 }
 
@@ -587,7 +586,7 @@ int32_t PlayerControl::OnSwitchTPlay2Play()
 
     ret = TPlayResume();
     pthread_mutex_unlock(&schMutex_);
-    CHECK_FAILED_RETURN(ret,HI_SUCCESS,ret,"TPlayResume failed");
+    CHECK_FAILED_RETURN(ret, HI_SUCCESS, ret, "TPlayResume failed");
     return HI_SUCCESS;
 }
 
@@ -701,6 +700,62 @@ static std::string GetAudioNameByAvCodecMime(AvCodecMime mime)
     return audioName;
 }
 
+int32_t PlayerControl::AudioDecoderStart(void)
+{
+    AvCodecMime mime = TransformCodecFormatToAvCodecMime(fmtFileInfo_.enAudioType);
+    if (mime == MEDIA_MIMETYPE_INVALID) {
+        MEDIA_ERR_LOG("DecoderStart not support codec:%d", fmtFileInfo_.enAudioType);
+        return -1;
+    }
+    audioDecoder_ = std::make_shared<Decoder>();
+    CHECK_NULL_RETURN(audioDecoder_, -1, "new decoder failed");
+    AvAttribute attr;
+    attr.type = AUDIO_DECODER;
+    attr.adecAttr.mime = mime;
+    attr.adecAttr.priv = nullptr;
+    attr.adecAttr.bufSize = 0x400; /* 1024 */
+    attr.adecAttr.channelCnt = (mime == MEDIA_MIMETYPE_AUDIO_PCM) ? fmtFileInfo_.u32AudioChannelCnt : 0;
+    const std::string audioName = GetAudioNameByAvCodecMime(mime);
+    int32_t ret = audioDecoder_->CreateHandle(audioName, attr);
+    CHECK_FAILED_RETURN(ret, 0, -1, "create audio decoder failed");
+    ret = audioDecoder_->StartDec();
+    CHECK_FAILED_RETURN(ret, 0, -1, "start audio decoder failed");
+    MEDIA_INFO_LOG("audio decoder started");
+
+    return 0;
+}
+
+int32_t PlayerControl::VideoDecoderStart(void)
+{
+    AvAttribute attr;
+    uint32_t width = DECODER_DEFAULT_WIDTH;
+    uint32_t height = DECODER_DEFAULT_HEIGHT;
+
+    AvCodecMime mime = TransformCodecFormatToAvCodecMime(fmtFileInfo_.enVideoType);
+    if (mime == MEDIA_MIMETYPE_INVALID) {
+        MEDIA_ERR_LOG("DecoderStart not support codec:%d", fmtFileInfo_.enVideoType);
+        return -1;
+    }
+    GetCurVideoSolution(fmtFileInfo_, width, height);
+
+    videoDecoder_ = std::make_shared<Decoder>();
+    CHECK_NULL_RETURN(videoDecoder_, -1, "new decoder failed");
+    attr.type = VIDEO_DECODER;
+    attr.vdecAttr.mime = mime;
+    attr.vdecAttr.priv = nullptr;
+    attr.vdecAttr.bufSize = 0;
+    attr.vdecAttr.maxWidth = width;
+    attr.vdecAttr.maxHeight = height;
+    const std::string videoName = "codec.avc.soft.decoder";
+    int32_t ret = videoDecoder_->CreateHandle(videoName, attr);
+    CHECK_FAILED_RETURN(ret, 0, -1, "create video decoder failed");
+    ret = videoDecoder_->StartDec();
+    CHECK_FAILED_RETURN(ret, 0, -1, "start video decoder failed");
+    MEDIA_INFO_LOG("video decoder started");
+
+    return 0;
+}
+
 int32_t PlayerControl::DecoderStart(void)
 {
     if (fmtFileInfo_.s32UsedAudioStreamIndex == -1 && fmtFileInfo_.s32UsedVideoStreamIndex == -1) {
@@ -710,52 +765,14 @@ int32_t PlayerControl::DecoderStart(void)
     MEDIA_INFO_LOG("PlayerControl::DecoderStart streamid:%d-%d",
         fmtFileInfo_.s32UsedAudioStreamIndex, fmtFileInfo_.s32UsedVideoStreamIndex);
     if (fmtFileInfo_.s32UsedAudioStreamIndex != -1) {
-        AvCodecMime mime = TransformCodecFormatToAvCodecMime(fmtFileInfo_.enAudioType);
-        if (mime == MEDIA_MIMETYPE_INVALID) {
-            MEDIA_ERR_LOG("DecoderStart not support codec:%d", fmtFileInfo_.enAudioType);
+        if (AudioDecoderStart() != 0) {
             return -1;
         }
-        audioDecoder_ = std::make_shared<Decoder>();
-        CHECK_NULL_RETURN(audioDecoder_, -1, "new decoder failed");
-        AvAttribute attr;
-        attr.type = AUDIO_DECODER;
-        attr.adecAttr.mime = mime;
-        attr.adecAttr.priv = nullptr;
-        attr.adecAttr.bufSize = 1024;
-        attr.adecAttr.channelCnt = (mime == MEDIA_MIMETYPE_AUDIO_PCM) ? fmtFileInfo_.u32AudioChannelCnt : 0;
-        const std::string audioName = GetAudioNameByAvCodecMime(mime);
-        int32_t ret = audioDecoder_->CreateHandle(audioName, attr);
-        CHECK_FAILED_RETURN(ret, 0, -1, "create audio decoder failed");
-        ret = audioDecoder_->StartDec();
-        CHECK_FAILED_RETURN(ret, 0, -1, "start audio decoder failed");
-        MEDIA_INFO_LOG("audio decoder started");
     }
     if (fmtFileInfo_.s32UsedVideoStreamIndex != -1) {
-        AvAttribute attr;
-        uint32_t width = DECODER_DEFAULT_WIDTH;
-        uint32_t height = DECODER_DEFAULT_HEIGHT;
-
-        AvCodecMime mime = TransformCodecFormatToAvCodecMime(fmtFileInfo_.enVideoType);
-        if (mime == MEDIA_MIMETYPE_INVALID) {
-            MEDIA_ERR_LOG("DecoderStart not support codec:%d", fmtFileInfo_.enVideoType);
+        if (VideoDecoderStart() != 0) {
             return -1;
         }
-        GetCurVideoSolution(fmtFileInfo_, width, height);
-
-        videoDecoder_ = std::make_shared<Decoder>();
-        CHECK_NULL_RETURN(videoDecoder_, -1, "new decoder failed");
-        attr.type = VIDEO_DECODER;
-        attr.vdecAttr.mime = mime;
-        attr.vdecAttr.priv = nullptr;
-        attr.vdecAttr.bufSize = 0;
-        attr.vdecAttr.maxWidth = width;
-        attr.vdecAttr.maxHeight = height;
-        const std::string videoName = "codec.avc.soft.decoder";
-        int32_t ret = videoDecoder_->CreateHandle(videoName, attr);
-        CHECK_FAILED_RETURN(ret, 0, -1, "create video decoder failed");
-        ret = videoDecoder_->StartDec();
-        CHECK_FAILED_RETURN(ret, 0, -1, "start video decoder failed");
-        MEDIA_INFO_LOG("video decoder started");
     }
     return 0;
 }
@@ -801,10 +818,10 @@ int32_t PlayerControl::AddAudioSink(void)
     attr.sinkType = SINK_TYPE_AUDIO;
     attr.trackId = fmtFileInfo_.s32UsedAudioStreamIndex;
     attr.audAttr.format = fmtFileInfo_.enAudioType;
-    attr.audAttr.sampleFmt = 2;
+    attr.audAttr.sampleFmt = DATA_TYPE_S16;
     attr.audAttr.sampleRate = adecAttr_.sampleRate;
     attr.audAttr.channel = fmtFileInfo_.u32AudioChannelCnt;
-    attr.audAttr.volume = 6;
+    attr.audAttr.volume = 0x6;
 
     if (sinkManager_->AddNewSink(attr) != 0) {
         MEDIA_ERR_LOG("AddNewSink  failed");
@@ -950,7 +967,7 @@ int32_t PlayerControl::DoPrepare(void)
 
 void PlayerControl::ReleaseADecoderOutputFrame(void)
 {
-    if (audioDecoder_ == nullptr || sinkManager_== nullptr){
+    if (audioDecoder_ == nullptr || sinkManager_ == nullptr) {
         return;
     }
     while (true) {
@@ -1006,7 +1023,7 @@ void PlayerControl::RenderAudioFrame(void)
 
 void PlayerControl::ReleaseVDecoderOutputFrame(void)
 {
-    if (videoDecoder_ == nullptr || sinkManager_== nullptr){
+    if (videoDecoder_ == nullptr || sinkManager_ == nullptr) {
         return;
     }
     while (true) {
@@ -1061,13 +1078,13 @@ void PlayerControl::ReortRenderPosition(void)
     }
 }
 
-void* PlayerControl::DataSchProcess(void *priv)
+void *PlayerControl::DataSchProcess(void *priv)
 {
     PlayerControl *play = (PlayerControl*)priv;
     CHECK_NULL_RETURN(play, nullptr, "play nullptr");
 
     prctl(PR_SET_NAME, "PlaySch", 0, 0, 0);
-    MEDIA_INFO_LOG( "start work");
+    MEDIA_INFO_LOG("start work");
     while (true) {
         pthread_mutex_lock(&play->schMutex_);
         if (play->schThreadExit_ == true) {
@@ -1205,7 +1222,7 @@ void PlayerControl::PushPacketToADecoder(void)
 {
     InputInfo inputData;
     CodecBufferInfo inBufInfo;
-    if (audioDecoder_ == nullptr){
+    if (audioDecoder_ == nullptr) {
         return;
     }
     inputData.bufferCnt = 0;
@@ -1244,7 +1261,7 @@ void PlayerControl::PushPacketToVDecoder(void)
 {
     InputInfo inputData;
     CodecBufferInfo inBufInfo;
-    if (videoDecoder_ == nullptr){
+    if (videoDecoder_ == nullptr) {
         return;
     }
     inputData.bufferCnt = 0;
@@ -1283,7 +1300,7 @@ int32_t PlayerControl::ReadPacketAndPushToDecoder()
 {
     int32_t ret = HI_SUCCESS;
     PlayerStatus playerState;
-    if (stateMachine_ == nullptr){
+    if (stateMachine_ == nullptr) {
         return HI_FAILURE;
     }
     playerState = stateMachine_->GetCurState();
@@ -1304,9 +1321,11 @@ int32_t PlayerControl::ReadPacketAndPushToDecoder()
     }
     if (ret == HI_RET_NODATA) {
         renderSleepTime_ = NO_DATA_READ_SLEEP_TIME_US;
-        goto RE_SEND;
+        ClearCachePacket();
+        return ret;
     } else if (ret != HI_SUCCESS) {
-        goto RE_SEND;
+        ClearCachePacket();
+        return ret;
     }
     if (formatPacket_.data == nullptr && formatPacket_.len == 0) {
         PushPacketToADecoder();
@@ -1321,10 +1340,6 @@ int32_t PlayerControl::ReadPacketAndPushToDecoder()
         PushPacketToVDecoder();
     }
     return HI_SUCCESS;
-    /* fall through */
-RE_SEND:
-    ClearCachePacket();
-    return ret;
 }
 
 int32_t PlayerControl::ReadTplayData()
@@ -1527,7 +1542,7 @@ int32_t PlayerControl::IsRepeatTplayReq(TplayAttr &tplayAttr, bool &isRepeat)
     if (tplayAttr_.direction == TPLAY_DIRECT_BACKWARD  &&
         tplayAttr.direction == TPLAY_DIRECT_BACKWARD &&
         lastVidRendPts == 0) {
-        MEDIA_DEBUG_LOG( "TPlay already played to start");
+        MEDIA_DEBUG_LOG("TPlay already played to start");
         isRepeat = true;
         return HI_SUCCESS;
     }
@@ -1572,9 +1587,8 @@ int32_t PlayerControl::DoTPlay(TplayAttr &trickPlayAttr)
     }
     curSeekOffset_ = TPlayGetSeekOffset(tplayAttr_.speed, tplayAttr_.direction);
     tplayMode_ = TPlayGetPlayMode();
-    if (strmReadEnd_ == true) {
-        lastReadPktStrmIdx_ = (uint32_t)fmtFileInfo_.s32UsedVideoStreamIndex;
-    }
+
+    lastReadPktStrmIdx_ = (uint32_t)fmtFileInfo_.s32UsedVideoStreamIndex;
     strmReadEnd_ = false;
     isVidPlayEos_ = false;
     isAudPlayEos_ = false;
@@ -1715,7 +1729,6 @@ int32_t PlayerControl::TPlayGetSeekOffset(float playSpeed, TplayDirect direction
 int32_t PlayerControl::TPlayResetBuffer()
 {
     int32_t ret;
-    int64_t lastVidRendPts;
     PlayerStreamInfo streamInfo;
 
     if (memset_s(&streamInfo, sizeof(streamInfo), 0x00, sizeof(PlayerStreamInfo)) != EOK) {
@@ -1723,8 +1736,7 @@ int32_t PlayerControl::TPlayResetBuffer()
     }
     ret = GetStreamInfo(streamInfo);
     CHECK_FAILED_RETURN(ret, HI_SUCCESS, ret, "GetStreamInfo failed");
-    lastVidRendPts = streamInfo.avStatus.syncStatus.lastVidPts;
-    lastReadPktPts_ = (lastVidRendPts < 0) ? (lastRendPos_) : (lastVidRendPts);
+    lastReadPktPts_ = currentPosition_;
     isTplayLastFrame_ = false;
     ClearCachePacket();
     ret = DecoderAndSinkReset();
@@ -1750,7 +1762,7 @@ int32_t PlayerControl::TPlayCheckContinueLost()
 bool PlayerControl::TPlayIsFileReadEnd()
 {
     if (lastReadPktPts_ == 0 && tplayAttr_.direction == TPLAY_DIRECT_BACKWARD) {
-        MEDIA_DEBUG_LOG( "backward last seek pts %lld", lastReadPktPts_);
+        MEDIA_DEBUG_LOG("backward last seek pts %lld", lastReadPktPts_);
         return true;
     } else if (isTplayLastFrame_ == true && (tplayAttr_.direction == TPLAY_DIRECT_FORWARD)) {
         MEDIA_DEBUG_LOG("forward last seek pts %lld fmtFileInfo_.s64Duration:%lld", lastReadPktPts_,
@@ -1885,14 +1897,20 @@ int32_t PlayerControl::AyncSeek(int64_t seekTime)
         ret = playerSource_->Seek(fmtFileInfo_.s32UsedVideoStreamIndex, seekTimeInMs, FORMAT_SEEK_MODE_BACKWARD_KEY);
         if (ret != HI_SUCCESS) {
             MEDIA_INFO_LOG("exec fmt_seek video stream failed, ret:%d", ret);
-            seekTimeInMs = lastRendPos_;
+            seekTimeInMs = currentPosition_;
         }
     } else if (fmtFileInfo_.s32UsedAudioStreamIndex != HI_DEMUXER_NO_MEDIA_STREAM) {
         ret = playerSource_->Seek(fmtFileInfo_.s32UsedAudioStreamIndex, seekTimeInMs, FORMAT_SEEK_MODE_BACKWARD_KEY);
         if (ret != HI_SUCCESS) {
             MEDIA_INFO_LOG("exec fmt_seek audio stream failed, ret:%d", ret);
-            seekTimeInMs = lastRendPos_;
+            seekTimeInMs = currentPosition_;
         }
+    }
+
+    if (tplayAttr_.speed != 1.0f) {
+        lastReadPktPts_ = currentPosition_;
+        isTplayStartRead_ = (currentPosition_ == 0) ? false : true;
+        isTplayLastFrame_ = false;
     }
     currentPosition_ = seekTimeInMs;
     EventCallback(PLAYERCONTROL_EVENT_PROGRESS, &currentPosition_);
@@ -1930,8 +1948,8 @@ int32_t PlayerControl::SyncPrepare()
     CHECK_FAILED_RETURN(ret, HI_SUCCESS, ret, "Prepare failed");
     ret = playerSource_->GetFileInfo(fmtFileInfo_);
     CHECK_FAILED_RETURN(ret, HI_SUCCESS, ret, "GetFileInfo failed");
-    MEDIA_INFO_LOG( " used audiostream index %d", fmtFileInfo_.s32UsedAudioStreamIndex);
-    MEDIA_INFO_LOG( " used videostream index %d", fmtFileInfo_.s32UsedVideoStreamIndex);
+    MEDIA_INFO_LOG("used audiostream index %d", fmtFileInfo_.s32UsedAudioStreamIndex);
+    MEDIA_INFO_LOG("used videostream index %d", fmtFileInfo_.s32UsedVideoStreamIndex);
     return HI_SUCCESS;
 }
 
@@ -1991,7 +2009,7 @@ int32_t PlayerControl::DoInvoke(InvokeParameter& invokeParam)
 {
     int32_t ret = -1;
 
-    switch(invokeParam.id) {
+    switch (invokeParam.id) {
         case INVOKE_ENABLE_PAUSE_AFTER_PLAYER:
             if (invokeParam.param == nullptr) {
                 break;

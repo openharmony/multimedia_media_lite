@@ -34,7 +34,7 @@ namespace {
         { true,  true,  false, false, false, false, false }, /* setsrc_stream */
         { false, true,  true,  false, false, false, false }, /* prepare */
         { false, false, true,  true,  true,  true,  false }, /* play */
-        { false, false, true,  true,  false, true,  false }, /* seek */
+        { false, false, true,  true,  true, true,  false }, /* seek */
         { false, false, false, true,  false, true,  false }, /* pause */
         { false, false, false, true,  true,  false, false }, /* tplay */
         { true,  true,  true,  true,  true,  true,  true },  /* stop */

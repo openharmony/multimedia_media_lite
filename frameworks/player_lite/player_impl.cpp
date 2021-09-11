@@ -430,7 +430,7 @@ int32_t PlayerImpl::Stop()
     if ((currentState_ != PLAYER_STARTED) && (currentState_ != PLAYER_PAUSED) &&
         (currentState_ != PLAYER_PLAYBACK_COMPLETE) && (currentState_ != PLAYER_STATE_ERROR)) {
         MEDIA_INFO_LOG("current state: %d, no need to do stop", currentState_);
-        return 0;
+        return -1;
     }
 
     if (player_ != nullptr) {
@@ -484,7 +484,6 @@ bool PlayerImpl::IsValidRewindMode(PlayerSeekMode mode)
         case PLAYER_SEEK_NEXT_SYNC:
         case PLAYER_SEEK_CLOSEST_SYNC:
         case PLAYER_SEEK_CLOSEST:
-        case PLAYER_SEEK_FRAME_INDEX:
             break;
         default:
             MEDIA_ERR_LOG("Unknown rewind mode %d", mode);
@@ -589,7 +588,7 @@ int32_t PlayerImpl::GetCurrentPosition(int64_t &position)
 {
     std::lock_guard<std::mutex> valueLock(lock_);
     CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
-    position = (currentPosition_ >= 0) ? currentPosition_ : -1;
+    position = (currentPosition_ >= 0) ? currentPosition_ : 0;
     return 0;
 }
 
@@ -688,7 +687,7 @@ int32_t PlayerImpl::SetPlaybackSpeed(float speed)
         return -1;
     }
     CHK_NULL_RETURN(player_);
-    if (currentState_ != PLAYER_STARTED/* && currentState_ != PLAYER_PAUSED*/) {
+    if (currentState_ != PLAYER_STARTED) {
         MEDIA_ERR_LOG(" currentState_ is %d", currentState_);
         return -1;
     }
@@ -939,6 +938,10 @@ int32_t PlayerImpl::SetLoop(bool loop)
     std::lock_guard<std::mutex> valueLock(lock_);
     CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
     CHECK_FAILED_RETURN(isStreamSource_, false, -1, "stream source not support loop player");
+    if (currentState_ == PLAYER_STOPPED || currentState_ == PLAYER_PLAYBACK_COMPLETE || currentState_ == PLAYER_IDLE) {
+        MEDIA_ERR_LOG(" currentState_ is %d", currentState_);
+        return -1;
+    }
     isSingleLoop_ = loop;
     return 0;
 }
@@ -1109,6 +1112,44 @@ int32_t PlayerImpl::GetReadableSize(const void *handle)
     return playImpl->bufferSource_->GetFilledQueDataSize();
 }
 
+int32_t PlayerImpl::ReadDataPro(uint8_t *data, int32_t size, DataFlags &flags)
+{
+    int readLen;
+    BufferInfo info;
+    if (bufferSource_->GetBufferInfo(buffer_.idx, &info) != 0) {
+        return 0;
+    }
+    /* read all buffer data */
+    if (buffer_.size <= size) {
+        if (buffer_.size == 0 && buffer_.flag == BUFFER_FLAG_EOS) {
+            buffer_.offset = 0;
+            buffer_.size = info.size;
+            bufferSource_->QueIdleBuffer(&buffer_);
+            buffer_.idx = -1;
+            flags = DATA_FLAG_EOS;
+            return 0;
+        }
+        if (memcpy_s(data, size, (unsigned char*)(info.virAddr) + buffer_.offset, buffer_.size) != EOK) {
+            return -1;
+        }
+        flags = (buffer_.flag == BUFFER_FLAG_EOS) ? DATA_FLAG_EOS : DATA_FLAG_PARTIAL_FRAME;
+        readLen = buffer_.size;
+        buffer_.offset = 0;
+        buffer_.size = info.size;
+        bufferSource_->QueIdleBuffer(&buffer_);
+        buffer_.idx = -1;
+    } else {
+        if (memcpy_s(data, size, (unsigned char*)(info.virAddr) + buffer_.offset, size) != EOK) {
+            return -1;
+        }
+        buffer_.offset += size;
+        buffer_.size -= size;
+        flags = DATA_FLAG_PARTIAL_FRAME;
+        readLen = size;
+    }
+    return readLen;
+}
+
 int32_t PlayerImpl::ReadData(void *handle, uint8_t *data, int32_t size, int32_t timeOutMs, DataFlags *flags)
 {
     PlayerImpl *playImpl = (PlayerImpl*)handle;
@@ -1121,10 +1162,9 @@ int32_t PlayerImpl::ReadData(void *handle, uint8_t *data, int32_t size, int32_t 
         MEDIA_ERR_LOG("data null or buffer size < 0");
         return -1;
     }
-    BufferInfo info;
-    int readLen;
+
     if (playImpl->buffer_.idx != -1) {
-        goto READ_BUFFER_DATA;
+        return playImpl->ReadDataPro(data, size, *flags);
     }
 
     if (playImpl->bufferSource_->GetFilledQueSize() <= 0) {
@@ -1134,40 +1174,8 @@ int32_t PlayerImpl::ReadData(void *handle, uint8_t *data, int32_t size, int32_t 
         playImpl->buffer_.idx = -1;
         return 0;
     }
-READ_BUFFER_DATA:
-    if (playImpl->bufferSource_->GetBufferInfo(playImpl->buffer_.idx, &info) != 0) {
-        return 0;
-    }
-    /* read all buffer data */
-    if (playImpl->buffer_.size <= size) {
-        if (playImpl->buffer_.size == 0 && playImpl->buffer_.flag == BUFFER_FLAG_EOS) {
-            playImpl->buffer_.offset = 0;
-            playImpl->buffer_.size = info.size;
-            playImpl->bufferSource_->QueIdleBuffer(&playImpl->buffer_);
-            playImpl->buffer_.idx = -1;
-            *flags = DATA_FLAG_EOS;
-            return 0;
-        }
-        if (memcpy_s(data, size, (unsigned char*)(info.virAddr) + playImpl->buffer_.offset,
-            playImpl->buffer_.size) != EOK) {
-            return -1;
-        }
-        *flags = (playImpl->buffer_.flag == BUFFER_FLAG_EOS) ? DATA_FLAG_EOS : DATA_FLAG_PARTIAL_FRAME;
-        readLen = playImpl->buffer_.size;
-        playImpl->buffer_.offset = 0;
-        playImpl->buffer_.size = info.size;
-        playImpl->bufferSource_->QueIdleBuffer(&playImpl->buffer_);
-        playImpl->buffer_.idx = -1;
-    } else {
-        if (memcpy_s(data, size, (unsigned char*)(info.virAddr) + playImpl->buffer_.offset, size) != EOK) {
-            return -1;
-        }
-        playImpl->buffer_.offset += size;
-        playImpl->buffer_.size -= size;
-        *flags = DATA_FLAG_PARTIAL_FRAME;
-        readLen = size;
-    }
-    return readLen;
+
+    return playImpl->ReadDataPro(data, size, *flags);
 }
 
 int32_t PlayerImpl::SetStreamSource(const Source &source)
@@ -1182,8 +1190,14 @@ int32_t PlayerImpl::SetStreamSource(const Source &source)
         MEDIA_ERR_LOG("new BufferSource failed");
         return -1;
     }
+
     bufferSource_->Init();
     std::shared_ptr<StreamSource> stream = source.GetSourceStream();
+    if (stream.get() == nullptr) {
+        MEDIA_ERR_LOG("GetSourceStream null");
+        return -1;
+    }
+
     streamCallback_ = std::make_shared<AdapterStreamCallback>(stream, bufferSource_);
     if (streamCallback_ == nullptr || streamCallback_.get() == nullptr) {
         MEDIA_ERR_LOG("new AdapterStreamCallback failed");

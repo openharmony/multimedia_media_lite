@@ -45,13 +45,7 @@ std::shared_ptr<OHOS::Surface> RecorderVideoSource::GetSurface()
         if (surface == nullptr) {
             return nullptr;
         }
-        int videoWidth = 1920;
-        int videoHeight = 1080;
-        surface->SetWidthAndHeight(videoWidth, videoHeight);
-        int queueSize = 3;
-        surface->SetQueueSize(queueSize);
-        int videoSize = 1024;
-        surface->SetSize(videoSize * videoSize);
+
         g_surface = surface;
         surface->RegisterConsumerListener(*this);
         surface_.reset(surface);
@@ -67,6 +61,8 @@ int32_t RecorderVideoSource::SetSurfaceSize(int32_t width, int32_t height)
         if (surface == nullptr) {
             return ERR_UNKNOWN;
         }
+
+        g_surface = surface;
         surface->RegisterConsumerListener(*this);
         surface_.reset(surface);
     }

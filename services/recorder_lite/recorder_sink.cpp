@@ -15,13 +15,14 @@
 
 #include "recorder_sink.h"
 #include <unistd.h>
+#include <sys/prctl.h>
 #include "format_interface.h"
 #include "media_log.h"
 #include "securec.h"
+
 namespace OHOS {
 namespace Media {
 constexpr uint32_t RECORDER_PARAMS_CNT = 2;
-
 
 RecorderSink::RecorderSink()
     :formatMuxerHandle_(nullptr),
@@ -34,11 +35,17 @@ RecorderSink::RecorderSink()
      maxDuration_(-1)
 {
     FormatInit();
+    MEDIA_INFO_LOG("RecorderSink");
 }
 
 RecorderSink::~RecorderSink()
 {
-    FormatDeInit();
+    threadRunning = false;
+    if (threadId != 0) {
+        MEDIA_INFO_LOG("message thread is still running. kill thread.");
+        pthread_cancel(threadId);
+    }
+
     if (outputFd_ > 0) {
         close(outputFd_);
     }
@@ -95,17 +102,24 @@ int32_t RecorderSink::Prepare()
         return ret;
     }
     prepared_ = true;
+
     if (maxDuration_ != -1) {
         ret = FormatMuxerSetMaxFileDuration(formatMuxerHandle_, maxDuration_);
         if (ret != SUCCESS) {
             MEDIA_ERR_LOG("FormatMuxersetMaxFileDuration failed 0x%x", ret);
         }
     }
+
     if (maxFileSize_ != -1) {
         ret = FormatMuxerSetMaxFileSize(formatMuxerHandle_, maxFileSize_);
         if (ret != SUCCESS) {
             MEDIA_ERR_LOG("FormatMuxersetMaxFileSize failed 0x%x", ret);
         }
+    }
+
+    if (recCallBack_ != nullptr && sinkCallback_ != nullptr) {
+        ret = FormatMuxerSetCallBack(formatMuxerHandle_, sinkCallback_.get());
+        MEDIA_ERR_LOG("FormatMuxerSetCallBack ret: 0x%x", ret);
     }
     return SUCCESS;
 }
@@ -214,6 +228,7 @@ int32_t RecorderSink::SendCallbackInfo(int32_t type, int32_t extra)
         case MUXER_INFO_NEXT_OUTPUT_FILE_STARTED:
         case MUXER_INFO_FILE_SPLIT_FINISHED:
         case MUXER_INFO_FILE_START_TIME_MS:
+        case MUXER_INFO_NEXT_FILE_FD_NOT_SET:
             recCallBack_->OnInfo(type, extra);
             return SUCCESS;
         default:
@@ -230,6 +245,11 @@ int32_t RecorderSink::SendCallbackError(int32_t errorType, int32_t errorCode)
         return ERR_INVALID_PARAM;
     }
     switch (errorType) {
+        case ERROR_CREATE_FILE_FAIL:
+        case ERROR_WRITE_FILE_FAIL:
+        case ERROR_CLOSE_FILE_FAIL:
+        case ERROR_READ_DATA_ERROR:
+        case ERROR_INTERNAL_OPERATION_FAIL:
         case ERROR_UNKNOWN:
             MEDIA_ERR_LOG("recorder Callback error");
             recCallBack_->OnError(errorType, errorCode);
@@ -247,7 +267,13 @@ int32_t SinkOnError(CALLBACK_HANDLE privateDataHandle, int32_t errorType, int32_
         MEDIA_ERR_LOG("sink: is nullptr");
         return ERR_INVALID_PARAM;
     }
-    return sink->SendCallbackError(errorType, errorCode);
+    MessageData data;
+    data.event = errorType;
+    data.extra = errorCode;
+    data.isInfo = false;
+    sink->messageQueue.push(data);
+    sem_post(&sink->sem);
+    return 0;
 }
 
 int32_t SinkOnInfo(CALLBACK_HANDLE privateDataHandle, int32_t type, int32_t extra)
@@ -258,7 +284,13 @@ int32_t SinkOnInfo(CALLBACK_HANDLE privateDataHandle, int32_t type, int32_t extr
         MEDIA_ERR_LOG("sink: is nullptr");
         return ERR_INVALID_PARAM;
     }
-    return sink->SendCallbackInfo(type, extra);
+    MessageData data;
+    data.event = type;
+    data.extra = extra;
+    data.isInfo = true;
+    sink->messageQueue.push(data);
+    sem_post(&sink->sem);
+    return 0;
 }
 
 
@@ -276,6 +308,42 @@ int32_t RecorderSink::SetRecorderCallback(const std::shared_ptr<RecorderCallback
     return SUCCESS;
 }
 
+static void *MessageThread(void *arg)
+{
+    RecorderSink *sink = (RecorderSink *)arg;
+    sink->threadRunning = true;
+    MEDIA_INFO_LOG("Message thread start.");
+    pthread_detach(pthread_self());
+    prctl(PR_SET_NAME, "RecorderMessageThread", 0, 0, 0);
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, nullptr);
+    int32_t ret = sem_init(&sink->sem, 0, 0);
+    if (ret != 0) {
+        MEDIA_ERR_LOG("sem_init failed.");
+        return nullptr;
+    }
+
+    while (sink->threadRunning) {
+        sem_wait(&sink->sem);
+        if (sink->messageQueue.empty()) {
+            continue;
+        }
+
+        MessageData data = sink->messageQueue.front();
+        sink->messageQueue.pop();
+        if (data.isInfo) {
+            sink->SendCallbackInfo(data.event, data.extra);
+        } else {
+            sink->SendCallbackError(data.event, data.extra);
+        }
+    }
+
+    sem_destroy(&sink->sem);
+
+    sink->threadId = 0;
+    MEDIA_INFO_LOG("Message thread exit.");
+    return nullptr;
+}
+
 int32_t RecorderSink::Start()
 {
     if (CheckPrepared() != SUCCESS) {
@@ -284,14 +352,17 @@ int32_t RecorderSink::Start()
     if (started_) {
         return SUCCESS;
     }
-    int32_t ret;
-    if (recCallBack_ != nullptr &&
-        sinkCallback_ != nullptr) {
-        ret = FormatMuxerSetCallBack(formatMuxerHandle_, sinkCallback_.get());
-        MEDIA_ERR_LOG("FormatMuxerSetCallBack :%p ret: 0x%x",
-                      recCallBack_.get(), ret);
+
+    MEDIA_INFO_LOG("FormatMuxerStart");
+    if (recCallBack_ != nullptr && sinkCallback_ != nullptr) {
+        int32_t ret = pthread_create(&threadId, nullptr, MessageThread, this);
+        if (ret != 0) {
+            MEDIA_ERR_LOG("create message thread failed %d", ret);
+            return -1;
+        }
     }
-    ret = FormatMuxerStart(formatMuxerHandle_);
+
+    int32_t ret = FormatMuxerStart(formatMuxerHandle_);
     if (ret != SUCCESS) {
         MEDIA_ERR_LOG("FormatMuxerStart failed 0x%x", ret);
         return ret;
@@ -311,6 +382,11 @@ int32_t RecorderSink::Stop(bool block)
         MEDIA_ERR_LOG("FormatMuxerStop failed 0x%x", ret);
         return ret;
     }
+    if (threadId != 0) {
+        threadRunning = false;
+        sem_post(&sem);
+    }
+
     started_ = false;
     return SUCCESS;
 }
@@ -343,6 +419,9 @@ int32_t RecorderSink::Reset()
 int32_t RecorderSink::Release()
 {
     int32_t ret;
+    if (!prepared_) {
+        return SUCCESS;
+    }
     if (started_) {
         ret = Stop(false);
         if (ret != SUCCESS) {
@@ -353,7 +432,7 @@ int32_t RecorderSink::Release()
     }
     ret = FormatMuxerDestroy(formatMuxerHandle_);
     if (ret != SUCCESS) {
-        MEDIA_ERR_LOG("FormatMuxerDestory failed Ret: 0x%x", ret);
+        MEDIA_ERR_LOG("FormatMuxerDestroy failed ret:%d", ret);
         return ret;
     }
     formatMuxerHandle_ = nullptr;
@@ -376,7 +455,7 @@ int32_t RecorderSink::SetParameter(int32_t trackId, const Format &format)
     memset_s(items, sizeof(ParameterItem) * RECORDER_PARAMS_CNT, 0x00,
              sizeof(ParameterItem) * RECORDER_PARAMS_CNT);
     int32_t value;
-    if (format.GetIntValue(RCORDER_PRE_CACHE_DURATION, value)) {
+    if (format.GetIntValue(RECORDER_PRE_CACHE_DURATION, value)) {
         items[itemNum].key = KEY_TYPE_PRE_CACHE;
         items[itemNum].value.s32Value = value;
         items[itemNum].size = sizeof(int32_t);

@@ -56,7 +56,7 @@ using OHOS::Surface;
  * This constant can be used as the value of {@link Format} in {@link SetParameter} to configure the duration for
  * storing recorded data in the cache.
  */
-const string RCORDER_PRE_CACHE_DURATION = "pre-cache-duration";
+const string RECORDER_PRE_CACHE_DURATION = "pre-cache-duration";
 
 /**
  * @brief Enumerates video source types.
@@ -144,12 +144,12 @@ public:
         RECORDER_INFO_MAX_FILESIZE_APPROACHING,
         /**
          * The threshold specified by {@link SetMaxDuration} is reached, and the recording ends.
-         * Before calling {@link SetOutputFile}, you must close the file.
+         * Before calling {@link SetNextOutputFile}, you must close the file.
          */
         RECORDER_INFO_MAX_DURATION_REACHED,
         /**
          * The threshold specified by {@link SetMaxFileSize} is reached, and the recording ends.
-         * Before calling {@link SetOutputFile}, you must close the file.
+         * Before calling {@link SetNextOutputFile}, you must close the file.
          */
         RECORDER_INFO_MAX_FILESIZE_REACHED,
         /** Recording started for the next output file. */
@@ -157,7 +157,9 @@ public:
         /** Manual file split completed. */
         RECORDER_INFO_FILE_SPLIT_FINISHED,
         /** The start time position of the recording file is not supported. */
-        RECORDER_INFO_FILE_START_TIME_MS
+        RECORDER_INFO_FILE_START_TIME_MS,
+        /** Next file fd is needed but not set. */
+        RECORDER_INFO_NEXT_FILE_FD_NOT_SET
     };
 
     /**
@@ -167,8 +169,18 @@ public:
      * @version 1.0
      */
     enum RecorderErrorType : int32_t {
+        /* create file failed */
+        RECORDER_ERROR_CREATE_FILE_FAIL = 0,
+        /* write file failed */
+        RECORDER_ERROR_WRITE_FILE_FAIL,
+        /* close file failed */
+        RECORDER_ERROR_CLOSE_FILE_FAIL,
+        /* read data failed or time out */
+        RECORDER_ERROR_READ_DATA_ERROR,
+        /* rec internal operation fail, must stop rec */
+        RECORDER_ERROR_INTERNAL_OPERATION_FAIL,
         /** Unknown error */
-        RECORDER_ERROR_UNKNOWN = 0
+        RECORDER_ERROR_UNKNOWN
 };
 
     /**

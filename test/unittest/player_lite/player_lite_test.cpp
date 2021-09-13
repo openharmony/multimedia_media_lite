@@ -109,7 +109,9 @@ void PlayerliteCallback::OnRewindToComplete()
 
 static int32_t FileCheck(const string &argv)
 {
-    if (sizeof(argv.c_str()) < sizeof(g_tagTestSample.filePath) &&
+    const char *ptr = argv.c_str();
+
+    if (sizeof(ptr) < sizeof(g_tagTestSample.filePath) &&
         realpath(argv.c_str(), g_tagTestSample.filePath) == nullptr) {
         printf("realpath input file failed, errno: %d!\n", errno);
         return -1;

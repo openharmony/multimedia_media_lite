@@ -155,9 +155,9 @@ void AudioSink::GetStatus(AudioSinkStatus &status)
 
 void AudioSink::UpdateAudioPts(int64_t lastPts, int64_t &timestamp, OutputInfo &renderFrame)
 {
-    if (renderFrame.timeStamp == -1) {
-        float sampleCnt = ((float)renderFrame.buffers[0].length / attr_.audAttr.channel) / AUDIO_SAMPLE_WIDTH_BYTE;
-        float duration = (sampleCnt / attr_.audAttr.sampleRate) * MS_SCALE;
+    if (renderFrame.timeStamp == -1 && attr_.audAttr.channel != 0) {
+        int32_t sampleCnt = (renderFrame.buffers[0].length / attr_.audAttr.channel) / AUDIO_SAMPLE_WIDTH_BYTE;
+        int64_t duration = (static_cast<int64_t>(sampleCnt) * MS_SCALE) / attr_.audAttr.sampleRate;
         renderFrame.timeStamp = lastPts + duration;
     }
     timestamp = renderFrame.timeStamp;

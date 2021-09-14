@@ -89,7 +89,7 @@ protected:
     int32_t DoRegCallback(PlayerCtrlCallbackParam &observer) override;
 
     int32_t DoSetDataSource(const std::string filepath) override;
-    int32_t DoSetDataSource(const int fd) override;
+    int32_t DoSetDataSource(const int32_t fd) override;
     int32_t DoSetDataSource(BufferStream &stream)  override;
     int32_t DoPrepare(void) override;
 
@@ -149,6 +149,8 @@ private:
     int32_t GetStreamInfo(PlayerStreamInfo &streamInfo);
     int32_t SinkStart(void);
     int32_t DecoderStart(void);
+    int32_t VideoDecoderStart(void);
+    int32_t AudioDecoderStart(void);
     int32_t SetDecoderAndStreamAttr(void);
     int32_t CheckMediaInfo(void);
     int32_t AddAudioSink(void);
@@ -160,7 +162,7 @@ private:
     void ReleaseVDecoderOutputFrame(void);
     void RenderAudioFrame(void);
     void RenderVideoFrame(void);
-    static void* DataSchProcess(void *priv);
+    static void *DataSchProcess(void *priv);
     void ReortRenderPosition(void);
     void PushPacketToADecoder(void);
     void PushPacketToVDecoder(void);

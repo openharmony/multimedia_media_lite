@@ -19,20 +19,14 @@
 #include <pthread.h>
 #include <sys/io.h>
 #include <sys/select.h>
+#include <sys/stat.h>
+#include <sys/time.h>
 #include <sys/prctl.h>
 #include "media_log.h"
 #include "securec.h"
 
 namespace OHOS {
 namespace Media {
-#define CHECK_MEMBER_PTR_RETURN(param)                                \
-    do {                                                              \
-        if (param == nullptr) {                                       \
-            MEDIA_ERR_LOG("ptr is null"); \
-            return ERR_UNKNOWN;                                       \
-        }                                                             \
-    } while (0)
-
 constexpr float RECORDER_DEFAULT_SPEED = 1.0;
 constexpr uint32_t RECORDER_AUDIO_THREAD_PRIORITY = 19;
 constexpr uint32_t RECORDER_VIDEO_THREAD_PRIORITY = 20;
@@ -126,15 +120,6 @@ int32_t RecorderImpl::ResetConfig()
     return SUCCESS;
 }
 
-int32_t RecorderImpl::InitCheck()
-{
-    if (status_ == RELEASED) {
-        MEDIA_ERR_LOG("InitCheck ILLEGAL_STATE  status:%u", status_);
-        return ERR_ILLEGAL_STATE;
-    }
-    return SUCCESS;
-}
-
 int32_t RecorderImpl::GetFreeVideoSourceID(int32_t &sourceId, uint32_t &freeIndex)
 {
     for (uint32_t i = 0; i < RECORDER_SOURCE_MAX_CNT; i++) {
@@ -211,6 +196,10 @@ bool RecorderImpl::GetIndexBySourceID(int32_t sourceId, uint32_t &validIndex)
 int32_t RecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    if (IsPrepared()) {
+        MEDIA_ERR_LOG("IsPrepared status:%u", status_);
+        return ERR_ILLEGAL_STATE;
+    }
     if (source < VIDEO_SOURCE_SURFACE_YUV || source >= VIDEO_SOURCE_BUTT) {
         MEDIA_ERR_LOG("only support VIDEO_SOURCE_SURFACE_ES source: %x is invalid", source);
         return ERR_INVALID_PARAM;
@@ -233,6 +222,10 @@ int32_t RecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId)
 int32_t RecorderImpl::SetVideoEncoder(int32_t sourceId, VideoCodecFormat encoder)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    if (IsPrepared()) {
+        MEDIA_ERR_LOG("IsPrepared status:%u", status_);
+        return ERR_ILLEGAL_STATE;
+    }
     uint32_t validIndex;
     if (!GetIndexBySourceID(sourceId, validIndex)) {
         MEDIA_ERR_LOG("input sourceId:%x is invalid", sourceId);
@@ -250,6 +243,10 @@ int32_t RecorderImpl::SetVideoEncoder(int32_t sourceId, VideoCodecFormat encoder
 int32_t RecorderImpl::SetVideoSize(int32_t sourceId, int32_t width, int32_t height)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    if (IsPrepared()) {
+        MEDIA_ERR_LOG("IsPrepared status:%u", status_);
+        return ERR_ILLEGAL_STATE;
+    }
     uint32_t validIndex;
     if (!GetIndexBySourceID(sourceId, validIndex)) {
         MEDIA_ERR_LOG("input sourceId: %x is invalid", sourceId);
@@ -268,6 +265,10 @@ int32_t RecorderImpl::SetVideoSize(int32_t sourceId, int32_t width, int32_t heig
 int32_t RecorderImpl::SetVideoFrameRate(int32_t sourceId, int32_t frameRate)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    if (IsPrepared()) {
+        MEDIA_ERR_LOG("IsPrepared status:%u", status_);
+        return ERR_ILLEGAL_STATE;
+    }
     uint32_t validIndex;
     if (!GetIndexBySourceID(sourceId, validIndex)) {
         MEDIA_ERR_LOG("input sourceId : %x is invalid", sourceId);
@@ -285,6 +286,10 @@ int32_t RecorderImpl::SetVideoFrameRate(int32_t sourceId, int32_t frameRate)
 int32_t RecorderImpl::SetVideoEncodingBitRate(int32_t sourceId, int32_t rate)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    if (IsPrepared()) {
+        MEDIA_ERR_LOG("IsPrepared status:%u", status_);
+        return ERR_ILLEGAL_STATE;
+    }
     uint32_t validIndex;
     if (!GetIndexBySourceID(sourceId, validIndex)) {
         MEDIA_ERR_LOG("input sourceId: %x is invalid", sourceId);
@@ -302,6 +307,10 @@ int32_t RecorderImpl::SetVideoEncodingBitRate(int32_t sourceId, int32_t rate)
 int32_t RecorderImpl::SetCaptureRate(int32_t sourceId, double fps)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    if (IsPrepared()) {
+        MEDIA_ERR_LOG("IsPrepared status:%u", status_);
+        return ERR_ILLEGAL_STATE;
+    }
     uint32_t validIndex;
     if (!GetIndexBySourceID(sourceId, validIndex)) {
         MEDIA_ERR_LOG("input sourceId: %x is invalid", sourceId);
@@ -319,6 +328,10 @@ int32_t RecorderImpl::SetCaptureRate(int32_t sourceId, double fps)
 int32_t RecorderImpl::SetOrientationHint(int32_t sourceId, int32_t degree)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    if (IsPrepared()) {
+        MEDIA_ERR_LOG("IsPrepared status:%u", status_);
+        return ERR_ILLEGAL_STATE;
+    }
     uint32_t validIndex;
     if (!GetIndexBySourceID(sourceId, validIndex)) {
         MEDIA_ERR_LOG("input sourceId: %x is invalid", sourceId);
@@ -369,6 +382,10 @@ bool RecorderImpl::IsPrepared()
 int32_t RecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    if (IsPrepared()) {
+        MEDIA_ERR_LOG("IsPrepared status:%u", status_);
+        return ERR_ILLEGAL_STATE;
+    }
     uint32_t freeIndex;
     int32_t ret = GetFreeAudioSourceID(sourceId, freeIndex);
     if (ret != SUCCESS) {
@@ -392,6 +409,10 @@ int32_t RecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId)
 int32_t RecorderImpl::SetAudioEncoder(int32_t sourceId, AudioCodecFormat encoder)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    if (IsPrepared()) {
+        MEDIA_ERR_LOG("IsPrepared status:%u", status_);
+        return ERR_ILLEGAL_STATE;
+    }
     uint32_t validIndex;
     if (!GetIndexBySourceID(sourceId, validIndex)) {
         MEDIA_ERR_LOG("input sourceId: %x is invalid", sourceId);
@@ -426,6 +447,10 @@ int32_t RecorderImpl::SetAudioEncoder(int32_t sourceId, AudioCodecFormat encoder
 int32_t RecorderImpl::SetAudioSampleRate(int32_t sourceId, int32_t rate)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    if (IsPrepared()) {
+        MEDIA_ERR_LOG("IsPrepared status:%u", status_);
+        return ERR_ILLEGAL_STATE;
+    }
     uint32_t validIndex;
     if (!GetIndexBySourceID(sourceId, validIndex)) {
         MEDIA_ERR_LOG("input sourceId : %x is invalid", sourceId);
@@ -443,6 +468,10 @@ int32_t RecorderImpl::SetAudioSampleRate(int32_t sourceId, int32_t rate)
 int32_t RecorderImpl::SetAudioChannels(int32_t sourceId, int32_t num)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    if (IsPrepared()) {
+        MEDIA_ERR_LOG("IsPrepared status:%u", status_);
+        return ERR_ILLEGAL_STATE;
+    }
     uint32_t validIndex;
     if (!GetIndexBySourceID(sourceId, validIndex)) {
         MEDIA_ERR_LOG("input sourceId : %x is invalid", sourceId);
@@ -460,6 +489,10 @@ int32_t RecorderImpl::SetAudioChannels(int32_t sourceId, int32_t num)
 int32_t RecorderImpl::SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRate)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    if (IsPrepared()) {
+        MEDIA_ERR_LOG("IsPrepared status:%u", status_);
+        return ERR_ILLEGAL_STATE;
+    }
     uint32_t validIndex;
     if (!GetIndexBySourceID(sourceId, validIndex)) {
         MEDIA_ERR_LOG("input sourceId : %x is invalid", sourceId);
@@ -506,24 +539,30 @@ int32_t RecorderImpl::SetDataSource(DataSourceType source, int32_t &sourceId)
 int32_t RecorderImpl::SetLocation(int32_t latitude, int32_t longitude)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    int32_t ret;
-    if ((ret = InitCheck()) != SUCCESS) {
-        MEDIA_ERR_LOG("SetLocation InitCheck err");
-        return ret;
+    if (IsPrepared()) {
+        MEDIA_ERR_LOG("IsPrepared status:%u", status_);
+        return ERR_ILLEGAL_STATE;
     }
-    CHECK_MEMBER_PTR_RETURN(recorderSink_);
+    if (recorderSink_ == nullptr) {
+        MEDIA_ERR_LOG("recorderSink_ is null");
+        return ERR_UNKNOWN;
+    }
+
     return recorderSink_->SetLocation(latitude, longitude);
 }
 
 int32_t RecorderImpl::SetMaxDuration(int32_t duration)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    int32_t ret;
-    if ((ret = InitCheck()) != SUCCESS) {
-        MEDIA_ERR_LOG("SetMaxDuration InitCheck err");
-        return ret;
+    if (IsPrepared()) {
+        MEDIA_ERR_LOG("IsPrepared status:%u", status_);
+        return ERR_ILLEGAL_STATE;
     }
-    CHECK_MEMBER_PTR_RETURN(recorderSink_);
+    if (recorderSink_ == nullptr) {
+        MEDIA_ERR_LOG("recorderSink_ is null");
+        return ERR_UNKNOWN;
+    }
+
     MEDIA_INFO_LOG("Max Duration :%d Set", duration);
     return recorderSink_->SetMaxDuration(duration);
 }
@@ -531,10 +570,10 @@ int32_t RecorderImpl::SetMaxDuration(int32_t duration)
 int32_t RecorderImpl::SetOutputFormat(OutputFormatType format)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    int32_t ret;
-    if ((ret = InitCheck()) != SUCCESS) {
-        MEDIA_ERR_LOG("SetOutputFormat InitCheck err");
-        return ret;
+    MEDIA_ERR_LOG("in");
+    if (IsPrepared()) {
+        MEDIA_ERR_LOG("IsPrepared status:%u", status_);
+        return ERR_ILLEGAL_STATE;
     }
     MEDIA_INFO_LOG("Output Format :%d Set", format);
     OutputFormat outPutFormat;
@@ -545,12 +584,19 @@ int32_t RecorderImpl::SetOutputFormat(OutputFormatType format)
         case FORMAT_TS:
             outPutFormat = OUTPUT_FORMAT_TS;
             break;
-        default:
-            MEDIA_ERR_LOG("format: %d use default OUTPUT_FORMAT_MPEG_4", format);
+        case FORMAT_DEFAULT:
             outPutFormat = OUTPUT_FORMAT_MPEG_4;
+            MEDIA_WARNING_LOG("format: %d use default OUTPUT_FORMAT_MPEG_4", format);
             break;
+        default:
+            MEDIA_ERR_LOG("invalid OutputFormatType: %d ", format);
+            return ERR_INVALID_PARAM;
     }
-    CHECK_MEMBER_PTR_RETURN(recorderSink_);
+    if (recorderSink_ == nullptr) {
+        MEDIA_ERR_LOG("recorderSink_ is null");
+        return ERR_UNKNOWN;
+    }
+
     MEDIA_INFO_LOG("Output Format:%d Set", format);
     return recorderSink_->SetOutputFormat(outPutFormat);
 }
@@ -558,9 +604,14 @@ int32_t RecorderImpl::SetOutputFormat(OutputFormatType format)
 int32_t RecorderImpl::SetOutputPath(const string &path)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_MEMBER_PTR_RETURN(recorderSink_);
-    if (status_ != INITIALIZED) {
-        MEDIA_ERR_LOG("SetOutputPath ILLEGAL_STATE  status:%u", status_);
+    if (recorderSink_ == nullptr) {
+        MEDIA_ERR_LOG("recorderSink_ is null");
+        return ERR_UNKNOWN;
+    }
+
+    MEDIA_ERR_LOG("in");
+    if (IsPrepared()) {
+        MEDIA_ERR_LOG("IsPrepared status:%u", status_);
         return ERR_ILLEGAL_STATE;
     }
     if (path.data() == nullptr) {
@@ -569,6 +620,12 @@ int32_t RecorderImpl::SetOutputPath(const string &path)
     }
     if (access(path.c_str(), F_OK) == -1) {
         MEDIA_ERR_LOG("The path :%s doesn't exisit", path.c_str());
+        return ERR_INVALID_PARAM;
+    }
+    struct stat fileStatus;
+    stat(path.c_str(), &fileStatus);
+    if (!S_ISDIR(fileStatus.st_mode)) {
+        MEDIA_ERR_LOG("path is a file!", path.c_str());
         return ERR_INVALID_PARAM;
     }
     if (access(path.c_str(),  W_OK) == -1) {
@@ -598,64 +655,75 @@ int32_t RecorderImpl::IsValidFileFd(int32_t fd)
 int32_t RecorderImpl::SetOutputFile(int32_t fd)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    int32_t ret;
-    if ((ret = InitCheck()) != SUCCESS) {
-        MEDIA_ERR_LOG("SetOutputFormat InitCheck err");
-        return ret;
-    }
     MEDIA_INFO_LOG("Output File :%d Set", fd);
+    if (IsPrepared()) {
+        MEDIA_ERR_LOG("IsPrepared status:%u", status_);
+        return ERR_ILLEGAL_STATE;
+    }
     if (IsValidFileFd(fd) != SUCCESS) {
         MEDIA_ERR_LOG("Fail to get File Status Flags from fd: %d", fd);
         return ERR_INVALID_PARAM;
     }
-    CHECK_MEMBER_PTR_RETURN(recorderSink_);
+    if (recorderSink_ == nullptr) {
+        MEDIA_ERR_LOG("recorderSink_ is null");
+        return ERR_UNKNOWN;
+    }
+
     return recorderSink_->SetOutputFile(fd);
 }
 
 int32_t RecorderImpl::SetNextOutputFile(int32_t fd)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    int32_t ret;
-    if ((ret = InitCheck()) != SUCCESS) {
-        MEDIA_ERR_LOG("SetNextOutputFile InitCheck err");
-        return ret;
+    if (IsPrepared()) {
+        return ERR_ILLEGAL_STATE;
     }
     MEDIA_INFO_LOG("Next Output File :%d Set", fd);
     if (IsValidFileFd(fd) != SUCCESS) {
         MEDIA_ERR_LOG("Fail to get File Status Flags from fd: %d", fd);
         return ERR_INVALID_PARAM;
     }
-    CHECK_MEMBER_PTR_RETURN(recorderSink_);
+    if (recorderSink_ == nullptr) {
+        MEDIA_ERR_LOG("recorderSink_ is null");
+        return ERR_UNKNOWN;
+    }
+
     return recorderSink_->SetNextOutputFile(fd);
 }
 
 int32_t RecorderImpl::SetMaxFileSize(int64_t size)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    int32_t ret;
-    if ((ret = InitCheck()) != SUCCESS) {
-        MEDIA_ERR_LOG("SetMaxFileSize InitCheck err");
-        return ret;
+    if (IsPrepared()) {
+        MEDIA_ERR_LOG("IsPrepared status:%u", status_);
+        return ERR_ILLEGAL_STATE;
     }
     MEDIA_INFO_LOG("Max File Size :%lld Set", size);
-    CHECK_MEMBER_PTR_RETURN(recorderSink_);
+    if (recorderSink_ == nullptr) {
+        MEDIA_ERR_LOG("recorderSink_ is null");
+        return ERR_UNKNOWN;
+    }
+
     return recorderSink_->SetMaxFileSize(size);
 }
 
 int32_t RecorderImpl::SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    int32_t ret;
-    if ((ret = InitCheck()) != SUCCESS) {
-        MEDIA_ERR_LOG("SetRecorderCallback InitCheck err");
-        return ret;
+    if (IsPrepared()) {
+        MEDIA_ERR_LOG("IsPrepared status:%u", status_);
+        return ERR_ILLEGAL_STATE;
     }
     if (callback == nullptr) {
         MEDIA_ERR_LOG("SetRecorderCallback callback is nullptr");
         return ERR_INVALID_PARAM;
     }
     MEDIA_INFO_LOG("RecorderCallback :%p Set", callback.get());
-    CHECK_MEMBER_PTR_RETURN(recorderSink_);
+    if (recorderSink_ == nullptr) {
+        MEDIA_ERR_LOG("recorderSink_ is null");
+        return ERR_UNKNOWN;
+    }
+
     return recorderSink_->SetRecorderCallback(callback);
 }
 
@@ -675,8 +743,13 @@ int32_t RecorderImpl::PrepareAudioSource()
                 MEDIA_ERR_LOG("GetAudioTrackSource  failed Ret: 0x%x", ret);
                 return ret;
             }
+
+            if (recorderSink_ == nullptr) {
+                MEDIA_ERR_LOG("recorderSink_ is null");
+                return ERR_UNKNOWN;
+            }
+
             int32_t trackId;
-            CHECK_MEMBER_PTR_RETURN(recorderSink_);
             ret = recorderSink_->AddTrackSource(trackSource, trackId);
             if (ret != SUCCESS) {
                 MEDIA_ERR_LOG("AddTrackSource failed Ret:0x%x", ret);
@@ -701,8 +774,13 @@ int32_t RecorderImpl::PrepareDataSource()
                 MEDIA_ERR_LOG("GetDataTrackSource failed ret:0x%x", ret);
                 return ret;
             }
+
+            if (recorderSink_ == nullptr) {
+                MEDIA_ERR_LOG("recorderSink_ is null");
+                return ERR_UNKNOWN;
+            }
+
             int32_t trackId;
-            CHECK_MEMBER_PTR_RETURN(recorderSink_);
             ret = recorderSink_->AddTrackSource(trackSource, trackId);
             if (ret != SUCCESS) {
                 MEDIA_ERR_LOG("AddTrackSource failed Ret: 0x%x", ret);
@@ -727,8 +805,13 @@ int32_t RecorderImpl::PrepareVideoSource()
                 MEDIA_ERR_LOG("GetVideoTrackSource failed. index:%d ret:0x%x", i, ret);
                 return ret;
             }
+
+            if (recorderSink_ == nullptr) {
+                MEDIA_ERR_LOG("recorderSink_ is null");
+                return ERR_UNKNOWN;
+            }
+
             int32_t trackId;
-            CHECK_MEMBER_PTR_RETURN(recorderSink_);
             ret = recorderSink_->AddTrackSource(trackSource, trackId);
             if (ret != SUCCESS) {
                 MEDIA_ERR_LOG("AddTrackSource failed ret:0x%x", ret);
@@ -784,11 +867,19 @@ int32_t RecorderImpl::GetAudioTrackSource(const RecorderAudioSourceConfig &audio
         case AAC_HE_V2:
         case AAC_LD:
         case AAC_ELD:
+        case AUDIO_DEFAULT:
             trackSource.trackSourceInfo.audioInfo.codecType = CODEC_AAC;
             break;
         default:
-            MEDIA_ERR_LOG("unsupport audiFormat format: %d", audioSourceConfig.audioFormat);
+            MEDIA_ERR_LOG("unsupport audiFormat: %d", audioSourceConfig.audioFormat);
             return ERR_INVALID_PARAM;
+    }
+    if (audioSourceConfig.bitRate == 0 ||
+        audioSourceConfig.sampleRate == 0 ||
+        audioSourceConfig.channelCount == 0) {
+        MEDIA_ERR_LOG("not set bitRate:%d sampleRate:%d channelCount:%d", audioSourceConfig.bitRate,
+                      audioSourceConfig.sampleRate, audioSourceConfig.channelCount);
+        return ERR_INVALID_PARAM;
     }
     trackSource.trackSourceInfo.audioInfo.sampleRate = audioSourceConfig.sampleRate;
     trackSource.trackSourceInfo.audioInfo.channelCount = audioSourceConfig.channelCount;
@@ -803,8 +894,9 @@ int32_t RecorderImpl::GetAudioTrackSource(const RecorderAudioSourceConfig &audio
             trackSource.trackSourceInfo.audioInfo.sampleBitWidth = AUDIO_SAMPLE_FMT_S24;
             break;
         default:
-            MEDIA_ERR_LOG("unsupport sampleBitWidth: %d", audioSourceConfig.bitWidth);
-            return ERR_INVALID_PARAM;
+            MEDIA_WARNING_LOG("default sampleBitWidth: %d", audioSourceConfig.bitWidth);
+            trackSource.trackSourceInfo.audioInfo.sampleBitWidth = AUDIO_SAMPLE_FMT_S16;
+            break;
     }
     int frame = 1024;
     trackSource.trackSourceInfo.audioInfo.samplesPerFrame = frame;
@@ -824,18 +916,25 @@ int32_t RecorderImpl::GetDataTrackSource(TrackSource &trackSource)
 
 int32_t RecorderImpl::PrepareRecorderSink()
 {
-    int32_t ret;
-    if ((ret = InitCheck()) != SUCCESS) {
-        MEDIA_ERR_LOG("PrepareRecorderSink InitCheck err");
-        return ret;
+    if (IsPrepared()) {
+        MEDIA_ERR_LOG("IsPrepared status:%u", status_);
+        return ERR_ILLEGAL_STATE;
     }
-    CHECK_MEMBER_PTR_RETURN(recorderSink_);
+    if (recorderSink_ == nullptr) {
+        MEDIA_ERR_LOG("recorderSink_ is null");
+        return ERR_UNKNOWN;
+    }
+
     return recorderSink_->Prepare();
 }
 
 int32_t RecorderImpl::Prepare()
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    if (IsPrepared()) {
+        MEDIA_ERR_LOG("IsPrepared status:%u", status_);
+        return ERR_ILLEGAL_STATE;
+    }
     int32_t ret = PrepareRecorderSink();
     if (ret != SUCCESS) {
         MEDIA_ERR_LOG("PrepareRecorderSink  failed Ret: %d", ret);
@@ -1118,7 +1217,11 @@ int32_t RecorderImpl::Start()
         MEDIA_ERR_LOG("Start ILLEGAL_STATE  status:%u", status_);
         return ERR_ILLEGAL_STATE;
     }
-    CHECK_MEMBER_PTR_RETURN(recorderSink_);
+
+    if (recorderSink_ == nullptr) {
+        MEDIA_ERR_LOG("recorderSink_ is null");
+        return ERR_UNKNOWN;
+    }
     int32_t ret = recorderSink_->Start();
     if (ret != SUCCESS) {
         MEDIA_ERR_LOG("recorderSink_  Start failed Ret: %d", ret);
@@ -1261,7 +1364,11 @@ int32_t RecorderImpl::Pause()
         MEDIA_ERR_LOG("StopDataSource Pause failed ret:%d", ret);
         return ret;
     }
-    CHECK_MEMBER_PTR_RETURN(recorderSink_);
+
+    if (recorderSink_ == nullptr) {
+        MEDIA_ERR_LOG("recorderSink_ is null");
+        return ERR_UNKNOWN;
+    }
     ret = recorderSink_->Stop(false);
     if (ret != SUCCESS) {
         MEDIA_ERR_LOG("recorderSink_ Stop! ret:0x%x", ret);
@@ -1279,7 +1386,11 @@ int32_t RecorderImpl::Resume()
         MEDIA_ERR_LOG("Resume ILLEGAL_STATE status:%u", status_);
         return ERR_ILLEGAL_STATE;
     }
-    CHECK_MEMBER_PTR_RETURN(recorderSink_);
+    if (recorderSink_ == nullptr) {
+        MEDIA_ERR_LOG("recorderSink_ is null");
+        return ERR_UNKNOWN;
+    }
+
     int32_t ret = recorderSink_->Start();
     if (ret != SUCCESS) {
         MEDIA_ERR_LOG("recorderSink_ Start! ret: 0x%x", ret);
@@ -1328,7 +1439,10 @@ int32_t RecorderImpl::StopInternal(bool block)
         return ret;
     }
 
-    CHECK_MEMBER_PTR_RETURN(recorderSink_);
+    if (recorderSink_ == nullptr) {
+        MEDIA_ERR_LOG("recorderSink_ is null");
+        return ERR_UNKNOWN;
+    }
     ret = recorderSink_->Stop(block);
     if (ret != SUCCESS) {
         MEDIA_ERR_LOG("recorderSink_ Stop! ret:0x%x", ret);
@@ -1355,9 +1469,9 @@ int32_t RecorderImpl::Reset()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     int32_t ret;
-    if ((ret = InitCheck()) != SUCCESS) {
-        MEDIA_ERR_LOG("Reset InitCheck err");
-        return ret;
+    if (status_ == RELEASED) {
+        MEDIA_ERR_LOG("already RELEASED");
+        return ERR_ILLEGAL_STATE;
     }
     if (status_ == RECORDING ||
         status_ == PAUSED) {
@@ -1366,7 +1480,11 @@ int32_t RecorderImpl::Reset()
             return ret;
         }
     }
-    CHECK_MEMBER_PTR_RETURN(recorderSink_);
+
+    if (recorderSink_ == nullptr) {
+        MEDIA_ERR_LOG("recorderSink_ is null");
+        return ERR_UNKNOWN;
+    }
     ret = recorderSink_->Reset();
     if (ret != SUCCESS) {
         MEDIA_ERR_LOG("recorderSink Reset err:0x%x", ret);
@@ -1386,9 +1504,9 @@ int32_t RecorderImpl::Release()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     int32_t ret;
-    if ((ret = InitCheck()) != SUCCESS) {
-        MEDIA_ERR_LOG("Release InitCheck err");
-        return ret;
+    if (status_ == RELEASED) {
+        MEDIA_ERR_LOG("already Released");
+        return ERR_ILLEGAL_STATE;
     }
     if (status_ == RECORDING ||
         status_ == PAUSED) {
@@ -1397,7 +1515,11 @@ int32_t RecorderImpl::Release()
             return ret;
         }
     }
-    CHECK_MEMBER_PTR_RETURN(recorderSink_);
+
+    if (recorderSink_ == nullptr) {
+        MEDIA_ERR_LOG("recorderSink_ is null");
+        return ERR_UNKNOWN;
+    }
     ret = recorderSink_->Release();
     if (ret != SUCCESS) {
         MEDIA_ERR_LOG("recorderSink_ Release failed:%d", ret);
@@ -1431,19 +1553,26 @@ int32_t RecorderImpl::SetFileSplitDuration(FileSplitType type, int64_t timestamp
             MEDIA_ERR_LOG("unsupport FileSplitType type: %d", type);
             return ERR_INVALID_PARAM;
     }
-    CHECK_MEMBER_PTR_RETURN(recorderSink_);
+    if (recorderSink_ == nullptr) {
+        MEDIA_ERR_LOG("recorderSink_ is null");
+        return ERR_UNKNOWN;
+    }
+
     return recorderSink_->SetFileSplitDuration(manualSplitType, timestamp, duration);
 }
 
 int32_t RecorderImpl::SetParameter(int32_t sourceId, const Format &format)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    int32_t ret;
-    if ((ret = InitCheck()) != SUCCESS) {
-        MEDIA_ERR_LOG("SetParameter InitCheck err");
-        return ret;
+    if (status_ == RELEASED) {
+        MEDIA_ERR_LOG("when RELEASED can not Set Parameter:%u");
+        return ERR_ILLEGAL_STATE;
     }
-    CHECK_MEMBER_PTR_RETURN(recorderSink_);
+    if (recorderSink_ == nullptr) {
+        MEDIA_ERR_LOG("recorderSink_ is null");
+        return ERR_UNKNOWN;
+    }
+
     return recorderSink_->SetParameter(sourceId, format);
 }
 }  // namespace Media

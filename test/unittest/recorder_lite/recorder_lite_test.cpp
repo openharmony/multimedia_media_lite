@@ -1342,6 +1342,90 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioSampleRate_test_003, Level1
 
 /*
  * Feature: Recorder
+ * Function: SetAudioSampleRate
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Set Audio Sample Rate with 44.1Khz
+ */
+HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioSampleRate_test_004, Level1)
+{
+    Recorder *recorder = new Recorder();
+    int32_t audioSourceId = 0;
+    int32_t sampleRate = 44100;
+    int32_t ret = recorder->SetAudioSource(AUDIO_MIC, audioSourceId);
+    EXPECT_EQ(RET_OK, ret);
+    ret = recorder->SetAudioSampleRate(audioSourceId, sampleRate);
+    EXPECT_EQ(RET_OK, ret);
+    delete recorder;
+    recorder = NULL;
+}
+
+/*
+ * Feature: Recorder
+ * Function: SetAudioSampleRate
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Set Audio Sample Rate with 8Khz
+ */
+HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioSampleRate_test_005, Level1)
+{
+    Recorder *recorder = new Recorder();
+    int32_t audioSourceId = 0;
+    int32_t sampleRate = 8000;
+    int32_t ret = recorder->SetAudioSource(AUDIO_MIC, audioSourceId);
+    EXPECT_EQ(RET_OK, ret);
+    ret = recorder->SetAudioSampleRate(audioSourceId, sampleRate);
+    EXPECT_EQ(RET_OK, ret);
+    delete recorder;
+    recorder = NULL;
+}
+
+/*
+ * Feature: Recorder
+ * Function: SetAudioSampleRate
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Set Audio Sample Rate with 16Khz
+ */
+HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioSampleRate_test_006, Level1)
+{
+    Recorder *recorder = new Recorder();
+    int32_t audioSourceId = 0;
+    int32_t sampleRate = 16000;
+    int32_t ret = recorder->SetAudioSource(AUDIO_MIC, audioSourceId);
+    EXPECT_EQ(RET_OK, ret);
+    ret = recorder->SetAudioSampleRate(audioSourceId, sampleRate);
+    EXPECT_EQ(RET_OK, ret);
+    delete recorder;
+    recorder = NULL;
+}
+
+/*
+ * Feature: Recorder
+ * Function: SetAudioSampleRate
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Set Audio Sample Rate with 32Khz
+ */
+HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioSampleRate_test_007, Level1)
+{
+    Recorder *recorder = new Recorder();
+    int32_t audioSourceId = 0;
+    int32_t sampleRate = 32000;
+    int32_t ret = recorder->SetAudioSource(AUDIO_MIC, audioSourceId);
+    EXPECT_EQ(RET_OK, ret);
+    ret = recorder->SetAudioSampleRate(audioSourceId, sampleRate);
+    EXPECT_EQ(RET_OK, ret);
+    delete recorder;
+    recorder = NULL;
+}
+
+/*
+ * Feature: Recorder
  * Function: SetAudioChannels
  * SubFunction: NA
  * FunctionPoints: NA
@@ -1409,14 +1493,56 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioChannels_test_003, Level1)
  * SubFunction: NA
  * FunctionPoints: NA
  * EnvConditions: NA
- * CaseDescription: Set Audio Channels with invalid channel count
+ * CaseDescription: Set Audio Channels with valid one channel count and AUDIO_VOICE_CALL as source
  */
 HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioChannels_test_004, Level1)
 {
     Recorder *recorder = new Recorder();
     int32_t audioSourceId = 0;
-    int32_t channelCount = 1000;
-    int32_t ret = recorder->SetAudioSource(AUDIO_MIC, audioSourceId);
+    int32_t channelCount = 2;
+    int32_t ret = recorder->SetAudioSource(AUDIO_VOICE_CALL, audioSourceId);
+    EXPECT_EQ(RET_OK, ret);
+    ret = recorder->SetAudioChannels(audioSourceId, channelCount);
+    EXPECT_EQ(RET_OK, ret);
+    delete recorder;
+    recorder = NULL;
+}
+
+/*
+ * Feature: Recorder
+ * Function: SetAudioChannels
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Set Audio Channels with valid two channel count and AUDIO_VOICE_CALL as source
+ */
+HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioChannels_test_005, Level1)
+{
+    Recorder *recorder = new Recorder();
+    int32_t audioSourceId = 0;
+    int32_t channelCount = 1;
+    int32_t ret = recorder->SetAudioSource(AUDIO_VOICE_CALL, audioSourceId);
+    EXPECT_EQ(RET_OK, ret);
+    ret = recorder->SetAudioChannels(audioSourceId, channelCount);
+    EXPECT_EQ(RET_OK, ret);
+    delete recorder;
+    recorder = NULL;
+}
+
+/*
+ * Feature: Recorder
+ * Function: SetAudioChannels
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Set Audio Channels with invalid channel count and AUDIO_VOICE_CALL as source
+ */
+HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioChannels_test_006, Level1)
+{
+    Recorder *recorder = new Recorder();
+    int32_t audioSourceId = 0;
+    int32_t channelCount = 0;
+    int32_t ret = recorder->SetAudioSource(AUDIO_VOICE_CALL, audioSourceId);
     EXPECT_EQ(RET_OK, ret);
     ret = recorder->SetAudioChannels(audioSourceId, channelCount);
     EXPECT_EQ(RET_OK, ret);
@@ -1432,7 +1558,7 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioChannels_test_004, Level1)
  * EnvConditions: NA
  * CaseDescription: Set Audio Channels with invalid source ID
  */
-HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioChannels_test_005, Level1)
+HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioChannels_test_007, Level1)
 {
     Recorder *recorder = new Recorder();
     int32_t audioSourceId = 100000;
@@ -1470,9 +1596,93 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioEncodingBitRate_test_001, L
  * SubFunction: NA
  * FunctionPoints: NA
  * EnvConditions: NA
- * CaseDescription: Set Audio Encoding BitRate with invalid bitrate
+ * CaseDescription: Set Audio Encoding BitRate with 44000
  */
 HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioEncodingBitRate_test_002, Level1)
+{
+    Recorder *recorder = new Recorder();
+    int32_t audioSourceId = 0;
+    int32_t audioEncodingBitRate = 44000;
+    int32_t ret = recorder->SetAudioSource(AUDIO_MIC, audioSourceId);
+    EXPECT_EQ(RET_OK, ret);
+    ret = recorder->SetAudioEncodingBitRate(audioSourceId, audioEncodingBitRate);
+    EXPECT_EQ(RET_OK, ret);
+    delete recorder;
+    recorder = NULL;
+}
+
+/*
+ * Feature: Recorder
+ * Function: SetAudioEncodingBitRate
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Set Audio Encoding BitRate with 8000
+ */
+HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioEncodingBitRate_test_003, Level1)
+{
+    Recorder *recorder = new Recorder();
+    int32_t audioSourceId = 0;
+    int32_t audioEncodingBitRate = 8000;
+    int32_t ret = recorder->SetAudioSource(AUDIO_MIC, audioSourceId);
+    EXPECT_EQ(RET_OK, ret);
+    ret = recorder->SetAudioEncodingBitRate(audioSourceId, audioEncodingBitRate);
+    EXPECT_EQ(RET_OK, ret);
+    delete recorder;
+    recorder = NULL;
+}
+
+/*
+ * Feature: Recorder
+ * Function: SetAudioEncodingBitRate
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Set Audio Encoding BitRate with 16000
+ */
+HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioEncodingBitRate_test_004, Level1)
+{
+    Recorder *recorder = new Recorder();
+    int32_t audioSourceId = 0;
+    int32_t audioEncodingBitRate = 16000;
+    int32_t ret = recorder->SetAudioSource(AUDIO_MIC, audioSourceId);
+    EXPECT_EQ(RET_OK, ret);
+    ret = recorder->SetAudioEncodingBitRate(audioSourceId, audioEncodingBitRate);
+    EXPECT_EQ(RET_OK, ret);
+    delete recorder;
+    recorder = NULL;
+}
+
+/*
+ * Feature: Recorder
+ * Function: SetAudioEncodingBitRate
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Set Audio Encoding BitRate with 32000
+ */
+HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioEncodingBitRate_test_005, Level1)
+{
+    Recorder *recorder = new Recorder();
+    int32_t audioSourceId = 0;
+    int32_t audioEncodingBitRate = 32000;
+    int32_t ret = recorder->SetAudioSource(AUDIO_MIC, audioSourceId);
+    EXPECT_EQ(RET_OK, ret);
+    ret = recorder->SetAudioEncodingBitRate(audioSourceId, audioEncodingBitRate);
+    EXPECT_EQ(RET_OK, ret);
+    delete recorder;
+    recorder = NULL;
+}
+
+/*
+ * Feature: Recorder
+ * Function: SetAudioEncodingBitRate
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Set Audio Encoding BitRate with invalid bitrate
+ */
+HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioEncodingBitRate_test_006, Level1)
 {
     Recorder *recorder = new Recorder();
     int32_t audioSourceId = 0;
@@ -1493,13 +1703,118 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioEncodingBitRate_test_002, L
  * EnvConditions: NA
  * CaseDescription: Set Audio Encoding BitRate with invalid source ID
  */
-HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioEncodingBitRate_test_003, Level1)
+HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioEncodingBitRate_test_007, Level1)
 {
     Recorder *recorder = new Recorder();
     int32_t audioSourceId = 10000;
     int32_t audioEncodingBitRate = 48000;
     int32_t ret = recorder->SetAudioEncodingBitRate(audioSourceId, audioEncodingBitRate);
     EXPECT_EQ(ERR_INVALID_PARAM, ret);
+    delete recorder;
+    recorder = NULL;
+}
+
+/*
+ * Feature: Recorder
+ * Function: SetAudioEncodingBitRate
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Set Audio Encoding BitRate with valid data and source AUDIO_VOICE_CALL
+ */
+HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioEncodingBitRate_test_008, Level1)
+{
+    Recorder *recorder = new Recorder();
+    int32_t audioSourceId = 0;
+    int32_t audioEncodingBitRate = 48000;
+    int32_t ret = recorder->SetAudioSource(AUDIO_VOICE_CALL, audioSourceId);
+    EXPECT_EQ(RET_OK, ret);
+    ret = recorder->SetAudioEncodingBitRate(audioSourceId, audioEncodingBitRate);
+    EXPECT_EQ(RET_OK, ret);
+    delete recorder;
+    recorder = NULL;
+}
+
+/*
+ * Feature: Recorder
+ * Function: SetAudioEncodingBitRate
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Set Audio Encoding BitRate with 44000 and source AUDIO_VOICE_CALL
+ */
+HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioEncodingBitRate_test_009, Level1)
+{
+    Recorder *recorder = new Recorder();
+    int32_t audioSourceId = 0;
+    int32_t audioEncodingBitRate = 44000;
+    int32_t ret = recorder->SetAudioSource(AUDIO_VOICE_CALL, audioSourceId);
+    EXPECT_EQ(RET_OK, ret);
+    ret = recorder->SetAudioEncodingBitRate(audioSourceId, audioEncodingBitRate);
+    EXPECT_EQ(RET_OK, ret);
+    delete recorder;
+    recorder = NULL;
+}
+
+/*
+ * Feature: Recorder
+ * Function: SetAudioEncodingBitRate
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Set Audio Encoding BitRate with 8000 and source AUDIO_VOICE_CALL
+ */
+HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioEncodingBitRate_test_010, Level1)
+{
+    Recorder *recorder = new Recorder();
+    int32_t audioSourceId = 0;
+    int32_t audioEncodingBitRate = 8000;
+    int32_t ret = recorder->SetAudioSource(AUDIO_VOICE_CALL, audioSourceId);
+    EXPECT_EQ(RET_OK, ret);
+    ret = recorder->SetAudioEncodingBitRate(audioSourceId, audioEncodingBitRate);
+    EXPECT_EQ(RET_OK, ret);
+    delete recorder;
+    recorder = NULL;
+}
+
+/*
+ * Feature: Recorder
+ * Function: SetAudioEncodingBitRate
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Set Audio Encoding BitRate with 16000 and source AUDIO_VOICE_CALL
+ */
+HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioEncodingBitRate_test_011, Level1)
+{
+    Recorder *recorder = new Recorder();
+    int32_t audioSourceId = 0;
+    int32_t audioEncodingBitRate = 16000;
+    int32_t ret = recorder->SetAudioSource(AUDIO_VOICE_CALL, audioSourceId);
+    EXPECT_EQ(RET_OK, ret);
+    ret = recorder->SetAudioEncodingBitRate(audioSourceId, audioEncodingBitRate);
+    EXPECT_EQ(RET_OK, ret);
+    delete recorder;
+    recorder = NULL;
+}
+
+/*
+ * Feature: Recorder
+ * Function: SetAudioEncodingBitRate
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Set Audio Encoding BitRate with 32000 and source AUDIO_VOICE_CALL
+ */
+HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioEncodingBitRate_test_012, Level1)
+{
+    Recorder *recorder = new Recorder();
+    int32_t audioSourceId = 0;
+    int32_t audioEncodingBitRate = 32000;
+    int32_t ret = recorder->SetAudioSource(AUDIO_VOICE_CALL, audioSourceId);
+    EXPECT_EQ(RET_OK, ret);
+    ret = recorder->SetAudioEncodingBitRate(audioSourceId, audioEncodingBitRate);
+    EXPECT_EQ(RET_OK, ret);
     delete recorder;
     recorder = NULL;
 }
@@ -1679,8 +1994,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetMaxFileSize_test_002, Level1)
 HWTEST_F(RecoderLiteTest, medialite_recorder_SetOutputFile_test_001, Level1)
 {
     Recorder *recorder = new Recorder();
-    int32_t ret = recorder->SetOutputFile(-1);
-    EXPECT_EQ(-5, ret);
+    int32_t ret = recorder->SetOutputFile(1);
+    EXPECT_EQ(ERR_INVALID_PARAM, ret);
     delete recorder;
     recorder = NULL;
 }
@@ -1696,8 +2011,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetOutputFile_test_001, Level1)
 HWTEST_F(RecoderLiteTest, medialite_recorder_SetNextOutputFile_test_001, Level1)
 {
     Recorder *recorder = new Recorder();
-    int32_t ret = recorder->SetNextOutputFile(-1);
-    EXPECT_EQ(-5, ret);
+    int32_t ret = recorder->SetNextOutputFile(1);
+    EXPECT_EQ(ERR_INVALID_PARAM, ret);
     delete recorder;
     recorder = NULL;
 }

@@ -57,6 +57,7 @@ using OHOS::Surface;
  * storing recorded data in the cache.
  */
 const string RECORDER_PRE_CACHE_DURATION = "pre-cache-duration";
+const string RECORDER_RECORD_SPEED = "record-speed";
 
 /**
  * @brief Enumerates video source types.

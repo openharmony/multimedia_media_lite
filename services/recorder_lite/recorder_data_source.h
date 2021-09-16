@@ -13,10 +13,9 @@
  * limitations under the License.
  */
 
-#ifndef RECORDER_VIDEO_SOURCE_H
-#define RECORDER_VIDEO_SOURCE_H
+#ifndef RECORDER_DATA_SOURCE_H
+#define RECORDER_DATA_SOURCE_H
 
-#include "recorder_source.h"
 #include <memory>
 #include <map>
 #include <string>
@@ -27,6 +26,7 @@
 #include "format.h"
 #include "media_errors.h"
 #include "media_info.h"
+#include "recorder_source.h"
 #include "surface.h"
 
 namespace OHOS {
@@ -34,16 +34,13 @@ namespace Media {
 using OHOS::Surface;
 using OHOS::SurfaceBuffer;
 using OHOS::IBufferConsumerListener;
-
-class RecorderVideoSource : public RecorderSource, public IBufferConsumerListener {
+class RecorderDataSource : public RecorderSource, IBufferConsumerListener {
 public:
 
-    RecorderVideoSource();
-    ~RecorderVideoSource() override;
+    RecorderDataSource();
+    ~RecorderDataSource() override;
 
     std::shared_ptr<OHOS::Surface> GetSurface();
-
-    int32_t SetSurfaceSize(int32_t width, int32_t height);
 
     int32_t Start() override;
 
@@ -59,14 +56,13 @@ public:
 
     int32_t Release() override;
 
-    void OnBufferAvailable() override;
-
+    void OnBufferAvailable();
 private:
     std::shared_ptr<Surface> surface_;
     std::mutex lock_;
     std::condition_variable frameAvailableCondition_;
     int32_t frameAvailableCount_;
-    std::vector<SurfaceBuffer*> acquiredBuffers;
+    std::vector<SurfaceBuffer*> acquiredBuffers_;
     SurfaceBuffer *acquireBuffer_;
     bool started_;
 };

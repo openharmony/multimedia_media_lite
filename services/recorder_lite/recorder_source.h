@@ -51,6 +51,7 @@ struct RecorderVideoSourceConfig {
     int32_t bitRate = 0;
     double captureRate = 0.0;
     int32_t degree = 0;
+    float speed = 1.0f;
 };
 
 /**
@@ -66,6 +67,15 @@ struct RecorderAudioSourceConfig {
     int32_t bitRate = 0;
     AudioStreamType streamType = TYPE_MEDIA;
     AudioBitWidth bitWidth = BIT_WIDTH_16;
+};
+
+enum DataType {
+    /** Image data source */
+    DATA_TYPE_METADATA = 0
+};
+
+struct RecorderDataSourceConfig {
+    DataType dataType;
 };
 
 struct RecorderSourceBuffer {
@@ -86,7 +96,7 @@ public:
         sourceType_ = RECORDER_SOURCE_INVALID;
     };
 
-    ~RecorderSource(){};
+    virtual ~RecorderSource(){};
 
     /**
      * get the source-type of the the source.

@@ -84,6 +84,11 @@ int32_t Recorder::SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRate)
     return impl_->SetAudioEncodingBitRate(sourceId, bitRate);
 }
 
+int32_t Recorder::SetDataSource(DataSourceType dataType, int32_t &sourceId)
+{
+    return impl_->SetDataSource(dataType, sourceId);
+}
+
 int32_t Recorder::SetMaxDuration(int32_t duration)
 {
     return impl_->SetMaxDuration(duration);

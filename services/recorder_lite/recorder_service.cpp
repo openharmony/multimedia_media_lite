@@ -252,12 +252,21 @@ void RecorderClientMng::Dispatch(int32_t funcId, pid_t pid, IpcIo *req, IpcIo *r
         case REC_FUNC_SET_PARAMETER: {
             break;
         }
+        case REC_FUNC_SET_DATASOURCE: {
+            uint32_t objSize;
+            DataSourceType *src = (DataSourceType *)IpcIoPopFlatObj(req, &objSize);
+            int32_t srcId;
+            int32_t ret = recorder->SetDataSource(*src, srcId);
+            IpcIoPushInt32(reply, ret);
+            IpcIoPushInt32(reply, srcId);
+            break;
+        }
         default:
             break;
     }
 }
 
-void RecorderCallbackClient::OnError(int32_t errorType, int32_t errorCode) 
+void RecorderCallbackClient::OnError(int32_t errorType, int32_t errorCode)
 {
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
@@ -270,7 +279,7 @@ void RecorderCallbackClient::OnError(int32_t errorType, int32_t errorCode)
     }
 }
 
-void RecorderCallbackClient::OnInfo(int32_t type, int32_t extra) 
+void RecorderCallbackClient::OnInfo(int32_t type, int32_t extra)
 {
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];

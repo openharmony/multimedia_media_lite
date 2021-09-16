@@ -15,6 +15,7 @@ import("//build/lite/config/component/lite_component.gni")
 static_library("recorder_server") {
   sources = [
     "recorder_audio_source.cpp",
+    "recorder_data_source.cpp",
     "recorder_impl.cpp",
     "recorder_samgr.cpp",
     "recorder_service.cpp",

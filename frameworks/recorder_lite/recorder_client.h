@@ -53,6 +53,7 @@ public:
     int32_t Release();
     int32_t SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration);
     int32_t SetParameter(int32_t sourceId, const Format &format);
+    int32_t SetDataSource(DataSourceType source, int32_t &sourceId);
 
     std::shared_ptr<RecorderCallback> callback_;
 private:

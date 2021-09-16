@@ -688,7 +688,7 @@ int32_t PlayerImpl::SetPlaybackSpeed(float speed)
     }
     CHK_NULL_RETURN(player_);
     if (currentState_ != PLAYER_STARTED) {
-        MEDIA_ERR_LOG(" currentState_ is %d", currentState_);
+        MEDIA_ERR_LOG("currentState_ is %d", currentState_);
         return -1;
     }
     if (speed == speed_) {
@@ -896,7 +896,7 @@ void PlayerImpl::SetPlayerCallback(const std::shared_ptr<PlayerCallback> &cb)
 
 void PlayerImpl::NotifyPlaybackComplete(PlayerImpl *curPlayer)
 {
-    if (!isSingleLoop_ || speed_ != 1.0f) {
+    if (!isSingleLoop_) {
         if (curPlayer->formatFileInfo_.s64Duration == -1) {
             curPlayer->formatFileInfo_.s64Duration = curPlayer->currentPosition_;
         }
@@ -939,7 +939,7 @@ int32_t PlayerImpl::SetLoop(bool loop)
     CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
     CHECK_FAILED_RETURN(isStreamSource_, false, -1, "stream source not support loop player");
     if (currentState_ == PLAYER_STOPPED || currentState_ == PLAYER_PLAYBACK_COMPLETE || currentState_ == PLAYER_IDLE) {
-        MEDIA_ERR_LOG(" currentState_ is %d", currentState_);
+        MEDIA_ERR_LOG("currentState_ is %d", currentState_);
         return -1;
     }
     isSingleLoop_ = loop;
@@ -1221,7 +1221,7 @@ int32_t PlayerImpl::SetStreamSource(const Source &source)
 int32_t PlayerImpl::EnablePauseAfterPlay(bool isPauseAfterPlay)
 {
     if (currentState_ != PLAYER_IDLE && currentState_ != PLAYER_INITIALIZED) {
-        MEDIA_ERR_LOG(" currentState_ is %d", currentState_);
+        MEDIA_ERR_LOG("currentState_ is %d", currentState_);
         return -1;
     }
     if (pauseAfterPlay_ == isPauseAfterPlay) {
@@ -1232,7 +1232,7 @@ int32_t PlayerImpl::EnablePauseAfterPlay(bool isPauseAfterPlay)
     if (player_ != NULL) {
         return player_->Invoke(INVOKE_ENABLE_PAUSE_AFTER_PLAYER, &pauseAfterPlay_);
     }
-    MEDIA_INFO_LOG(" isPauseAfterPlay:%d", isPauseAfterPlay);
+    MEDIA_INFO_LOG("isPauseAfterPlay:%d", isPauseAfterPlay);
     return 0;
 }
 

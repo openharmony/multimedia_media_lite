@@ -61,7 +61,7 @@ struct RecorderVideoSourceConfig {
  */
 struct RecorderAudioSourceConfig {
     AudioSourceType inputSource = AUDIO_MIC;
-    AudioCodecFormat audioFormat = AUDIO_DEFAULT;
+    AudioCodecFormat audioFormat = FORMAT_BUTT;
     int32_t sampleRate = 0;
     int32_t channelCount = 0;
     int32_t bitRate = 0;

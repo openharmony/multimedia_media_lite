@@ -16,7 +16,9 @@
 #define RECORDER_LITE_TEST_H
 
 #include "gtest/gtest.h"
+#include "recorder.h"
 
+using OHOS::Media::RecorderCallback;
 namespace OHOS {
 class RecoderLiteTest : public testing::Test {
 public:
@@ -33,5 +35,14 @@ public:
 
     void OnInfo(const int32_t type, const int32_t extra);
 };
+
+namespace Media {
+class TestVideoRecorderCallback : public RecorderCallback {
+public:
+    void OnError(int32_t errorType, int32_t errorCode);
+
+    void OnInfo(int32_t type, int32_t extra);
+};
+}
 }
 #endif // RECORDER_LITE_TEST_H

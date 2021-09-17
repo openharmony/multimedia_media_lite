@@ -675,9 +675,11 @@ int32_t RecorderImpl::SetOutputFile(int32_t fd)
 int32_t RecorderImpl::SetNextOutputFile(int32_t fd)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (IsPrepared()) {
+    if (status_ == RELEASED) {
+        MEDIA_ERR_LOG("already RELEASED");
         return ERR_ILLEGAL_STATE;
     }
+
     MEDIA_INFO_LOG("Next Output File :%d Set", fd);
     if (IsValidFileFd(fd) != SUCCESS) {
         MEDIA_ERR_LOG("Fail to get File Status Flags from fd: %d", fd);
@@ -916,10 +918,6 @@ int32_t RecorderImpl::GetDataTrackSource(TrackSource &trackSource)
 
 int32_t RecorderImpl::PrepareRecorderSink()
 {
-    if (IsPrepared()) {
-        MEDIA_ERR_LOG("IsPrepared status:%u", status_);
-        return ERR_ILLEGAL_STATE;
-    }
     if (recorderSink_ == nullptr) {
         MEDIA_ERR_LOG("recorderSink_ is null");
         return ERR_UNKNOWN;
@@ -933,7 +931,7 @@ int32_t RecorderImpl::Prepare()
     std::lock_guard<std::mutex> lock(mutex_);
     if (IsPrepared()) {
         MEDIA_ERR_LOG("IsPrepared status:%u", status_);
-        return ERR_ILLEGAL_STATE;
+        return SUCCESS;
     }
     int32_t ret = PrepareRecorderSink();
     if (ret != SUCCESS) {
@@ -1573,6 +1571,12 @@ int32_t RecorderImpl::SetParameter(int32_t sourceId, const Format &format)
         return ERR_UNKNOWN;
     }
 
+    float value;
+    if (format.GetFloatValue(RECORDER_RECORD_SPEED, value)) {
+        MEDIA_INFO_LOG("SetParameter RCORDER_RECORD_SPEED value = %f\n", value);
+        sourceManager_[sourceId].videoSourceConfig.speed = value;
+        return SUCCESS;
+    }
     return recorderSink_->SetParameter(sourceId, format);
 }
 }  // namespace Media

@@ -48,6 +48,18 @@ void RecoderLiteTest::OnInfo(const int32_t type, const int32_t extra)
     cout << "RecoderLiteTest::OnInfo ..." << endl;
 }
 
+namespace Media {
+void TestVideoRecorderCallback::OnError(int32_t errorType, int32_t errorCode)
+{
+    cout << "TestVideoRecorderCallback::OnError ..." << endl;
+}
+
+void TestVideoRecorderCallback::OnInfo(int32_t type, int32_t extra)
+{
+    cout << "TestVideoRecorderCallback::OnInfo ..." << endl;
+}
+}
+
 /*
  * Feature: Recorder
  * Function: Start Recording
@@ -62,7 +74,7 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_Start_test_001, Level1)
     int32_t sourceId = 0;
     int32_t audioSourceId = 0;
     Recorder *recInstance = new Recorder();
-    shared_ptr<RecorderCallback> cb;
+    shared_ptr<TestVideoRecorderCallback> cb = std::make_shared<TestVideoRecorderCallback> ();
 
     retStatus = recInstance->SetVideoSource(VIDEO_SOURCE_SURFACE_ES, sourceId);
     EXPECT_EQ(RET_OK, retStatus);
@@ -93,7 +105,7 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_Start_test_002, Level1)
     int32_t sourceId = 0;
     int32_t audioSourceId = 0;
     Recorder *recInstance = new Recorder();
-    shared_ptr<RecorderCallback> cb;
+    shared_ptr<TestVideoRecorderCallback> cb = std::make_shared<TestVideoRecorderCallback> ();
 
     retStatus = recInstance->SetVideoSource(VIDEO_SOURCE_SURFACE_ES, sourceId);
     EXPECT_EQ(RET_OK, retStatus);
@@ -122,7 +134,7 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_Pause_test_001, Level1)
     int32_t sourceId = 0;
     int32_t audioSourceId = 0;
     Recorder *recInstance = new Recorder();
-    shared_ptr<RecorderCallback> cb;
+    shared_ptr<TestVideoRecorderCallback> cb = std::make_shared<TestVideoRecorderCallback> ();
 
     retStatus = recInstance->SetVideoSource(VIDEO_SOURCE_SURFACE_ES, sourceId);
     EXPECT_EQ(RET_OK, retStatus);
@@ -155,7 +167,7 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_Pause_test_002, Level1)
     int32_t sourceId = 0;
     int32_t audioSourceId = 0;
     Recorder *recInstance = new Recorder();
-    shared_ptr<RecorderCallback> cb;
+    shared_ptr<TestVideoRecorderCallback> cb = std::make_shared<TestVideoRecorderCallback> ();
 
     retStatus = recInstance->SetVideoSource(VIDEO_SOURCE_SURFACE_ES, sourceId);
     EXPECT_EQ(RET_OK, retStatus);
@@ -190,7 +202,7 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_Resume_test_001, Level1)
     int32_t sourceId = 0;
     int32_t audioSourceId = 0;
     Recorder *recInstance = new Recorder();
-    shared_ptr<RecorderCallback> cb;
+    shared_ptr<TestVideoRecorderCallback> cb = std::make_shared<TestVideoRecorderCallback> ();
 
     retStatus = recInstance->SetVideoSource(VIDEO_SOURCE_SURFACE_ES, sourceId);
     EXPECT_EQ(RET_OK, retStatus);
@@ -225,7 +237,7 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_Resume_test_002, Level1)
     int32_t sourceId = 0;
     int32_t audioSourceId = 0;
     Recorder *recInstance = new Recorder();
-    shared_ptr<RecorderCallback> cb;
+    shared_ptr<TestVideoRecorderCallback> cb = std::make_shared<TestVideoRecorderCallback> ();
 
     retStatus = recInstance->SetVideoSource(VIDEO_SOURCE_SURFACE_ES, sourceId);
     EXPECT_EQ(RET_OK, retStatus);
@@ -262,7 +274,7 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_Stop_test_001, Level1)
     int32_t sourceId = 0;
     int32_t audioSourceId = 0;
     Recorder *recInstance = new Recorder();
-    shared_ptr<RecorderCallback> cb;
+    shared_ptr<TestVideoRecorderCallback> cb = std::make_shared<TestVideoRecorderCallback> ();
 
     retStatus = recInstance->SetVideoSource(VIDEO_SOURCE_SURFACE_ES, sourceId);
     EXPECT_EQ(RET_OK, retStatus);
@@ -295,7 +307,7 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_Stop_test_002, Level1)
     int32_t sourceId = 0;
     int32_t audioSourceId = 0;
     Recorder *recInstance = new Recorder();
-    shared_ptr<RecorderCallback> cb;
+    shared_ptr<TestVideoRecorderCallback> cb = std::make_shared<TestVideoRecorderCallback> ();
 
     retStatus = recInstance->SetVideoSource(VIDEO_SOURCE_SURFACE_ES, sourceId);
     EXPECT_EQ(RET_OK, retStatus);
@@ -330,7 +342,7 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_Reset_test_001, Level1)
     int32_t sourceId = 0;
     int32_t audioSourceId = 0;
     Recorder *recInstance = new Recorder();
-    shared_ptr<RecorderCallback> cb;
+    shared_ptr<TestVideoRecorderCallback> cb = std::make_shared<TestVideoRecorderCallback> ();
 
     retStatus = recInstance->SetVideoSource(VIDEO_SOURCE_SURFACE_ES, sourceId);
     EXPECT_EQ(RET_OK, retStatus);
@@ -363,7 +375,7 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_Reset_test_002, Level1)
     int32_t sourceId = 0;
     int32_t audioSourceId = 0;
     Recorder *recInstance = new Recorder();
-    shared_ptr<RecorderCallback> cb;
+    shared_ptr<TestVideoRecorderCallback> cb = std::make_shared<TestVideoRecorderCallback> ();
 
     retStatus = recInstance->SetVideoSource(VIDEO_SOURCE_SURFACE_ES, sourceId);
     EXPECT_EQ(RET_OK, retStatus);
@@ -378,7 +390,7 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_Reset_test_002, Level1)
     retStatus = recInstance->Reset();
     EXPECT_EQ(RET_OK, retStatus);
     retStatus = recInstance->Reset();
-    EXPECT_NE(RET_OK, retStatus);
+    EXPECT_EQ(RET_OK, retStatus);
     retStatus = recInstance->Release();
     delete recInstance;
     recInstance = nullptr;
@@ -398,7 +410,7 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_Release_test_001, Level1)
     int32_t sourceId = 0;
     int32_t audioSourceId = 0;
     Recorder *recInstance = new Recorder();
-    shared_ptr<RecorderCallback> cb;
+    shared_ptr<TestVideoRecorderCallback> cb = std::make_shared<TestVideoRecorderCallback> ();
 
     retStatus = recInstance->SetVideoSource(VIDEO_SOURCE_SURFACE_ES, sourceId);
     EXPECT_EQ(RET_OK, retStatus);
@@ -430,7 +442,7 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_Release_test_002, Level1)
     int32_t sourceId = 0;
     int32_t audioSourceId = 0;
     Recorder *recInstance = new Recorder();
-    shared_ptr<RecorderCallback> cb;
+    shared_ptr<TestVideoRecorderCallback> cb = std::make_shared<TestVideoRecorderCallback> ();
 
     retStatus = recInstance->SetVideoSource(VIDEO_SOURCE_SURFACE_ES, sourceId);
     EXPECT_EQ(RET_OK, retStatus);
@@ -467,7 +479,7 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetFileSplitDuration_test_001, Leve
     int64_t timestamp = -1;
     uint32_t duration = 5;
     Recorder *recInstance = new Recorder();
-    shared_ptr<RecorderCallback> cb;
+    shared_ptr<TestVideoRecorderCallback> cb = std::make_shared<TestVideoRecorderCallback> ();
 
     retStatus = recInstance->SetVideoSource(VIDEO_SOURCE_SURFACE_ES, sourceId);
     EXPECT_EQ(RET_OK, retStatus);
@@ -503,7 +515,7 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetFileSplitDuration_test_002, Leve
     int64_t timestamp = -1;
     uint32_t duration = 5;
     Recorder *recInstance = new Recorder();
-    shared_ptr<RecorderCallback> cb;
+    shared_ptr<TestVideoRecorderCallback> cb = std::make_shared<TestVideoRecorderCallback> ();
 
     retStatus = recInstance->SetVideoSource(VIDEO_SOURCE_SURFACE_ES, sourceId);
     EXPECT_EQ(RET_OK, retStatus);
@@ -539,7 +551,7 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetFileSplitDuration_test_003, Leve
     int64_t timestamp = -1;
     uint32_t duration = 5;
     Recorder *recInstance = new Recorder();
-    shared_ptr<RecorderCallback> cb;
+    shared_ptr<TestVideoRecorderCallback> cb = std::make_shared<TestVideoRecorderCallback> ();
 
     retStatus = recInstance->SetVideoSource(VIDEO_SOURCE_SURFACE_ES, sourceId);
     EXPECT_EQ(RET_OK, retStatus);
@@ -575,7 +587,7 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetFileSplitDuration_test_004, Leve
     int64_t timestamp = -1;
     uint32_t duration = 5;
     Recorder *recInstance = new Recorder();
-    shared_ptr<RecorderCallback> cb;
+    shared_ptr<TestVideoRecorderCallback> cb = std::make_shared<TestVideoRecorderCallback> ();
 
     retStatus = recInstance->SetVideoSource(VIDEO_SOURCE_SURFACE_ES, sourceId);
     EXPECT_EQ(RET_OK, retStatus);
@@ -1545,7 +1557,7 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioChannels_test_006, Level1)
     int32_t ret = recorder->SetAudioSource(AUDIO_VOICE_CALL, audioSourceId);
     EXPECT_EQ(RET_OK, ret);
     ret = recorder->SetAudioChannels(audioSourceId, channelCount);
-    EXPECT_EQ(RET_OK, ret);
+    EXPECT_EQ(ERR_INVALID_PARAM, ret);
     delete recorder;
     recorder = NULL;
 }
@@ -1837,7 +1849,7 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_Prepare_test_001, Level1)
     ret = recorder->SetAudioSource(AUDIO_MIC, audioSourceId);
     EXPECT_EQ(RET_OK, ret);
     ret = recorder->Prepare();
-    EXPECT_NE(RET_OK, ret);
+    EXPECT_EQ(RET_OK, ret);
     delete recorder;
     recorder = NULL;
 }
@@ -1994,7 +2006,7 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetMaxFileSize_test_002, Level1)
 HWTEST_F(RecoderLiteTest, medialite_recorder_SetOutputFile_test_001, Level1)
 {
     Recorder *recorder = new Recorder();
-    int32_t ret = recorder->SetOutputFile(1);
+    int32_t ret = recorder->SetOutputFile(-1);
     EXPECT_EQ(ERR_INVALID_PARAM, ret);
     delete recorder;
     recorder = NULL;
@@ -2011,7 +2023,7 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetOutputFile_test_001, Level1)
 HWTEST_F(RecoderLiteTest, medialite_recorder_SetNextOutputFile_test_001, Level1)
 {
     Recorder *recorder = new Recorder();
-    int32_t ret = recorder->SetNextOutputFile(1);
+    int32_t ret = recorder->SetNextOutputFile(-1);
     EXPECT_EQ(ERR_INVALID_PARAM, ret);
     delete recorder;
     recorder = NULL;

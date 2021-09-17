@@ -252,7 +252,7 @@ HWTEST_F(PlayerliteTest, medialite_player_Stop_test_002, Level1)
     ret = g_tagTestSample.adaptr->SetVideoSurface(g_surface);
     EXPECT_EQ(HI_SUCCESS, ret);
     ret = g_tagTestSample.adaptr->Stop();
-    EXPECT_EQ(HI_SUCCESS, ret);
+    EXPECT_EQ(HI_FAILURE, ret);
     g_tagTestSample.adaptr->Release();
 }
 

@@ -59,7 +59,7 @@ static int32_t RecorderCallbackSvc(const IpcContext *context, void *ipcMsg, IpcI
     }
 
     /* Not need to check if callback is valid because message will not arrive before callback ready */
-    std::shared_ptr<RecorderCallback> *callback = (static_cast<std::shared_ptr<RecorderCallback> *>(arg));
+    RecorderCallback *callback = static_cast<RecorderCallback *>(arg);
 
     uint32_t funcId;
     (void)GetCode(ipcMsg, &funcId);
@@ -68,13 +68,13 @@ static int32_t RecorderCallbackSvc(const IpcContext *context, void *ipcMsg, IpcI
         case REC_ANONYMOUS_FUNC_ON_ERROR: {
             int32_t type = IpcIoPopInt32(io);
             int32_t code = IpcIoPopInt32(io);
-            (*callback)->OnError(type, code);
+            callback->OnError(type, code);
             break;
         }
         case REC_ANONYMOUS_FUNC_ON_INFO: {
             int32_t type = IpcIoPopInt32(io);
             int32_t code = IpcIoPopInt32(io);
-            (*callback)->OnInfo(type, code);
+            callback->OnInfo(type, code);
             break;
         }
         default: {
@@ -109,7 +109,7 @@ Recorder::RecorderImpl::RecorderImpl()
         throw runtime_error("Ipc proxy Invoke failed.");
     }
 
-    ret = RegisterIpcCallback(RecorderCallbackSvc, 0, IPC_WAIT_FOREVER, &sid_, &callback_);
+    ret = RegisterIpcCallback(RecorderCallbackSvc, 0, IPC_WAIT_FOREVER, &sid_, callback_.get());
     if (ret != LITEIPC_OK) {
         MEDIA_ERR_LOG("RegisteIpcCallback failed, ret=%d", ret);
         throw runtime_error("Ipc proxy RegisterIpcCallback failed.");
@@ -407,8 +407,29 @@ int32_t Recorder::RecorderImpl::SetOutputPath(const string &path)
     return para.ret;
 }
 
+static int32_t IsValidFileFd(int32_t fd)
+{
+    int flags = fcntl(fd, F_GETFL);
+    if (flags == -1) {
+        MEDIA_ERR_LOG("Fail to get File Status Flags err: %d", errno);
+        return ERR_INVALID_OPERATION;
+    }
+    // fd must be in read-write mode or write-only mode.
+    uint32_t flagsCheck = static_cast<uint32_t>(flags);
+    if ((flagsCheck & (O_RDWR | O_WRONLY)) == 0) {
+        MEDIA_ERR_LOG("File descriptor is not in read-write mode or write-only mode fd:%d flag:%x", fd, flagsCheck);
+        return ERR_INVALID_OPERATION;
+    }
+    return SUCCESS;
+}
+
 int32_t Recorder::RecorderImpl::SetOutputFile(int32_t fd)
 {
+    if (fd < 0 || IsValidFileFd(fd) != SUCCESS) {
+        MEDIA_ERR_LOG("Fail to get File Status Flags from fd: %d", fd);
+        return ERR_INVALID_PARAM;
+    }
+
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 1);
@@ -424,6 +445,11 @@ int32_t Recorder::RecorderImpl::SetOutputFile(int32_t fd)
 
 int32_t Recorder::RecorderImpl::SetNextOutputFile(int32_t fd)
 {
+    if (fd < 0 || IsValidFileFd(fd) != SUCCESS) {
+        MEDIA_ERR_LOG("Fail to get File Status Flags from fd: %d", fd);
+        return ERR_INVALID_PARAM;
+    }
+
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 1);
@@ -453,6 +479,11 @@ int32_t Recorder::RecorderImpl::SetMaxFileSize(int64_t size)
 
 int32_t Recorder::RecorderImpl::SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback)
 {
+    if (callback == nullptr || callback.get() == nullptr) {
+        MEDIA_ERR_LOG("SetRecorderCallback callback is nullptr");
+        return ERR_INVALID_PARAM;
+    }
+
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 1);

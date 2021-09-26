@@ -27,7 +27,6 @@
 
 namespace OHOS {
 namespace Media {
-constexpr float RECORDER_DEFAULT_SPEED = 1.0;
 constexpr uint32_t RECORDER_AUDIO_THREAD_PRIORITY = 19;
 constexpr uint32_t RECORDER_VIDEO_THREAD_PRIORITY = 20;
 constexpr uint32_t RECORDER_AUDIO_SAMPLES_PER_FRAME = 1024;
@@ -35,6 +34,48 @@ constexpr uint32_t RECORDER_AUDIO_SAMPLES_PER_FRAME = 1024;
 constexpr uint32_t RECORDER_VIDEO_SOURCE_ID_MASK = 0;
 constexpr uint32_t RECORDER_AUDIO_SOURCE_ID_MASK = 0x100;
 constexpr uint32_t RECORDER_DATA_SOURCE_ID_MASK = 0x200;
+
+static int64_t CalcDiffTimeMs(struct timeval begin, struct timeval end)
+{
+    const int32_t us2Ms = 1000;
+    const int32_t us2MsHalf = 500;
+    const int32_t s2Ms = 1000;
+    int64_t diffSec = static_cast<int64_t> (end.tv_sec - begin.tv_sec);
+    int64_t diffMsec = (static_cast<int64_t> (end.tv_usec - begin.tv_usec) + us2MsHalf) / us2Ms;
+    const int64_t diffSecMax = INT64_MAX / s2Ms;
+    diffSec = (diffSec > diffSecMax) ? diffSecMax : diffSec;
+    return diffSec * s2Ms + diffMsec;
+}
+
+static void SetDefaultVideoConfig(RecorderVideoSourceConfig &config)
+{
+    const int32_t width = 1920;
+    const int32_t height = 1080;
+    const int32_t frameRate = 30;
+    const int32_t bitRate = 4 * 1024; /* kbps */
+
+    config.videoFormat = HEVC;
+    config.width = width;
+    config.height = height;
+    config.frameRate = frameRate;
+    config.bitRate = bitRate;
+    config.captureRate = frameRate;
+    config.speed = 1.0;
+}
+
+static void SetDefaultAudioConfig(RecorderAudioSourceConfig &config)
+{
+    const int32_t bitRate = 64000;
+    const int32_t sampleRate = 48000;
+
+    config.inputSource = AUDIO_MIC;
+    config.audioFormat = AAC_LC;
+    config.sampleRate = sampleRate;
+    config.channelCount = 1;
+    config.bitRate = bitRate;
+    config.streamType = TYPE_MEDIA;
+    config.bitWidth = BIT_WIDTH_16;
+}
 
 RecorderImpl::RecorderImpl()
 {
@@ -51,8 +92,9 @@ RecorderImpl::RecorderImpl()
         sourceManager_[i].dataSourceStarted = false;
         sourceManager_[i].dataSourcePaused = false;
         sourceManager_[i].dataTrackId = -1;
-        sourceManager_[i].videoSourceConfig = {};
-        sourceManager_[i].audioSourceConfig = {};
+
+        SetDefaultVideoConfig(sourceManager_[i].videoSourceConfig);
+        SetDefaultAudioConfig(sourceManager_[i].audioSourceConfig);
         sourceManager_[i].dataSourceConfig = {};
     }
     recorderSink_ = new(std::nothrow) RecorderSink();
@@ -99,17 +141,9 @@ int32_t RecorderImpl::ResetConfig()
             delete sourceManager_[i].dataSource;
             sourceManager_[i].dataSource = nullptr;
         }
-        if (memset_s(&sourceManager_[i].videoSourceConfig, sizeof(RecorderVideoSourceConfig),
-            0x00, sizeof(RecorderVideoSourceConfig)) != EOK) {
-            MEDIA_ERR_LOG("memset videoSourceConfig failed");
-            return ERR_UNKNOWN;
-        }
-        sourceManager_[i].videoSourceConfig.speed = RECORDER_DEFAULT_SPEED;
-        if (memset_s(&sourceManager_[i].audioSourceConfig, sizeof(RecorderAudioSourceConfig),
-            0x00, sizeof(RecorderAudioSourceConfig)) != EOK) {
-            MEDIA_ERR_LOG("memset audioSourceConfig failed");
-            return ERR_UNKNOWN;
-        }
+        SetDefaultVideoConfig(sourceManager_[i].videoSourceConfig);
+        SetDefaultAudioConfig(sourceManager_[i].audioSourceConfig);
+
         if (memset_s(&sourceManager_[i].dataSourceConfig, sizeof(RecorderDataSourceConfig),
             0x00, sizeof(RecorderDataSourceConfig)) != EOK) {
             MEDIA_ERR_LOG("memset dataSourceConfig failed");
@@ -660,7 +694,7 @@ int32_t RecorderImpl::SetOutputFile(int32_t fd)
         MEDIA_ERR_LOG("IsPrepared status:%u", status_);
         return ERR_ILLEGAL_STATE;
     }
-    if (IsValidFileFd(fd) != SUCCESS) {
+    if (fd < 0 || IsValidFileFd(fd) != SUCCESS) {
         MEDIA_ERR_LOG("Fail to get File Status Flags from fd: %d", fd);
         return ERR_INVALID_PARAM;
     }
@@ -681,7 +715,7 @@ int32_t RecorderImpl::SetNextOutputFile(int32_t fd)
     }
 
     MEDIA_INFO_LOG("Next Output File :%d Set", fd);
-    if (IsValidFileFd(fd) != SUCCESS) {
+    if (fd < 0 || IsValidFileFd(fd) != SUCCESS) {
         MEDIA_ERR_LOG("Fail to get File Status Flags from fd: %d", fd);
         return ERR_INVALID_PARAM;
     }
@@ -712,11 +746,11 @@ int32_t RecorderImpl::SetMaxFileSize(int64_t size)
 int32_t RecorderImpl::SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (IsPrepared()) {
-        MEDIA_ERR_LOG("IsPrepared status:%u", status_);
+    if (status_ == RELEASED) {
+        MEDIA_ERR_LOG("illegal status:%u", status_);
         return ERR_ILLEGAL_STATE;
     }
-    if (callback == nullptr) {
+    if (callback == nullptr || callback.get() == nullptr) {
         MEDIA_ERR_LOG("SetRecorderCallback callback is nullptr");
         return ERR_INVALID_PARAM;
     }
@@ -734,15 +768,15 @@ int32_t RecorderImpl::PrepareAudioSource()
     int32_t ret = 0;
     for (uint32_t i = 0; i < RECORDER_SOURCE_MAX_CNT; i++) {
         if (sourceManager_[i].audioSource != nullptr) {
-            ret = sourceManager_[i].audioSource->Init(sourceManager_[i].audioSourceConfig);
-            if (ret != SUCCESS) {
-                MEDIA_ERR_LOG("audioSource Init failed Ret: 0x%x", ret);
-                return ret;
-            }
             TrackSource trackSource;
             ret = GetAudioTrackSource(sourceManager_[i].audioSourceConfig, trackSource);
             if (ret != SUCCESS) {
                 MEDIA_ERR_LOG("GetAudioTrackSource  failed Ret: 0x%x", ret);
+                return ret;
+            }
+            ret = sourceManager_[i].audioSource->Init(sourceManager_[i].audioSourceConfig);
+            if (ret != SUCCESS) {
+                MEDIA_ERR_LOG("audioSource Init failed Ret: 0x%x", ret);
                 return ret;
             }
 
@@ -855,7 +889,7 @@ int32_t RecorderImpl::GetVideoTrackSource(const RecorderVideoSourceConfig &video
     trackSource.trackSourceInfo.videoInfo.bitRate = videoSourceConfig.bitRate;
     trackSource.trackSourceInfo.videoInfo.frameRate = videoSourceConfig.frameRate;
     trackSource.trackSourceInfo.videoInfo.keyFrameInterval = videoSourceConfig.frameRate;
-    trackSource.trackSourceInfo.videoInfo.speed = RECORDER_DEFAULT_SPEED;
+    trackSource.trackSourceInfo.videoInfo.speed = 1.0;
     return SUCCESS;
 }
 
@@ -931,8 +965,9 @@ int32_t RecorderImpl::Prepare()
     std::lock_guard<std::mutex> lock(mutex_);
     if (IsPrepared()) {
         MEDIA_ERR_LOG("IsPrepared status:%u", status_);
-        return SUCCESS;
+        return ERR_ILLEGAL_STATE;
     }
+
     int32_t ret = PrepareRecorderSink();
     if (ret != SUCCESS) {
         MEDIA_ERR_LOG("PrepareRecorderSink  failed Ret: %d", ret);
@@ -1209,9 +1244,14 @@ int32_t RecorderImpl::StopVideoSource()
 int32_t RecorderImpl::Start()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (status_ != PREPARED &&
-        status_ != PAUSED &&
-        status_ != STOPPED) {
+    int64_t startTime;
+    int64_t startVideoTime;
+    int64_t startAudioAndDataTime;
+    struct timeval begin = { 0, 0 };
+    struct timeval end = { 0, 0 };
+
+    gettimeofday(&begin, nullptr);
+    if (status_ != PREPARED && status_ != PAUSED && status_ != STOPPED) {
         MEDIA_ERR_LOG("Start ILLEGAL_STATE  status:%u", status_);
         return ERR_ILLEGAL_STATE;
     }
@@ -1225,11 +1265,19 @@ int32_t RecorderImpl::Start()
         MEDIA_ERR_LOG("recorderSink_  Start failed Ret: %d", ret);
         return ret;
     }
+    gettimeofday(&end, nullptr);
+    startTime = CalcDiffTimeMs(begin, end);
+
+    gettimeofday(&begin, nullptr);
     ret = StartVideoSource();
     if (ret != SUCCESS) {
         MEDIA_ERR_LOG("StartVideoSource  Start failed Ret: %d", ret);
         return ret;
     }
+    gettimeofday(&end, nullptr);
+    startVideoTime = CalcDiffTimeMs(begin, end);
+
+    gettimeofday(&begin, nullptr);
     ret = StartAudioSource();
     if (ret != SUCCESS) {
         MEDIA_ERR_LOG("StartAudioSource  Start failed Ret: %d", ret);
@@ -1240,6 +1288,10 @@ int32_t RecorderImpl::Start()
         MEDIA_ERR_LOG("StartDataSource failed:%d", ret);
         return ret;
     }
+    gettimeofday(&end, nullptr);
+    startAudioAndDataTime = CalcDiffTimeMs(begin, end);
+    MEDIA_INFO_LOG("SUCCESS. cost: startTime:%lld, startVideoTime:%lld, startAudioAndDataTime:%lld", startTime,
+        startVideoTime, startAudioAndDataTime);
     status_ = RECORDING;
     return SUCCESS;
 }
@@ -1417,19 +1469,32 @@ int32_t RecorderImpl::Resume()
 int32_t RecorderImpl::StopInternal(bool block)
 {
     MEDIA_DEBUG_LOG("StopInternal");
+
+    int64_t time;
+    struct timeval begin = { 0, 0 };
+    struct timeval end = { 0, 0 };
+
+    gettimeofday(&begin, nullptr);
+
     int32_t ret = StopVideoSource();
     MEDIA_DEBUG_LOG("StopVideoSource");
     if (ret != SUCCESS) {
         MEDIA_ERR_LOG("StopVideoSource  Start failed ret:%d", ret);
         return ret;
     }
-
+    gettimeofday(&end, nullptr);
+    time = CalcDiffTimeMs(begin, end);
+    MEDIA_INFO_LOG("StopVideoSource cost:%lld", time);
+    gettimeofday(&begin, nullptr);
     MEDIA_DEBUG_LOG("StopAudioSource");
     ret = StopAudioSource();
     if (ret != SUCCESS) {
         MEDIA_ERR_LOG("StopAudioSource Start failed ret:%d", ret);
         return ret;
     }
+    gettimeofday(&end, nullptr);
+    time = CalcDiffTimeMs(begin, end);
+    MEDIA_INFO_LOG("StopAudioSource cost:%lld", time);
 
     ret = StopDataSource();
     if (ret != SUCCESS) {
@@ -1446,7 +1511,9 @@ int32_t RecorderImpl::StopInternal(bool block)
         MEDIA_ERR_LOG("recorderSink_ Stop! ret:0x%x", ret);
         return ret;
     }
-
+    gettimeofday(&end, nullptr);
+    time = CalcDiffTimeMs(begin, end);
+    MEDIA_INFO_LOG("recorderSink Stop cost:%lld", time);
     status_ = STOPPED;
     MEDIA_INFO_LOG("Stop Recorder SUCCESS");
     return SUCCESS;

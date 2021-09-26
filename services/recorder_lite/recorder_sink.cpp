@@ -24,13 +24,16 @@ namespace OHOS {
 namespace Media {
 constexpr uint32_t RECORDER_PARAMS_CNT = 2;
 
+static int32_t SinkOnError(CALLBACK_HANDLE privateDataHandle, int32_t errorType, int32_t errorCode);
+static int32_t SinkOnInfo(CALLBACK_HANDLE privateDataHandle, int32_t type, int32_t extra);
+
 RecorderSink::RecorderSink()
     :formatMuxerHandle_(nullptr),
      prepared_(false),
      started_(false),
      outputFormat_(OUTPUT_FORMAT_INVALID),
      outputFd_(-1),
-     path_(""),
+     path_("/userdata/"),
      maxFileSize_(-1),
      maxDuration_(-1)
 {
@@ -80,11 +83,8 @@ int32_t RecorderSink::Prepare()
     if (prepared_) {
         return SUCCESS;
     }
+
     FormatOutputConfig outputConfig;
-    if (memset_s(&outputConfig, sizeof(FormatOutputConfig), 0, sizeof(FormatOutputConfig)) != EOK) {
-        MEDIA_ERR_LOG("memset_s failed %s", path_.c_str());
-        return ERR_INVALID_PARAM;
-    }
     outputConfig.format = outputFormat_;
     if (outputFd_ != -1) {
         outputConfig.type = OUTPUT_TYPE_FD;
@@ -117,10 +117,14 @@ int32_t RecorderSink::Prepare()
         }
     }
 
-    if (recCallBack_ != nullptr && sinkCallback_ != nullptr) {
-        ret = FormatMuxerSetCallBack(formatMuxerHandle_, sinkCallback_.get());
-        MEDIA_ERR_LOG("FormatMuxerSetCallBack ret: 0x%x", ret);
+    sinkCallback_ = std::make_shared<FormatCallback>();
+    sinkCallback_->privateDataHandle = this;
+    sinkCallback_->OnError = SinkOnError;
+    sinkCallback_->OnInfo = SinkOnInfo;
+    if (FormatMuxerSetCallBack(formatMuxerHandle_, sinkCallback_.get()) != 0) {
+        MEDIA_ERR_LOG("FormatMuxerSetCallBack failed");
     }
+
     return SUCCESS;
 }
 
@@ -216,7 +220,7 @@ int32_t RecorderSink::SetLocation(int latitude, int longitude)
 
 int32_t RecorderSink::SendCallbackInfo(int32_t type, int32_t extra)
 {
-    if (recCallBack_ == nullptr) {
+    if (recCallBack_ == nullptr || recCallBack_.get() == nullptr) {
         MEDIA_ERR_LOG("sink: is nullptr");
         return ERR_INVALID_PARAM;
     }
@@ -240,7 +244,7 @@ int32_t RecorderSink::SendCallbackInfo(int32_t type, int32_t extra)
 int32_t RecorderSink::SendCallbackError(int32_t errorType, int32_t errorCode)
 {
     MEDIA_INFO_LOG("errorType:%d", errorType);
-    if (recCallBack_ == nullptr) {
+    if (recCallBack_ == nullptr || recCallBack_.get() == nullptr) {
         MEDIA_ERR_LOG("sink: is nullptr");
         return ERR_INVALID_PARAM;
     }
@@ -260,7 +264,7 @@ int32_t RecorderSink::SendCallbackError(int32_t errorType, int32_t errorCode)
     }
 }
 
-int32_t SinkOnError(CALLBACK_HANDLE privateDataHandle, int32_t errorType, int32_t errorCode)
+static int32_t SinkOnError(CALLBACK_HANDLE privateDataHandle, int32_t errorType, int32_t errorCode)
 {
     RecorderSink *sink = reinterpret_cast<RecorderSink *>(privateDataHandle);
     if (sink == nullptr) {
@@ -276,7 +280,7 @@ int32_t SinkOnError(CALLBACK_HANDLE privateDataHandle, int32_t errorType, int32_
     return 0;
 }
 
-int32_t SinkOnInfo(CALLBACK_HANDLE privateDataHandle, int32_t type, int32_t extra)
+static int32_t SinkOnInfo(CALLBACK_HANDLE privateDataHandle, int32_t type, int32_t extra)
 {
     MEDIA_INFO_LOG("type:%d", type);
     RecorderSink *sink = reinterpret_cast<RecorderSink *>(privateDataHandle);
@@ -296,15 +300,7 @@ int32_t SinkOnInfo(CALLBACK_HANDLE privateDataHandle, int32_t type, int32_t extr
 
 int32_t RecorderSink::SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback)
 {
-    if (started_) {
-        MEDIA_ERR_LOG("RecorderSink is started , SetMaxFileSize must setted before Prepare");
-        return ERR_ILLEGAL_STATE;
-    }
     recCallBack_ = callback;
-    sinkCallback_ = std::make_shared<FormatCallback>();
-    sinkCallback_->privateDataHandle = this;
-    sinkCallback_->OnError = SinkOnError;
-    sinkCallback_->OnInfo = SinkOnInfo;
     return SUCCESS;
 }
 
@@ -354,7 +350,7 @@ int32_t RecorderSink::Start()
     }
 
     MEDIA_INFO_LOG("FormatMuxerStart");
-    if (recCallBack_ != nullptr && sinkCallback_ != nullptr) {
+    if (sinkCallback_ != nullptr && sinkCallback_.get() != nullptr) {
         int32_t ret = pthread_create(&threadId, nullptr, MessageThread, this);
         if (ret != 0) {
             MEDIA_ERR_LOG("create message thread failed %d", ret);

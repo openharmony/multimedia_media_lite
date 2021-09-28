@@ -48,9 +48,13 @@ RecorderSink::~RecorderSink()
         MEDIA_INFO_LOG("message thread is still running. kill thread.");
         pthread_cancel(threadId);
     }
-
     if (outputFd_ > 0) {
+        FILE *fp = fdopen(outputFd_, "r");
+        fflush(fp);
+        fsync(outputFd_);
+        fclose(fp);
         close(outputFd_);
+        outputFd_ = -1;
     }
 }
 
@@ -384,6 +388,14 @@ int32_t RecorderSink::Stop(bool block)
     }
 
     started_ = false;
+    if (outputFd_ > 0) {
+        FILE *fp = fdopen(outputFd_, "r");
+        fflush(fp);
+        fsync(outputFd_);
+        fclose(fp);
+        close(outputFd_);
+        outputFd_ = -1;
+    }
     return SUCCESS;
 }
 
@@ -406,7 +418,6 @@ int32_t RecorderSink::Reset()
     }
     prepared_ = false;
     outputFormat_ = OUTPUT_FORMAT_INVALID;
-    outputFd_ = -1;
     maxFileSize_ = -1;
     maxDuration_ = -1;
     return SUCCESS;

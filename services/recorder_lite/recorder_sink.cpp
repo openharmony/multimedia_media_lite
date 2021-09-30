@@ -33,7 +33,7 @@ RecorderSink::RecorderSink()
      started_(false),
      outputFormat_(OUTPUT_FORMAT_INVALID),
      outputFd_(-1),
-     path_("/userdata/"),
+     path_("/userdata"),
      maxFileSize_(-1),
      maxDuration_(-1)
 {

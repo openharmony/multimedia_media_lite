@@ -1141,13 +1141,16 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioSource_test_002, Level1)
  */
 HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioSource_test_003, Level1)
 {
+    int32_t sourceId;
+    int32_t ret;
     Recorder *recorder = new Recorder();
     for (int32_t i = 0; i < g_recorderSourceMaxCount; i++) {
-        int32_t ret = recorder->SetAudioSource(AUDIO_MIC, i);
+        ret = recorder->SetAudioSource(AUDIO_MIC, sourceId);
         cout << i << endl;
         EXPECT_EQ(RET_OK, ret);
     }
-    int32_t ret = recorder->SetAudioSource(AUDIO_MIC, g_recorderSourceMaxCount);
+
+    ret = recorder->SetAudioSource(AUDIO_MIC, sourceId);
     EXPECT_EQ(ERR_NOFREE_CHANNEL, ret);
     delete recorder;
     recorder = NULL;

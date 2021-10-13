@@ -27,6 +27,8 @@
 #include "source.h"
 #include "surface.h"
 #include "player.h"
+#include "player_interface.h"
+
 using namespace std;
 using OHOS::Media::PlayerControl;
 namespace OHOS {
@@ -62,40 +64,40 @@ private:
 };
 
 class PlayerControl;
-class PlayerImpl {
+class PlayerImpl : public PlayerInterface {
 friend class BufferSource;
 friend class StreamSource;
 
 public:
     PlayerImpl();
     ~PlayerImpl();
-    int32_t SetSource(const Source &source);
-    int32_t Prepare();
-    int32_t Play();
-    bool IsPlaying();
-    int32_t Pause();
-    int32_t Stop();
-    int32_t Rewind(int64_t mSeconds, int32_t mode);
-    int32_t SetVolume(float leftVolume, float rightVolume);
-    int32_t SetSurface(Surface *surface);
-    bool IsSingleLooping();
-    int32_t GetPlayerState(int32_t &state);
-    int32_t GetCurrentPosition(int64_t &position);
-    int32_t GetDuration(int64_t &durationMs);
-    int32_t GetVideoWidth(int32_t &videoWidth);
-    int32_t GetVideoHeight(int32_t &videoHeight);
-    int32_t SetPlaybackSpeed(float speed);
-    int32_t GetPlaybackSpeed(float &speed);
-    int32_t SetAudioStreamType(int32_t type);
-    void GetAudioStreamType(int32_t &type);
-    int32_t Reset(void);
-    int32_t Release();
-    int32_t SetLoop(bool loop);
-    void SetPlayerCallback(const std::shared_ptr<PlayerCallback> &cb);
+    int32_t SetSource(const Source &source) override;
+    int32_t Prepare() override;
+    int32_t Play() override;
+    bool IsPlaying() override;
+    int32_t Pause() override;
+    int32_t Stop() override;
+    int32_t Rewind(int64_t mSeconds, int32_t mode) override;
+    int32_t SetVolume(float leftVolume, float rightVolume) override;
+    int32_t SetSurface(Surface *surface) override;
+    bool IsSingleLooping() override;
+    int32_t GetPlayerState(int32_t &state) override;
+    int32_t GetCurrentPosition(int64_t &position) override;
+    int32_t GetDuration(int64_t &durationMs) override;
+    int32_t GetVideoWidth(int32_t &videoWidth) override;
+    int32_t GetVideoHeight(int32_t &videoHeight) override;
+    int32_t SetPlaybackSpeed(float speed) override;
+    int32_t GetPlaybackSpeed(float &speed) override;
+    int32_t SetAudioStreamType(int32_t type) override;
+    void GetAudioStreamType(int32_t &type) override;
+    int32_t Reset(void) override;
+    int32_t Release() override;
+    int32_t SetLoop(bool loop) override;
+    void SetPlayerCallback(const std::shared_ptr<PlayerCallback> &cb) override;
     int32_t SetVideoScaleType(int32_t type);
-    int32_t Init(void);
-    int32_t DeInit(void);
-    int32_t SetParameter(const Format &params);
+    int32_t Init(void) override;
+    int32_t DeInit(void) override;
+    int32_t SetParameter(const Format &params) override;
 private:
     void NotifySeekComplete(PlayerImpl *curPlayer, int64_t seekToMs);
     void NotifyPlaybackComplete(PlayerImpl *curPlayer);

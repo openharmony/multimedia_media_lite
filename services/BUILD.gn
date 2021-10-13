@@ -21,6 +21,7 @@ executable("media_server") {
   include_dirs = [
     "//third_party/bounds_checking_function/include",
     "//drivers/peripheral/display/interfaces/include",
+    "//foundation/multimedia/media_lite/interfaces/innerkits",
     "//foundation/multimedia/camera_lite/services/include",
     "//foundation/multimedia/utils/lite/interfaces/kits",
     "//foundation/multimedia/utils/lite/hals"

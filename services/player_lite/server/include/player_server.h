@@ -18,7 +18,7 @@
 
 #include "liteipc_adapter.h"
 #include "serializer.h"
-#include "player_impl.h"
+#include "player_interface.h"
 
 namespace OHOS {
 namespace Media {
@@ -46,7 +46,7 @@ public:
     static void PlayerServerRequestHandle(int funcId, void *origin, IpcIo *req, IpcIo *reply);
     int32_t PlayerServerInit();
 private:
-    PlayerImpl *player_;
+    std::shared_ptr<PlayerInterface> player_;
     std::shared_ptr<StreamSource> stream_;
     SvcIdentity *sid_;
     PlayerServer() : player_(nullptr), stream_(nullptr), sid_(nullptr) {}

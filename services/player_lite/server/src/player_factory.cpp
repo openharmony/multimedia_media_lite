@@ -14,11 +14,11 @@
  */
 
 #include "../include/player_factory.h"
-#include <fstream>
+
 #include "histreamer/hiplayer.h"
-#include "player_impl.h"
 #include "media_log.h"
 #include "parameter.h"
+#include "player_impl.h"
 
 namespace OHOS {
 namespace Media {
@@ -26,13 +26,13 @@ std::shared_ptr<PlayerInterface> PlayerFactory::CreatePlayer(PlayerId playerId)
 {
     std::shared_ptr<PlayerInterface> player = nullptr;
     switch (playerId) {
-    case PlayerId::HISTREAMER:
-        player = CreateHiPlayer();
-        break;
-    case PlayerId::PLAYER_LITE:
-    default:
-        player = std::shared_ptr<PlayerInterface>(new (std::nothrow) PlayerImpl());
-        break;
+        case PlayerId::HISTREAMER:
+            player = CreateHiPlayer();
+            break;
+        case PlayerId::PLAYER_LITE:
+        default:
+            player = std::shared_ptr<PlayerInterface>(new (std::nothrow) PlayerImpl());
+            break;
     }
     return player;
 }

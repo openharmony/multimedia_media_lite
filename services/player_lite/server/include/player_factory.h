@@ -16,14 +16,15 @@
 #ifndef MULTIMEDIA_PLAYER_FACTORY_H
 #define MULTIMEDIA_PLAYER_FACTORY_H
 
-#include "player_interface.h"
 #include <memory>
+
+#include "player_interface.h"
 
 namespace OHOS {
 namespace Media {
 enum class PlayerId {
-  HISTREAMER,
-  PLAYER_LITE
+    HISTREAMER,
+    PLAYER_LITE
 };
 
 class PlayerFactory {
@@ -31,7 +32,6 @@ public:
   static std::shared_ptr<PlayerInterface> CreatePlayer(PlayerId playerId);
   static std::shared_ptr<PlayerInterface> CreatePlayer();
 };
-
 } // namespace Media
 } // namespace OHOS
 #endif // MULTIMEDIA_PLAYER_FACTORY_H

@@ -23,7 +23,6 @@
 
 namespace OHOS {
 namespace Media {
-
 class PlayerInterface {
 public:
   virtual ~PlayerInterface() = default;

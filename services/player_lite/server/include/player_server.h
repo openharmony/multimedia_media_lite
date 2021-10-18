@@ -48,6 +48,7 @@ public:
 private:
     std::shared_ptr<PlayerInterface> player_;
     std::shared_ptr<StreamSource> stream_;
+    std::shared_ptr<PlayerCallback> playerCallback_;
     SvcIdentity *sid_;
     PlayerServer() : player_(nullptr), stream_(nullptr), sid_(nullptr) {}
     ~PlayerServer() {}

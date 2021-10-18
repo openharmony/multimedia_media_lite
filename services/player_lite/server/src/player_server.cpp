@@ -551,6 +551,7 @@ void PlayerServer::Release(IpcIo *req, IpcIo *reply)
             delete sid_;
             sid_ = nullptr;
         }
+        playerCallback_.reset();
         player_ = nullptr;
         IpcIoPushInt32(reply, ret);
         return;
@@ -571,9 +572,9 @@ void PlayerServer::SetPlayerCallback(IpcIo *req, IpcIo *reply)
     BinderAcquire(sid->ipcContext, sid->handle);
 #endif
     if (sid != nullptr) {
-        shared_ptr<PalyerCallbackImpl> pcb = std::make_shared<PalyerCallbackImpl>(*sid);
+        playerCallback_ = std::make_shared<PalyerCallbackImpl>(*sid);
         if (player_ != nullptr) {
-            player_->SetPlayerCallback(pcb);
+            player_->SetPlayerCallback(playerCallback_);
             return;
         }
     }

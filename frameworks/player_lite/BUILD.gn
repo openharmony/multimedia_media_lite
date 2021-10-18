@@ -44,7 +44,7 @@ shared_library("player_lite_impl") {
     "//foundation/multimedia/utils/lite/hals",
     "//foundation/multimedia/utils/lite/interfaces/kits",
     "//drivers/peripheral/display/interfaces/include",
-    "//drivers/peripheral/base"
+    "//drivers/peripheral/base",
   ]
   outdir = rebase_path("$root_out_dir")
   public_configs = [ ":player_impl_external_library_config" ]

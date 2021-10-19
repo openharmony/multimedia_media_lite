@@ -40,10 +40,11 @@ shared_library("player_lite_impl") {
   cflags_cc = cflags
   include_dirs = [
     "//third_party/bounds_checking_function/include",
+    "//foundation/multimedia/media_lite/interfaces/innerkits",
     "//foundation/multimedia/utils/lite/hals",
     "//foundation/multimedia/utils/lite/interfaces/kits",
     "//drivers/peripheral/display/interfaces/include",
-    "//drivers/peripheral/base"
+    "//drivers/peripheral/base",
   ]
   outdir = rebase_path("$root_out_dir")
   public_configs = [ ":player_impl_external_library_config" ]
@@ -62,7 +63,7 @@ shared_library("player_lite_impl") {
 }
 
 config("player_impl_external_library_config") {
-  include_dirs = [ "//foundation/multimedia/fr:ameworks/player_lite" ]
+  include_dirs = [ "//foundation/multimedia/frameworks/player_lite" ]
   include_dirs +=
       [ "//foundation/multimedia/media_lite/interfaces/kits/player_lite" ]
   include_dirs += [ "//foundation/multimedia/media_lite/frameworks/player_lite/buffersource/include" ]

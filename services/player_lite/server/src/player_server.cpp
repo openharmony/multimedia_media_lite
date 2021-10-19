@@ -21,6 +21,7 @@
 #include "source.h"
 #include "surface.h"
 #include "surface_impl.h"
+#include "player_factory.h"
 extern "C"
 {
 #include "codec_interface.h"
@@ -293,7 +294,8 @@ void PlayerServer::SetSource(IpcIo *req, IpcIo *reply)
     MEDIA_INFO_LOG("process in");
     int32_t sourceType = IpcIoPopInt32(req);
     if (player_ == nullptr) {
-        player_ = new (std::nothrow)PlayerImpl();
+        MEDIA_INFO_LOG("player nullptr");
+        player_ = PlayerFactory::CreatePlayer();
     }
     switch ((SourceType)sourceType) {
         case SourceType::SOURCE_TYPE_URI: {
@@ -549,7 +551,7 @@ void PlayerServer::Release(IpcIo *req, IpcIo *reply)
             delete sid_;
             sid_ = nullptr;
         }
-        delete player_;
+        playerCallback_.reset();
         player_ = nullptr;
         IpcIoPushInt32(reply, ret);
         return;
@@ -570,9 +572,9 @@ void PlayerServer::SetPlayerCallback(IpcIo *req, IpcIo *reply)
     BinderAcquire(sid->ipcContext, sid->handle);
 #endif
     if (sid != nullptr) {
-        shared_ptr<PalyerCallbackImpl> pcb = std::make_shared<PalyerCallbackImpl>(*sid);
+        playerCallback_ = std::make_shared<PalyerCallbackImpl>(*sid);
         if (player_ != nullptr) {
-            player_->SetPlayerCallback(pcb);
+            player_->SetPlayerCallback(playerCallback_);
             return;
         }
     }

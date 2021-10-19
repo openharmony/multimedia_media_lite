@@ -21,9 +21,10 @@ executable("media_server") {
   include_dirs = [
     "//third_party/bounds_checking_function/include",
     "//drivers/peripheral/display/interfaces/include",
+    "//foundation/multimedia/media_lite/interfaces/innerkits",
     "//foundation/multimedia/camera_lite/services/include",
     "//foundation/multimedia/utils/lite/interfaces/kits",
-    "//foundation/multimedia/utils/lite/hals"
+    "//foundation/multimedia/utils/lite/hals",
   ]
   ldflags += [
     "-lstdc++",
@@ -38,8 +39,8 @@ executable("media_server") {
   deps = [
     "//foundation/distributedschedule/samgr_lite/samgr:samgr",
     "//foundation/multimedia/camera_lite/services:camera_server",
-    "//foundation/multimedia/media_lite/services/recorder_lite:recorder_server",
     "//foundation/multimedia/media_lite/services/player_lite:player_server",
+    "//foundation/multimedia/media_lite/services/recorder_lite:recorder_server",
   ]
 }
 copy("camera_config") {

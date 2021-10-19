@@ -36,6 +36,7 @@ shared_library("player_client") {
 
 shared_library("player_server") {
   sources = [
+    "server/src/player_factory.cpp",
     "server/src/player_server.cpp",
     "server/src/samgr_player_server.cpp",
   ]
@@ -47,11 +48,14 @@ shared_library("player_server") {
     "//drivers/peripheral/format/interfaces/include",
     "//drivers/peripheral/display/interfaces/include",
     "//drivers/peripheral/base",
+    "//foundation/multimedia/histreamer/interface",
     "//foundation/multimedia/utils/lite/hals",
     "//foundation/multimedia/utils/lite/interfaces/kits",
+    "//foundation/multimedia/media_lite/interfaces/innerkits",
     "//foundation/distributedschedule/samgr_lite/interfaces/kits/registry",
     "//foundation/distributedschedule/samgr_lite/interfaces/kits/samgr",
     "//foundation/distributedschedule/samgr_lite/interfaces/kits/communication/broadcast",
+    "//base/startup/syspara_lite/interfaces/kits/",
   ]
   outdir = rebase_path("$root_out_dir")
   public_configs = [ ":player_server_external_library_config" ]
@@ -70,16 +74,19 @@ shared_library("player_server") {
   deps = [
     "//foundation/distributedschedule/samgr_lite/samgr:samgr",
     "//foundation/graphic/surface:lite_surface",
+    "//foundation/multimedia/histreamer:histreamer",
   ]
   public_deps = [
+    "//base/startup/syspara_lite/frameworks/parameter/src:sysparam",
     "//foundation/multimedia/media_lite/frameworks/player_lite:player_lite_impl",
     "//foundation/multimedia/utils/lite:media_common",
   ]
 }
 
 config("player_server_external_library_config") {
-  include_dirs =
-      [ "//foundation/multimedia/media_lite/services/player_lite/server/include" ]
+  include_dirs = [
+    "//foundation/multimedia/media_lite/services/player_lite/server/include",
+  ]
   include_dirs +=
       [ "//foundation/multimedia/media_lite/frameworks/player_lite" ]
 }

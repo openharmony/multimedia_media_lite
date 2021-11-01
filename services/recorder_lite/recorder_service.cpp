@@ -58,6 +58,7 @@ void RecorderClientMng::Dispatch(int32_t funcId, pid_t pid, IpcIo *req, IpcIo *r
     if (recorder == nullptr) {
         MEDIA_ERR_LOG("Cannot find client object.(pid=%d)", pid);
         IpcIoPushInt32(reply, MEDIA_IPC_FAILED);
+        return;
     }
     switch (funcId) {
         case REC_FUNC_DISCONNECT:

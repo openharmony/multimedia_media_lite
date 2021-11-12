@@ -59,6 +59,7 @@ public:
     void RenderEos(void);
     int DequeReleaseFrame(OutputInfo &frame);
     void GetRenderPosition(int64_t &position);
+    void SetAudioStreamType(int32_t &type);
 
 private:
     void ResetRendStartTime();

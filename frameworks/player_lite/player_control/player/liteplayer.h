@@ -85,6 +85,8 @@ public:
     void OnVideoEndOfStream(void);
     void StateChangeCallback(PlayerStatus state) override;
 
+    void SetAudioStreamType(int32_t type);
+
 protected:
     int32_t DoRegCallback(PlayerCtrlCallbackParam &observer) override;
 

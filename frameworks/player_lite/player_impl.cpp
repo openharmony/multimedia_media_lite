@@ -746,6 +746,7 @@ int32_t PlayerImpl::SetAudioStreamType(int32_t type)
         return -1;
     }
     audioStreamType_ = type;
+    player_->SetAudioStreamType(type);
     return 0;
 }
 

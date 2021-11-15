@@ -13,8 +13,10 @@
  * limitations under the License.
  */
 
+#include "audio_types.h"
 #include "player_audio_sink.h"
 #include "player_sync.h"
+#include "media_info.h"
 #include "media_log.h"
 #include <unistd.h>
 #include <cmath>
@@ -452,6 +454,20 @@ void AudioSink::GetRenderPosition(int64_t &position)
 void AudioSink::SetRenderMode(RenderMode mode)
 {
     renderMode_ = mode;
+}
+
+void AudioSink::SetAudioStreamType(int32_t &type)
+{
+    struct AudioSceneDescriptor sceneDesc;
+    if (type == TYPE_VOICE_COMMUNICATION) {
+        sceneDesc.scene.id = AUDIO_IN_COMMUNICATION;
+    } else {
+        sceneDesc.scene.id = AUDIO_IN_MEDIA;
+    }
+    sceneDesc.desc.portId = 0;
+    sceneDesc.desc.pins = PIN_OUT_SPEAKER;
+    sceneDesc.desc.desc = nullptr;
+    audioRender_->scene.SelectScene(audioRender_, &sceneDesc);
 }
 }
 }

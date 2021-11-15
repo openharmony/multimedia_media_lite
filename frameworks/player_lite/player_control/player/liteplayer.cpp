@@ -1004,6 +1004,7 @@ void PlayerControl::RenderAudioFrame(void)
             sinkManager_->RenderEos(true);  /* all frame have been send to audio sink */
         }
     }
+    outInfo.type = AUDIO_DECODER;
     ret = sinkManager_->RenderFrame(outInfo);
     if (ret == SINK_RENDER_FULL || ret == SINK_RENDER_DELAY) {
         renderSleepTime_ = RENDER_FULL_SLEEP_TIME_US;
@@ -1050,6 +1051,7 @@ void PlayerControl::RenderVideoFrame(void)
         }
     }
 
+    outInfo.type = VIDEO_DECODER;
     ret = sinkManager_->RenderFrame(outInfo);
     if (ret == SINK_RENDER_FULL || ret == SINK_RENDER_DELAY) {
         renderSleepTime_ = RENDER_FULL_SLEEP_TIME_US;
@@ -2021,6 +2023,11 @@ int32_t PlayerControl::DoInvoke(InvokeParameter& invokeParam)
             break;
     }
     return ret;
+}
+
+void PlayerControl::SetAudioStreamType(int32_t type)
+{
+    sinkManager_->SetAudioStreamType(type);
 }
 }
 }

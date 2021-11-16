@@ -1095,6 +1095,8 @@ void AudioSourceProcess(const SourceManager *audioSourceManager, const RecorderS
     param.sched_priority = RECORDER_AUDIO_THREAD_PRIORITY;
     pthread_setschedparam(pthread_self(), SCHED_RR, &param);
     MEDIA_INFO_LOG("sched_priority:%d", param.sched_priority);
+    long long times = 0;
+    int interval = 400;
     while (audioSourceManager->audioSourceStarted) {
         RecorderSourceBuffer buffer;
         int32_t ret = audioSourceManager->audioSource->AcquireBuffer(buffer, false);
@@ -1112,7 +1114,10 @@ void AudioSourceProcess(const SourceManager *audioSourceManager, const RecorderS
             frameData.len = buffer.dataLen;
             ret = recorderSink->WriteData(audioSourceManager->audioTrackId, frameData);
             if (ret != SUCCESS) {
-                MEDIA_ERR_LOG("Audio WriteData failed 0x%x", ret);
+                times++;
+                if (times % interval == 1) {
+                    MEDIA_ERR_LOG("Audio WriteData failed 0x%x", ret);
+                }
             }
         }
         audioSourceManager->audioSource->ReleaseBuffer(buffer);
@@ -1178,6 +1183,8 @@ void VideoSourceProcess(const SourceManager *videoSourceManager, const RecorderS
     param.sched_priority = RECORDER_VIDEO_THREAD_PRIORITY;
     pthread_setschedparam(pthread_self(), SCHED_RR, &param);
     MEDIA_INFO_LOG("sched_priority:%d", param.sched_priority);
+    long long times = 0;
+    int interval = 400;
     while (videoSourceManager->videoSourceStarted) {
         RecorderSourceBuffer buffer;
         int32_t ret = videoSourceManager->videoSource->AcquireBuffer(buffer, true);
@@ -1195,7 +1202,10 @@ void VideoSourceProcess(const SourceManager *videoSourceManager, const RecorderS
             frameData.len = buffer.dataLen;
             ret = recorderSink->WriteData(videoSourceManager->videoTrackId, frameData);
             if (ret != SUCCESS) {
-                MEDIA_ERR_LOG("video WriteData failed 0x%x", ret);
+                times++;
+                if (times % interval == 1) {
+                    MEDIA_ERR_LOG("video WriteData failed 0x%x", ret);
+                }
             }
         }
         videoSourceManager->videoSource->ReleaseBuffer(buffer);

@@ -383,6 +383,10 @@ int32_t RecorderSink::Stop(bool block)
     started_ = false;
     if (outputFd_ > 0) {
         FILE *fp = fdopen(outputFd_, "r");
+        if (fp == nullptr) {
+            MEDIA_ERR_LOG("fdopen failed");
+            return -1;
+        }
         fflush(fp);
         fsync(outputFd_);
         fclose(fp);

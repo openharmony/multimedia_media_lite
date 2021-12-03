@@ -284,7 +284,6 @@ std::shared_ptr<OHOS::Surface> Recorder::RecorderImpl::GetSurface(int32_t source
     if (ret != 0) {
         MEDIA_ERR_LOG("SetSource failed, ret=%d", ret);
     }
-    printf("Recorder::RecorderImpl::GetSurface surface=%p", surface);
     return std::shared_ptr<OHOS::Surface>(surface);
 }
 

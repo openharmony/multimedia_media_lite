@@ -741,7 +741,7 @@ int32_t PlayerImpl::SetAudioStreamType(int32_t type)
     std::lock_guard<std::mutex> valueLock(lock_);
     MEDIA_INFO_LOG("process in");
     CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
-    if (currentState_ != PLAYER_IDLE && currentState_ != PLAYER_INITIALIZED) {
+    if (currentState_ != PLAYER_PREPARED) {
         MEDIA_ERR_LOG("failed, state %d,type:%d", currentState_, type);
         return -1;
     }

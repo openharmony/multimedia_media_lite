@@ -337,6 +337,7 @@ int32_t PlayerControl::SetDataSource(BufferStream &stream)
 
 int32_t PlayerControl::Prepare()
 {
+    sinkManager_ = std::make_shared<SinkManager>();
     CHECK_NULL_RETURN(stateMachine_, HI_ERR_PLAYERCONTROL_NULL_PTR, "stateMachine_ nullptr");
     return stateMachine_->Send(PLAYERCONTROL_MSG_PREPARE);
 }
@@ -854,7 +855,6 @@ int32_t PlayerControl::AddVideoSink()
 int32_t PlayerControl::SinkStart(void)
 {
     int32_t ret = HI_SUCCESS;
-    sinkManager_ = std::make_shared<SinkManager>();
     CHECK_NULL_RETURN(sinkManager_, HI_FAILURE, "new sinkManager_ nullptr");
     if (fmtFileInfo_.s32UsedVideoStreamIndex != HI_DEMUXER_NO_MEDIA_STREAM && !isVideoStarted_) {
         ret = AddVideoSink();

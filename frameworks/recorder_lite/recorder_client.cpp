@@ -88,8 +88,6 @@ static int32_t RecorderCallbackSvc(const IpcContext *context, void *ipcMsg, IpcI
 
 Recorder::RecorderImpl::RecorderImpl()
 {
-    OHOS_SystemInit();
-
     IUnknown *iUnknown = SAMGR_GetInstance()->GetDefaultFeatureApi(RECORDER_SERVICE_NAME);
     if (iUnknown == nullptr) {
         MEDIA_ERR_LOG("iUnknown is NULL");

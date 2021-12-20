@@ -28,7 +28,6 @@ namespace OHOS {
 namespace Media {
 bool Player::PlayerClient::InitPlayerClient()
 {
-    OHOS_SystemInit();
     if (proxy_ == nullptr) {
         IUnknown *iUnknown = SAMGR_GetInstance()->GetDefaultFeatureApi(SERVICE_NAME);
         if (iUnknown == nullptr) {

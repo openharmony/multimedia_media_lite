@@ -19,7 +19,9 @@
 #include "format.h"
 #include "player.h"
 #include "source.h"
+#ifndef SURFACE_DISABLED
 #include "surface.h"
+#endif
 
 namespace OHOS {
 namespace Media {
@@ -34,7 +36,9 @@ public:
     virtual int32_t Stop() = 0;
     virtual int32_t Rewind(int64_t mSeconds, int32_t mode) = 0;
     virtual int32_t SetVolume(float leftVolume, float rightVolume) = 0;
+#ifndef SURFACE_DISABLED
     virtual int32_t SetSurface(Surface *surface) = 0;
+#endif
     virtual bool IsSingleLooping() = 0;
     virtual int32_t GetPlayerState(int32_t &state) = 0;
     virtual int32_t GetCurrentPosition(int64_t &currentPosition) = 0;

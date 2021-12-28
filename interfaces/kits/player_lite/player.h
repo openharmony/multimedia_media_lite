@@ -41,7 +41,9 @@
 #include "format.h"
 #include <memory>
 #include <vector>
+#ifndef SURFACE_DISABLED
 #include "surface.h"
+#endif
 
 namespace OHOS {
 namespace Media {
@@ -270,7 +272,9 @@ public:
      * @since 1.0
      * @version 1.0
      */
+#ifndef SURFACE_DISABLED
     int32_t SetVideoSurface(Surface *surface);
+#endif
 
     /**
      * @brief Sets loop playback.

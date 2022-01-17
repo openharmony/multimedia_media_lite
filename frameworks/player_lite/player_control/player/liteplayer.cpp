@@ -28,7 +28,6 @@ using OHOS::Media::Decoder;
 
 namespace OHOS {
 namespace Media {
-const uint32_t PLAYER_MPF_MBUF_SIZE = 624640;
 /* DEFAULT_VID_BUFSIZE: 2 * 1024 * 1024 */
 const uint32_t DEFAULT_VID_BUFSIZE = 2097152;
 /* DEFAULT_AUD_BUFSIZE: 256 * 1024 */

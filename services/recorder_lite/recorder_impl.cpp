@@ -29,7 +29,6 @@ namespace OHOS {
 namespace Media {
 constexpr uint32_t RECORDER_AUDIO_THREAD_PRIORITY = 19;
 constexpr uint32_t RECORDER_VIDEO_THREAD_PRIORITY = 20;
-constexpr uint32_t RECORDER_AUDIO_SAMPLES_PER_FRAME = 1024;
 
 constexpr uint32_t RECORDER_VIDEO_SOURCE_ID_MASK = 0;
 constexpr uint32_t RECORDER_AUDIO_SOURCE_ID_MASK = 0x100;
@@ -1630,7 +1629,7 @@ int32_t RecorderImpl::SetParameter(int32_t sourceId, const Format &format)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (status_ == RELEASED) {
-        MEDIA_ERR_LOG("when RELEASED can not Set Parameter:%u");
+        MEDIA_ERR_LOG("when RELEASED can not Set Parameter:u");
         return ERR_ILLEGAL_STATE;
     }
     if (recorderSink_ == nullptr) {

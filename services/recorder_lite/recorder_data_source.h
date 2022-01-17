@@ -56,7 +56,7 @@ public:
 
     int32_t Release() override;
 
-    void OnBufferAvailable();
+    void OnBufferAvailable() override;
 private:
     std::shared_ptr<Surface> surface_;
     std::mutex lock_;

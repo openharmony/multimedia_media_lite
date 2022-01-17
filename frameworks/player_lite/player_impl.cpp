@@ -35,12 +35,8 @@ using OHOS::Media::AdapterStreamCallback;
 
 namespace OHOS {
 namespace Media {
-const int32_t DEFAULT_SEND_LEVEL = 3;
 const int32_t INVALID_MEDIA_POSITION = -1;
 const int32_t DEFAULT_REWIND_TIME = 0;
-const float DEFAULT_MEDIA_VOLUME = 100.0f;
-const int32_t INIT_VIDEO_SIZE = 0;
-const int32_t DEFAULT_THREAD_ID = -1;
 const int32_t IDLE_QUEQUE_SLEEP_TIME_US = 5000;
 const float MAX_MEDIA_VOLUME = 300.0f;
 const int32_t POS_NOTIFY_INTERVAL_MS = 300;

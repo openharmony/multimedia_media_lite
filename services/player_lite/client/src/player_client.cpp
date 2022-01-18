@@ -70,7 +70,6 @@ int Player::PlayerClient::Callback(void* owner, int code, IpcIo *reply)
         return -1;
     }
     CallBackPara* para = (CallBackPara*)owner;
-    MEDIA_INFO_LOG("Callback, funcId = %d", para->funcId);
     switch (para->funcId) {
         case PLAYER_SERVER_SET_SOURCE: {
             int32_t* ret = static_cast<int32_t*>(para->ret);

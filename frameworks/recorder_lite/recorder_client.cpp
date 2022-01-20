@@ -15,12 +15,23 @@
 
 #include "recorder_client.h"
 
+#include <cstddef>
+#include <cstdint>
+#include <cstdio>
+#include <fcntl.h>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <vector>
+#include "liteipc_adapter.h"
 #include "media_log.h"
 #include "pms_interface.h"
-#include "recorder_service.h"
+#include "recorder_common.h"
 #include "samgr_lite.h"
 #include "securec.h"
 #include "surface_impl.h"
+
+using namespace std;
 
 extern "C" void __attribute__((weak)) OHOS_SystemInit(void)
 {
@@ -385,8 +396,8 @@ int32_t Recorder::RecorderImpl::SetOutputFormat(OutputFormatType format)
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
     IpcIoPushFlatObj(&io, &format, sizeof(format));
-    CallBackPara para = {.funcId = REC_FUNC_SET_MAXDURATION, .ret = MEDIA_IPC_FAILED};
-    uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_MAXDURATION, &io, &para, SimpleCallback);
+    CallBackPara para = {.funcId = REC_FUNC_SET_OUTPUTFORMAT, .ret = MEDIA_IPC_FAILED};
+    uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_OUTPUTFORMAT, &io, &para, SimpleCallback);
     if (ret != 0) {
         MEDIA_ERR_LOG("SetSource failed, ret=%d", ret);
     }

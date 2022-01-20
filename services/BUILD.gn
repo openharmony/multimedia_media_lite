@@ -23,7 +23,12 @@ executable("media_server") {
     "//drivers/peripheral/display/interfaces/include",
     "//foundation/multimedia/camera_lite/services/include",
     "//foundation/multimedia/utils/lite/interfaces/kits",
-    "//foundation/multimedia/utils/lite/hals"
+    "//foundation/multimedia/utils/lite/hals",
+    "//foundation/multimedia/audio_lite/interfaces/kits",
+    "//foundation/multimedia/media_lite/services/recorder_lite",
+    "//foundation/multimedia/media_lite/services/player_lite",
+    "//foundation/multimedia/audio_lite/frameworks",
+    "//foundation/multimedia/audio_lite/services/include",
   ]
   ldflags += [
     "-lstdc++",
@@ -37,9 +42,11 @@ executable("media_server") {
   ]
   deps = [
     "//foundation/distributedschedule/samgr_lite/samgr:samgr",
+    "//foundation/multimedia/audio_lite/frameworks:audio_capturer_impl",
+    "//foundation/multimedia/audio_lite/services:audio_capturer_server",
     "//foundation/multimedia/camera_lite/services:camera_server",
-    "//foundation/multimedia/media_lite/services/recorder_lite:recorder_server",
     "//foundation/multimedia/media_lite/services/player_lite:player_server",
+    "//foundation/multimedia/media_lite/services/recorder_lite:recorder_server",
   ]
 }
 copy("camera_config") {
@@ -62,6 +69,7 @@ lite_component("media_lite") {
     "//foundation/multimedia/media_lite/frameworks/recorder_lite:recorder_lite",
     "//foundation/multimedia/media_lite/services/player_lite:player_server",
     "//foundation/multimedia/media_lite/services/player_lite:player_client",
+    "//foundation/multimedia/audio_lite/frameworks:audio_capturer_lite",
   ]
 }
 
@@ -80,5 +88,6 @@ ndk_lib("media_ndk") {
     "//foundation/multimedia/audio_lite/interfaces/kits",
     "//foundation/multimedia/media_lite/interfaces/kits/player_lite",
     "//foundation/multimedia/media_lite/interfaces/kits/recorder_lite",
+    "//foundation/multimedia/audio_lite/interfaces/kits/audio_capturer_lite",
   ]
 }

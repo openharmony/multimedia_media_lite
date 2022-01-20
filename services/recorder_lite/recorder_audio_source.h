@@ -23,7 +23,7 @@
 #include "media_errors.h"
 #include "media_info.h"
 #include "recorder_source.h"
-#include "audio_capturer.h"
+#include "audio_capturer_impl.h"
 
 namespace OHOS {
 namespace Media {
@@ -52,7 +52,7 @@ public:
     virtual int32_t Release() override;
 
 private:
-    std::unique_ptr<AudioCapturer> audioCap_;
+    std::unique_ptr<AudioCapturerImpl> audioCap_;
     uint32_t framesize_;
     uint8_t *buffer_;
     uint64_t frameSeq_;

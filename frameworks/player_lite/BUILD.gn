@@ -37,6 +37,7 @@ shared_library("player_lite_impl") {
   ]
   cflags = [ "-fPIC" ]
   cflags += [ "-Wall" ]
+  cflags += [ "-Werror" ]
   cflags_cc = cflags
   include_dirs = [
     "//third_party/bounds_checking_function/include",
@@ -84,6 +85,7 @@ shared_library("player_lite") {
   sources = [ "player.cpp" ]
   cflags = [ "-fPIC" ]
   cflags += [ "-Wall" ]
+  cflags += [ "-Werror" ]
   cflags_cc = cflags
   include_dirs = [
     "//base/security/permission/interfaces/kits/permission_lite",

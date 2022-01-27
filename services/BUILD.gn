@@ -17,6 +17,7 @@ executable("media_server") {
   ldflags = [ "-Wl,-Map=media_server.map" ]
   sources = [ "media_main.cpp" ]
   cflags = [ "-Wall" ]
+  cflags += [ "-Werror" ]
   cflags_cc = cflags
   include_dirs = [
     "//third_party/bounds_checking_function/include",

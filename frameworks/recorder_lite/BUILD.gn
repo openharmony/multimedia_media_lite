@@ -20,6 +20,7 @@ shared_library("recorder_lite") {
   ]
   cflags = [ "-fPIC" ]
   cflags += [ "-Wall" ]
+  cflags += [ "-Werror" ]
   cflags_cc = cflags
   include_dirs = [
     "recorder_sink/include",

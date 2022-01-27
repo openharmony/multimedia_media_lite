@@ -24,6 +24,7 @@ if (ohos_build_type == "debug") {
   unittest("lite_player_unittest") {
     output_dir = "$root_out_dir/test/unittest/playerlite"
     sources = [ "player_lite/player_lite_test.cpp" ]
+    cflags = [ "-Wno-error" ]
     ldflags = [ "-lpthread" ]
     ldflags += [ "-Wl,-rpath-link=$ohos_root_path/$root_out_dir" ]
     include_dirs = [
@@ -45,6 +46,7 @@ if (ohos_build_type == "debug") {
   unittest("lite_recorder_unittest") {
     output_dir = "$root_out_dir/test/unittest/recorder"
     sources = [ "recorder_lite/recorder_lite_test.cpp" ]
+    cflags = [ "-Wno-error" ]
     include_dirs = [
     "//third_party/bounds_checking_function/include",
     "//drivers/peripheral/codec/interfaces/include",

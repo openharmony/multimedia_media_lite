@@ -564,13 +564,13 @@ int32_t PlayerControl::OnSwitchTPlay2Play()
     if (tplayMode_ != PLAYER_TPLAY_FULL_PLAY) {
         ret = TPlayResetBuffer();
         if (ret != HI_SUCCESS) {
-            MEDIA_ERR_LOG("TPlayResetBuffer failed", ret);
+            MEDIA_ERR_LOG("TPlayResetBuffer failed , ret:%d", ret);
             pthread_mutex_unlock(&schMutex_);
             return ret;
         }
         ret = playerSource_->Seek(fmtFileInfo_.s32UsedVideoStreamIndex, lastReadPktPts_, FORMAT_SEEK_MODE_FORWARD_KEY);
         if (ret != HI_SUCCESS) {
-            MEDIA_ERR_LOG("playerSource_ seek failed", ret);
+            MEDIA_ERR_LOG("playerSource_ seek failed , ret:%d", ret);
             pthread_mutex_unlock(&schMutex_);
             return ret;
         }
@@ -1577,14 +1577,14 @@ int32_t PlayerControl::DoTPlay(TplayAttr &trickPlayAttr)
     pthread_mutex_lock(&schMutex_);
     ret = TPlayResetBuffer();
     if (ret != HI_SUCCESS) {
-        MEDIA_ERR_LOG("TPlayResetBuffer failed", ret);
+        MEDIA_ERR_LOG("TPlayResetBuffer failed , ret:%d", ret);
         pthread_mutex_unlock(&schMutex_);
         return ret;
     }
     isVidContinueLost_ = false;
     ret = sinkManager_->SetSpeed(tplayAttr_.speed, tplayAttr_.direction);
     if (ret != HI_SUCCESS) {
-        MEDIA_ERR_LOG("TPlayResetBuffer failed", ret);
+        MEDIA_ERR_LOG("TPlayResetBuffer failed , ret:%d", ret);
     }
     curSeekOffset_ = TPlayGetSeekOffset(tplayAttr_.speed, tplayAttr_.direction);
     tplayMode_ = TPlayGetPlayMode();

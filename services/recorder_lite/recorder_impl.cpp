@@ -658,7 +658,7 @@ int32_t RecorderImpl::SetOutputPath(const string &path)
     struct stat fileStatus;
     stat(path.c_str(), &fileStatus);
     if (!S_ISDIR(fileStatus.st_mode)) {
-        MEDIA_ERR_LOG("path is a file!", path.c_str());
+        MEDIA_ERR_LOG("The path :%s is a file!", path.c_str());
         return ERR_INVALID_PARAM;
     }
     if (access(path.c_str(),  W_OK) == -1) {

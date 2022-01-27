@@ -15,6 +15,7 @@ import("//build/lite/config/component/lite_component.gni")
 executable("test_play_file_h265") {
   sources = [ "test_play_file_h265.cpp" ]
   cflags = [ "-Wall" ]
+  cflags += [ "-Wno-error" ]
   cflags_cc = cflags
   include_dirs = [
     "//third_party/bounds_checking_function/include",

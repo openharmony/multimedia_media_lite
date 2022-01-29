@@ -10,32 +10,38 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import("//build/lite/config/component/lite_component.gni")
 import("//build/lite/ndk/ndk.gni")
-shared_library("audio_lite_api") {
+import("//foundation/ace/ace_engine_lite/ace_lite.gni")
+
+lite_library("audio_lite_api") {
+  if (ohos_kernel_type == "liteos_m") {
+    target_type = "static_library"
+  } else {
+    target_type = "shared_library"
+  }
+
   sources = [
-    "//foundation/multimedia/media_lite/interfaces/kits/player_lite/js/builtin/src/audio_module.cpp",
-    "//foundation/multimedia/media_lite/interfaces/kits/player_lite/js/builtin/src/audio_player.cpp",
+    "src/audio_module.cpp",
+    "src/audio_player.cpp",
   ]
-  cflags = [ "-fPIC" ]
-  cflags += [ "-Wall" ]
-  cflags_cc = cflags
-  include_dirs = [
-    "//foundation/ace/ace_engine_lite/interfaces/innerkits/builtin/base",
-    "//foundation/ace/ace_engine_lite/interfaces/innerkits/builtin/jsi",
-    "//foundation/ace/ace_engine_lite/interfaces/innerkits/builtin/async",
+
+  include_dirs = ace_lite_include_dirs
+  include_dirs += [
     "//foundation/multimedia/media_lite/interfaces/kits/player_lite/js/builtin/include",
     "//foundation/multimedia/media_lite/interfaces/kits/player_lite",
     "//foundation/multimedia/utils/lite/interfaces/kits",
   ]
-  outdir = rebase_path("$root_out_dir")
-  ldflags = [ "-L$outdir" ]
-  ldflags += [ "-laudio_hw" ]
-  ldflags += [ "-lcodec" ]
-  ldflags += [ "-lformat_hw" ]
+
   public_deps = [
-    "//foundation/multimedia/media_lite/frameworks/player_lite:player_lite",
+    "//foundation/multimedia/media_lite/frameworks/player_lite",
     "//foundation/multimedia/utils/lite:media_common",
-    "//third_party/bounds_checking_function:libsec_shared",
   ]
+
+  if (ohos_kernel_type == "liteos_m") {
+    public_deps += [ "//third_party/bounds_checking_function:libsec_static" ]
+  } else {
+    public_deps += [ "//third_party/bounds_checking_function:libsec_shared" ]
+  }
 }

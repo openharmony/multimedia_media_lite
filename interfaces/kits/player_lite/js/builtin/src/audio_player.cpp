@@ -14,7 +14,7 @@
  */
 #include "audio_player.h"
 #include <errno.h>
-#include <sys/prctl.h>
+#include <pthread.h>
 #include <sys/time.h>
 #include <unistd.h>
 #include "js_async_work.h"
@@ -78,9 +78,13 @@ AudioPlayerCallback::AudioPlayerCallback(AudioPlayer *audioPlayer) : PlayerCallb
 
 void *AudioPlayerCallback::PlaybackCompleteHandler(void *arg)
 {
-    AudioPlayer *audioPlayer_ = (AudioPlayer *)arg;
-    prctl(PR_SET_NAME, "PlaybackCompleteHandler");
+    int32_t ret = pthread_setname_np((pthread_t)pthread_self(), "PlaybackCompleteHandler");
+    if (ret != 0) {
+      MEDIA_ERR_LOG("fail to set thread name.");
+      return nullptr;
+    }
 
+    AudioPlayer *audioPlayer_ = (AudioPlayer *)arg;
     if (!audioPlayer_->ResetPlayer()) {
         MEDIA_ERR_LOG("fail to reset player.");
         TriggerEventListener(audioPlayer_->GetOnErrorListener());
@@ -176,7 +180,11 @@ void AudioPlayer::ForkUpdateTimeThread()
 
 void *AudioPlayer::UpdateTimeHandler(void *arg)
 {
-    prctl(PR_SET_NAME, "UpdateTimeHandler");
+    int32_t ret = pthread_setname_np((pthread_t)pthread_self(), "UpdateTimeHandler");
+    if (ret != 0) {
+      MEDIA_ERR_LOG("fail to set thread name.");
+      return nullptr;
+    }
     if (arg == nullptr) {
         MEDIA_ERR_LOG("audio player is null.");
         return nullptr;
@@ -234,13 +242,13 @@ bool AudioPlayer::CreatePlayer()
     if (muted_) {
         player_->SetVolume(0, 0);
     } else {
-        double volume = volume_ * MILLISECONDS_PER_SECOND;
+        double volume = volume_ * 100;
         if (player_->SetVolume(volume, volume) != 0) {
             MEDIA_ERR_LOG("fail to reset volume");
         }
     }
     if (!callback_) {
-        MEDIA_ERR_LOG("Create Callback");
+        MEDIA_INFO_LOG("Create Callback");
         callback_ = std::make_shared<AudioPlayerCallback>(this);
     }
     player_->SetPlayerCallback(callback_);
@@ -366,7 +374,7 @@ double AudioPlayer::GetCurrentTime() const
     if (player_->GetCurrentTime(currentTime) != 0) {
         MEDIA_ERR_LOG("fail to get audio currentTime property.");
     }
-    return currentTime / MILLISECONDS_PER_SECOND;
+  return currentTime / MILLISECONDS_PER_SECOND;
 }
 
 double AudioPlayer::GetDuration() const

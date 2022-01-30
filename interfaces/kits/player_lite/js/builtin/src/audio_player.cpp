@@ -78,7 +78,7 @@ AudioPlayerCallback::AudioPlayerCallback(AudioPlayer *audioPlayer) : PlayerCallb
 
 void *AudioPlayerCallback::PlaybackCompleteHandler(void *arg)
 {
-    int32_t ret = pthread_setname_np((pthread_t)pthread_self(), "PlaybackCompleteHandler");
+    int32_t ret = pthread_setname_np((pthread_t)pthread_self(), "PlaybackCom");
     if (ret != 0) {
       MEDIA_ERR_LOG("fail to set thread name.");
       return nullptr;
@@ -180,7 +180,7 @@ void AudioPlayer::ForkUpdateTimeThread()
 
 void *AudioPlayer::UpdateTimeHandler(void *arg)
 {
-    int32_t ret = pthread_setname_np((pthread_t)pthread_self(), "UpdateTimeHandler");
+    int32_t ret = pthread_setname_np((pthread_t)pthread_self(), "UpdateTime");
     if (ret != 0) {
       MEDIA_ERR_LOG("fail to set thread name.");
       return nullptr;

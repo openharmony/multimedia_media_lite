@@ -121,5 +121,4 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_Pause_test_001, Level1)
     delete recInstance;
     recInstance = nullptr;
 }
-
 } // namespace OHOS

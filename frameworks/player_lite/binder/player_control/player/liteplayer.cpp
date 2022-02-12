@@ -692,6 +692,9 @@ static std::string GetAudioNameByAvCodecMime(AvCodecMime mime)
         case MEDIA_MIMETYPE_AUDIO_MP3:
             audioName = "codec.mp3.soft.decoder";
             break;
+        case MEDIA_MIMETYPE_AUDIO_PCM:
+            audioName = "codec.pcm16s.soft.decoder";
+            break;
         default:
             MEDIA_ERR_LOG("not support codec type:%d", mime);
             break;
@@ -1577,14 +1580,14 @@ int32_t PlayerControl::DoTPlay(TplayAttr &trickPlayAttr)
     pthread_mutex_lock(&schMutex_);
     ret = TPlayResetBuffer();
     if (ret != HI_SUCCESS) {
-        MEDIA_ERR_LOG("TPlayResetBuffer failed , ret:%d", ret);
+        MEDIA_ERR_LOG("TPlayResetBuffer failed, ret:%d", ret);
         pthread_mutex_unlock(&schMutex_);
         return ret;
     }
     isVidContinueLost_ = false;
     ret = sinkManager_->SetSpeed(tplayAttr_.speed, tplayAttr_.direction);
     if (ret != HI_SUCCESS) {
-        MEDIA_ERR_LOG("TPlayResetBuffer failed , ret:%d", ret);
+        MEDIA_ERR_LOG("TPlayResetBuffer failed, ret:%d", ret);
     }
     curSeekOffset_ = TPlayGetSeekOffset(tplayAttr_.speed, tplayAttr_.direction);
     tplayMode_ = TPlayGetPlayMode();

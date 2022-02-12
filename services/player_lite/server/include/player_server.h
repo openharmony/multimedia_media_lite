@@ -77,6 +77,7 @@ private:
     void SetParameter(IpcIo *req, IpcIo *reply);
     void SetAudioStreamType(IpcIo *req, IpcIo *reply);
     void GetAudioStreamType(IpcIo *req, IpcIo *reply);
+    void SetStreamSource(IpcIo *reply);
 };
 }
 }

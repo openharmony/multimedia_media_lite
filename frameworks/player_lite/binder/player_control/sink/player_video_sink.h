@@ -64,6 +64,9 @@ private:
     int32_t WriteToVideoDevice(OutputInfo &renderFrame);
     void QueueRenderFrame(OutputInfo &frame, bool cacheQueue);
     void CheckConfigVideoOutput(void);
+    void SetDefaultDisplayRegionInfo(void);
+    void UpdateDisplayRegionInfo(int32_t x, int32_t y, int32_t w, int32_t h);
+    void CreateAndConfigLayer(void);
 
     SinkAttr attr_;
     float speed_;

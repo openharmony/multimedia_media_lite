@@ -26,6 +26,8 @@ const float VIDEO_FRAME_RATE_MAX = 120.0f;
 const int32_t FLOAT_INT_SCALE = 1000;
 const int32_t SS2US = 1000000;
 const int32_t US2MS = 1000;
+const int32_t DEFUALT_REGION_WIDTH = 480;
+const int32_t DEFUALT_REGION_HEIGHT = 480;
 
 #define CHECK_FAILED_RETURN(value, target, ret, printfString) \
 do { \
@@ -63,7 +65,7 @@ VideoSink::VideoSink(void)
     renderFrameCnt_(0), renderMode_(RENDER_MODE_NORMAL), rendStartTime_(-1), lastRendPts_(AV_INVALID_PTS),
     recievedEos_(false), EosPts_(AV_INVALID_PTS), pauseAfterPlay_(false), firstVidRend_(false),
     lastRendCnt_(0), vidRendStartTime_(AV_INVALID_PTS), eosSended_(false), lastConfigRegionX_(-1),
-    lastConfigRegionY_(-1), lastConfigRegionW_(), lastConfigRegionH_(-1)
+    lastConfigRegionY_(-1), lastConfigRegionW_(-1), lastConfigRegionH_(-1)
 {
     ResetRendStartTime();
     attr_.sinkType = SINK_TYPE_BUT;
@@ -127,33 +129,36 @@ void VideoSink::GetStatus(VideoSinkStatus &status)
     status.fpsDecimal = 0;
 }
 
-void VideoSink::CheckConfigVideoOutput(void)
+void VideoSink::SetDefaultDisplayRegionInfo(void)
 {
-    Surface *surface = attr_.vidAttr.surface;
-    if (surface == nullptr) {
-        return;
-    }
-    IRect attr;
-    uint32_t devId = 0;
-    uint32_t layerId = 0;
-    int32_t x = std::stoi(surface->GetUserData("region_position_x"));
-    int32_t y = std::stoi(surface->GetUserData("region_position_y"));
-    int32_t w = std::stoi(surface->GetUserData("region_width"));
-    int32_t h = std::stoi(surface->GetUserData("region_height"));
-    /* no need to repeat operation */
-    if (x == lastConfigRegionX_ && y == lastConfigRegionY_ && w == lastConfigRegionW_ && h == lastConfigRegionH_) {
-        return;
-    }
+    lastConfigRegionX_ = 0;
+    lastConfigRegionY_ = 0;
+    lastConfigRegionW_ = DEFUALT_REGION_WIDTH;
+    lastConfigRegionH_ = DEFUALT_REGION_HEIGHT;
+}
+
+void VideoSink::UpdateDisplayRegionInfo(int32_t x, int32_t y, int32_t w, int32_t h)
+{
     lastConfigRegionX_ = x;
     lastConfigRegionY_ = y;
     lastConfigRegionW_ = w;
     lastConfigRegionH_ = h;
+}
 
-    int32_t right = x + w - 1;
-    int32_t botttom = y + h - 1;
+void VideoSink::CreateAndConfigLayer(void)
+{
+    int32_t x;
+    int32_t y;
+    int32_t w;
+    int32_t h;
+    IRect attr;
+    uint32_t devId = 0;
+    uint32_t layerId = 0;
+    int32_t right = lastConfigRegionX_ + lastConfigRegionW_ - 1;
+    int32_t botttom = lastConfigRegionY_ + lastConfigRegionH_ - 1;
     /* Make sure the coordinates are even */
-    x = x - x % 2;
-    y = y - y % 2;
+    x = lastConfigRegionX_ - lastConfigRegionX_ % 0x2;
+    y = lastConfigRegionY_ - lastConfigRegionY_ % 0x2;
     w = right - x + 1;
     h = botttom - y + 1;
     w = w + w % 2;
@@ -169,6 +174,24 @@ void VideoSink::CheckConfigVideoOutput(void)
         layerFuncs_->CreateLayer(devId, &lInfo, &layerId);
         layerFuncs_->SetLayerSize(devId, layerId, &attr);
     }
+
+}
+
+void VideoSink::CheckConfigVideoOutput(void)
+{
+    Surface *surface = attr_.vidAttr.surface;
+    /* set default region if not set */
+    if (surface == nullptr) {
+        SetDefaultDisplayRegionInfo();
+        return CreateAndConfigLayer();
+    }
+    int32_t x = std::stoi(surface->GetUserData("region_position_x"));
+    int32_t y = std::stoi(surface->GetUserData("region_position_y"));
+    int32_t w = std::stoi(surface->GetUserData("region_width"));
+    int32_t h = std::stoi(surface->GetUserData("region_height"));
+    UpdateDisplayRegionInfo(x, y, w, h);
+
+    CreateAndConfigLayer();
 }
 
 int32_t VideoSink::Start()

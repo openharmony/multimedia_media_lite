@@ -30,7 +30,7 @@ const int64_t AUDIO_SOURCE_TIME_US_S = 1000000ULL;   /* us to s */
 const int64_t AUDIO_SOURCE_TIME_NS_US = 1000ULL;     /* ns  to us */
 
 RecorderAudioSource::RecorderAudioSource()
-    :audioCap_(new(std::nothrow) AudioCapturer()),
+    :audioCap_(new(std::nothrow) AudioCapturerImpl()),
      framesize_(0),
      buffer_(nullptr),
      frameSeq_(0)
@@ -58,7 +58,7 @@ int32_t RecorderAudioSource::Init(const RecorderAudioSourceConfig &sourceConfig)
     info.streamType = TYPE_MEDIA;
     info.bitWidth = BIT_WIDTH_16;
     if ((ret = audioCap_->SetCapturerInfo(info)) != SUCCESS) {
-        MEDIA_ERR_LOG("Can't SetCapturerInfo ret:x%x", ret);
+        MEDIA_ERR_LOG("Can't AudioCapturerImpl ret:x%x", ret);
         return ret;
     }
     uint64_t frameCnt = audioCap_->GetFrameCount();
@@ -78,8 +78,8 @@ int32_t RecorderAudioSource::Init(const RecorderAudioSourceConfig &sourceConfig)
 
 int32_t RecorderAudioSource::Start()
 {
-    if (audioCap_ == nullptr || !audioCap_->Start()) {
-        MEDIA_ERR_LOG("AudioCapturer Can't Start");
+    if (audioCap_ == nullptr || !audioCap_->Record()) {
+        MEDIA_ERR_LOG("AudioCapturerImpl Can't Start");
         return ERR_UNKNOWN;
     }
     return SUCCESS;
@@ -105,7 +105,7 @@ int32_t RecorderAudioSource::AcquireBuffer(RecorderSourceBuffer &buffer, bool is
     CHK_NULL_RETURN(audioCap_);
     int32_t readLen = audioCap_->Read(buffer_, framesize_, isBlocking);
     if (readLen <= SUCCESS || readLen > static_cast<int32_t>(framesize_)) {
-        MEDIA_ERR_LOG("audioCap Read failed ret:0x%x", readLen);
+        MEDIA_ERR_LOG("AudioCapturerImpl Read failed ret:0x%x", readLen);
         return ERR_READ_BUFFER;
     }
     frameSeq_++;
@@ -115,8 +115,8 @@ int32_t RecorderAudioSource::AcquireBuffer(RecorderSourceBuffer &buffer, bool is
     buffer.dataSeq = frameSeq_;
     Timestamp timestamp;
     Timestamp::Timebase base = Timestamp::Timebase::MONOTONIC;
-    if (!audioCap_->GetAudioTime(timestamp, base)) {
-        MEDIA_ERR_LOG("AudioCapturer Can't GetAudioTime");
+    if (!audioCap_->GetTimestamp(timestamp, base)) {
+        MEDIA_ERR_LOG("AudioCapturerImpl Can't GetTimestamp");
         return ERR_READ_BUFFER;
     }
     int64_t timeStampSecPart = 0;
@@ -136,7 +136,7 @@ int32_t RecorderAudioSource::ReleaseBuffer(RecorderSourceBuffer &buffer)
 int32_t RecorderAudioSource::Stop()
 {
     if (audioCap_ == nullptr || !audioCap_->Stop()) {
-        MEDIA_ERR_LOG("AudioCapturer Can't Stop");
+        MEDIA_ERR_LOG("AudioCapturerImpl Can't Stop");
         return ERR_UNKNOWN;
     }
     return SUCCESS;
@@ -155,7 +155,7 @@ int32_t RecorderAudioSource::Pause()
 int32_t RecorderAudioSource::Release()
 {
     if (audioCap_ == nullptr || !audioCap_->Release()) {
-        MEDIA_ERR_LOG("AudioCapturer Can't Release");
+        MEDIA_ERR_LOG("AudioCapturerImpl Can't Release");
         return ERR_UNKNOWN;
     }
     return SUCCESS;

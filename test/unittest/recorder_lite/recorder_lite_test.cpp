@@ -59,7 +59,7 @@ void TestVideoRecorderCallback::OnInfo(int32_t type, int32_t extra)
     cout << "TestVideoRecorderCallback::OnInfo ..." << endl;
 }
 }
-
+#if 0
 /*
  * Feature: Recorder
  * Function: Start Recording
@@ -90,7 +90,7 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_Start_test_001, Level1)
     delete recInstance;
     recInstance = nullptr;
 }
-
+#endif
 /*
  * Feature: Recorder
  * Function: Start Recording
@@ -152,7 +152,7 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_Pause_test_001, Level1)
     delete recInstance;
     recInstance = nullptr;
 }
-
+#if 0
 /*
  * Feature: Recorder
  * Function: Pause Recording
@@ -187,7 +187,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_Pause_test_002, Level1)
     delete recInstance;
     recInstance = nullptr;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: Resume Recording
@@ -222,7 +223,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_Resume_test_001, Level1)
     delete recInstance;
     recInstance = nullptr;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: Resume Recording
@@ -259,7 +261,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_Resume_test_002, Level1)
     delete recInstance;
     recInstance = nullptr;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: Stop Recording
@@ -292,7 +295,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_Stop_test_001, Level1)
     delete recInstance;
     recInstance = nullptr;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: Stop Recording
@@ -327,7 +331,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_Stop_test_002, Level1)
     delete recInstance;
     recInstance = nullptr;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: Reset Recording
@@ -360,7 +365,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_Reset_test_001, Level1)
     delete recInstance;
     recInstance = nullptr;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: Reset Recording
@@ -395,7 +401,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_Reset_test_002, Level1)
     delete recInstance;
     recInstance = nullptr;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: Release Recording
@@ -427,7 +434,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_Release_test_001, Level1)
     delete recInstance;
     recInstance = nullptr;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: Reset Recording
@@ -461,7 +469,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_Release_test_002, Level1)
     delete recInstance;
     recInstance = nullptr;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetFileSplitDuration for Recording
@@ -497,7 +506,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetFileSplitDuration_test_001, Leve
     delete recInstance;
     recInstance = nullptr;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetFileSplitDuration for Recording
@@ -533,7 +543,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetFileSplitDuration_test_002, Leve
     delete recInstance;
     recInstance = nullptr;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetFileSplitDuration for Recording
@@ -569,7 +580,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetFileSplitDuration_test_003, Leve
     delete recInstance;
     recInstance = nullptr;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetFileSplitDuration for Recording
@@ -607,7 +619,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetFileSplitDuration_test_004, Leve
     delete recInstance;
     recInstance = nullptr;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetVideoSource
@@ -627,7 +640,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetVideoSource_test_001, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetVideoSource
@@ -647,7 +661,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetVideoSource_test_002, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetVideoSource
@@ -667,7 +682,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetVideoSource_test_003, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetVideoSource
@@ -687,7 +703,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetVideoSource_test_004, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetVideoSource
@@ -710,7 +727,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetVideoSource_test_005, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetVideoEncoder
@@ -730,7 +748,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetVideoEncoder_test_001, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetVideoEncoder
@@ -748,7 +767,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetVideoEncoder_test_002, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetVideoEncoder
@@ -768,7 +788,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetVideoEncoder_test_003, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetVideoEncoder
@@ -788,7 +809,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetVideoEncoder_test_004, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetVideoEncoder
@@ -808,7 +830,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetVideoEncoder_test_005, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetVideoSize
@@ -830,7 +853,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetVideoSize_test_001, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetVideoSize
@@ -852,7 +876,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetVideoSize_test_002, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetVideoSize
@@ -872,7 +897,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetVideoSize_test_003, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetVideoSize
@@ -892,7 +918,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetVideoSize_test_004, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetVideoSize
@@ -912,7 +939,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetVideoSize_test_005, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetVideoFrameRate
@@ -933,6 +961,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetVideoFrameRate_test_001, Level1)
     delete recorder;
     recorder = NULL;
 }
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetVideoFrameRate
@@ -953,7 +983,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetVideoFrameRate_test_002, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetVideoFrameRate
@@ -972,7 +1003,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetVideoFrameRate_test_003, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetVideoEncodingBitRate
@@ -993,7 +1025,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetVideoEncodingBitRate_test_001, L
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetVideoEncodingBitRate
@@ -1014,7 +1047,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetVideoEncodingBitRate_test_002, L
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetVideoEncodingBitRate
@@ -1033,7 +1067,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetVideoEncodingBitRate_test_003, L
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetCaptureRate
@@ -1054,7 +1089,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetCaptureRate_test_001, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetCaptureRate
@@ -1073,7 +1109,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetCaptureRate_test_002, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetCaptureRate
@@ -1094,7 +1131,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetCaptureRate_test_003, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioSource
@@ -1112,7 +1150,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioSource_test_001, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioSource
@@ -1130,7 +1169,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioSource_test_002, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioSource
@@ -1155,7 +1195,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioSource_test_003, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioEncoder
@@ -1175,7 +1216,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioEncoder_test_001, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioEncoder
@@ -1195,7 +1237,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioEncoder_test_002, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioEncoder
@@ -1213,7 +1256,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioEncoder_test_003, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioEncoder
@@ -1233,7 +1277,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioEncoder_test_004, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioEncoder
@@ -1253,7 +1298,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioEncoder_test_005, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioEncoder
@@ -1273,7 +1319,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioEncoder_test_006, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioEncoder
@@ -1293,7 +1340,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioEncoder_test_007, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioSampleRate
@@ -1314,7 +1362,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioSampleRate_test_001, Level1
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioSampleRate
@@ -1333,7 +1382,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioSampleRate_test_002, Level1
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioSampleRate
@@ -1354,7 +1404,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioSampleRate_test_003, Level1
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioSampleRate
@@ -1375,7 +1426,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioSampleRate_test_004, Level1
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioSampleRate
@@ -1396,7 +1448,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioSampleRate_test_005, Level1
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioSampleRate
@@ -1417,7 +1470,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioSampleRate_test_006, Level1
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioSampleRate
@@ -1438,7 +1492,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioSampleRate_test_007, Level1
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioChannels
@@ -1459,7 +1514,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioChannels_test_001, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioChannels
@@ -1480,7 +1536,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioChannels_test_002, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioChannels
@@ -1501,7 +1558,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioChannels_test_003, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioChannels
@@ -1522,7 +1580,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioChannels_test_004, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioChannels
@@ -1543,7 +1602,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioChannels_test_005, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioChannels
@@ -1564,7 +1624,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioChannels_test_006, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioChannels
@@ -1583,7 +1644,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioChannels_test_007, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioEncodingBitRate
@@ -1604,7 +1666,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioEncodingBitRate_test_001, L
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioEncodingBitRate
@@ -1625,7 +1688,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioEncodingBitRate_test_002, L
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioEncodingBitRate
@@ -1646,7 +1710,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioEncodingBitRate_test_003, L
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioEncodingBitRate
@@ -1667,7 +1732,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioEncodingBitRate_test_004, L
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioEncodingBitRate
@@ -1688,7 +1754,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioEncodingBitRate_test_005, L
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioEncodingBitRate
@@ -1709,7 +1776,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioEncodingBitRate_test_006, L
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioEncodingBitRate
@@ -1728,7 +1796,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioEncodingBitRate_test_007, L
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioEncodingBitRate
@@ -1749,7 +1818,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioEncodingBitRate_test_008, L
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioEncodingBitRate
@@ -1770,7 +1840,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioEncodingBitRate_test_009, L
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioEncodingBitRate
@@ -1791,7 +1862,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioEncodingBitRate_test_010, L
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioEncodingBitRate
@@ -1812,7 +1884,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioEncodingBitRate_test_011, L
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetAudioEncodingBitRate
@@ -1833,7 +1906,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetAudioEncodingBitRate_test_012, L
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: Prepare
@@ -1856,7 +1930,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_Prepare_test_001, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: GetSurface
@@ -1877,7 +1952,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_GetSurface_test_001, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: GetSurface
@@ -1895,7 +1971,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_GetSurface_test_002, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetMaxDuration
@@ -1912,7 +1989,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetMaxDuration_test_001, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetMaxDuration
@@ -1929,7 +2007,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetMaxDuration_test_002, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetMaxDuration
@@ -1946,7 +2025,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetMaxDuration_test_003, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetMaxDuration
@@ -1963,7 +2043,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetMaxDuration_test_004, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetMaxFileSize
@@ -1980,7 +2061,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetMaxFileSize_test_001, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetMaxFileSize
@@ -1997,7 +2079,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetMaxFileSize_test_002, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetOutputFile
@@ -2014,7 +2097,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetOutputFile_test_001, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetNextOutputFile
@@ -2031,7 +2115,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetNextOutputFile_test_001, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetOutputPath
@@ -2049,7 +2134,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetOutputPath_test_001, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetOutputPath
@@ -2066,7 +2152,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetOutputFormat_test_001, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetOutputPath
@@ -2083,7 +2170,8 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetOutputFormat_test_002, Level1)
     delete recorder;
     recorder = NULL;
 }
-
+#endif
+#if 0
 /*
  * Feature: Recorder
  * Function: SetOutputPath
@@ -2100,4 +2188,5 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_SetOutputFormat_test_003, Level1)
     delete recorder;
     recorder = NULL;
 }
+#endif
 } // namespace OHOS

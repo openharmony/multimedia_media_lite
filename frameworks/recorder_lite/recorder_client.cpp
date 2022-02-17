@@ -120,11 +120,6 @@ Recorder::RecorderImpl::RecorderImpl()
         throw runtime_error("Ipc proxy Invoke failed.");
     }
 
-    ret = RegisterIpcCallback(RecorderCallbackSvc, 0, IPC_WAIT_FOREVER, &sid_, callback_.get());
-    if (ret != LITEIPC_OK) {
-        MEDIA_ERR_LOG("RegisteIpcCallback failed, ret=%d", ret);
-        throw runtime_error("Ipc proxy RegisterIpcCallback failed.");
-    }
     MEDIA_ERR_LOG("Create recorder client succeed.");
 }
 
@@ -494,19 +489,24 @@ int32_t Recorder::RecorderImpl::SetRecorderCallback(const std::shared_ptr<Record
         MEDIA_ERR_LOG("SetRecorderCallback callback is nullptr");
         return ERR_INVALID_PARAM;
     }
-
+    callback_ = callback;
+    int32_t ret = RegisterIpcCallback(RecorderCallbackSvc, 0, IPC_WAIT_FOREVER, &sid_, callback_.get());
+    if (ret != LITEIPC_OK) {
+        MEDIA_ERR_LOG("RegisteIpcCallback failed, ret=%d", ret);
+        throw runtime_error("Ipc proxy RegisterIpcCallback failed.");
+    }
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 1);
     IpcIoPushSvc(&io, &sid_);
     CallBackPara para = {.funcId = REC_FUNC_SET_RECORDERCALLBACK, .ret = MEDIA_IPC_FAILED};
-    int32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_RECORDERCALLBACK, &io, &para, SimpleCallback);
+    ret = proxy_->Invoke(proxy_, REC_FUNC_SET_RECORDERCALLBACK, &io, &para, SimpleCallback);
     if (ret != 0) {
         MEDIA_ERR_LOG("SetRecorderCallback failed, ret=%d", ret);
         return -1;
     }
-    if (para.ret == 0) {
-        callback_ = callback;
+    if (para.ret != 0) {
+        callback_ = NULL;
     }
 
     return para.ret;

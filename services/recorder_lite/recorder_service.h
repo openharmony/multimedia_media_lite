@@ -35,7 +35,7 @@ public:
 
 private:
     RecorderClientMng() = default;
-
+    SvcIdentity svc_;
     pid_t client_ = -1;
     RecorderImpl *rec_ = nullptr;
 };

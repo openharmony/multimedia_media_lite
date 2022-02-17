@@ -196,11 +196,11 @@ void RecorderClientMng::Dispatch(int32_t funcId, pid_t pid, IpcIo *req, IpcIo *r
             break;
         }
         case REC_FUNC_SET_RECORDERCALLBACK: {
-            SvcIdentity *svc = IpcIoPopSvc(req);
+            svc_ = *IpcIoPopSvc(req);
 #ifdef __LINUX__
-            BinderAcquire(svc->ipcContext, svc->handle);
+            BinderAcquire(svc_.ipcContext, svc_.handle);
 #endif
-            std::shared_ptr<RecorderCallbackClient> client(new RecorderCallbackClient(svc));
+            std::shared_ptr<RecorderCallbackClient> client(new RecorderCallbackClient(&svc_));
             int32_t ret = recorder->SetRecorderCallback(client);
             IpcIoPushInt32(reply, ret);
             break;

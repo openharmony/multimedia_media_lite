@@ -160,7 +160,9 @@ public:
         /** The start time position of the recording file is not supported. */
         RECORDER_INFO_FILE_START_TIME_MS,
         /** Next file fd is needed but not set. */
-        RECORDER_INFO_NEXT_FILE_FD_NOT_SET
+        RECORDER_INFO_NEXT_FILE_FD_NOT_SET,
+        /** No frame data is sent to recorder. */
+        RECORDER_INFO_NO_FRAME_DATA
     };
 
     /**

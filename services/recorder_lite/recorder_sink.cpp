@@ -33,6 +33,7 @@ RecorderSink::RecorderSink()
      started_(false),
      outputFormat_(OUTPUT_FORMAT_INVALID),
      outputFd_(-1),
+     outputNextFd_(-1),
      path_("/userdata"),
      maxFileSize_(-1),
      maxDuration_(-1)
@@ -161,7 +162,7 @@ int32_t RecorderSink::SetNextOutputFile(int32_t fd)
     if (CheckPrepared() != SUCCESS) {
         return ERR_ILLEGAL_STATE;
     }
-    outputFd_ = fd;
+    outputNextFd_ = fd;
     return FormatMuxerSetNextOutputFile(formatMuxerHandle_, fd);
 }
 
@@ -230,6 +231,11 @@ int32_t RecorderSink::SendCallbackInfo(int32_t type, int32_t extra)
         case MUXER_INFO_FILE_SPLIT_FINISHED:
         case MUXER_INFO_FILE_START_TIME_MS:
         case MUXER_INFO_NEXT_FILE_FD_NOT_SET:
+        case MUXER_INFO_NO_FRAME_DATA:
+            if (type == MUXER_INFO_NEXT_OUTPUT_FILE_STARTED && outputFd_ != -1 && outputNextFd_ != -1) {
+                close(outputFd_);
+                outputFd_ = outputNextFd_;
+            }
             recCallBack_->OnInfo(type, extra);
             return SUCCESS;
         default:
@@ -364,9 +370,29 @@ int32_t RecorderSink::Start()
     return SUCCESS;
 }
 
+void RecorderSink::CloseFd()
+{
+    if (outputFd_ > 0) {
+        FILE *fp = fdopen(outputFd_, "r");
+        if (fp == nullptr) {
+            MEDIA_ERR_LOG("fdopen failed");
+            return;
+        }
+        fflush(fp);
+        fsync(outputFd_);
+        fclose(fp);
+        outputFd_ = -1;
+    }
+    if (outputNextFd_ > 0) {
+        close(outputNextFd_);
+        outputNextFd_ = -1;
+    }
+}
+
 int32_t RecorderSink::Stop(bool block)
 {
     if (!started_) {
+        CloseFd();
         MEDIA_INFO_LOG("RecorderSink is stoped or not started");
         return SUCCESS;
     }
@@ -379,19 +405,8 @@ int32_t RecorderSink::Stop(bool block)
         threadRunning = false;
         sem_post(&sem);
     }
-
+    CloseFd();
     started_ = false;
-    if (outputFd_ > 0) {
-        FILE *fp = fdopen(outputFd_, "r");
-        if (fp == nullptr) {
-            MEDIA_ERR_LOG("fdopen failed");
-            return -1;
-        }
-        fflush(fp);
-        fsync(outputFd_);
-        fclose(fp);
-        outputFd_ = -1;
-    }
 
     return SUCCESS;
 }
@@ -413,9 +428,9 @@ int32_t RecorderSink::Reset()
             return ret;
         }
     }
+    CloseFd();
     prepared_ = false;
     outputFormat_ = OUTPUT_FORMAT_INVALID;
-    outputFd_ = -1;
     maxFileSize_ = -1;
     maxDuration_ = -1;
     return SUCCESS;
@@ -435,6 +450,7 @@ int32_t RecorderSink::Release()
         }
         started_ = false;
     }
+    CloseFd();
     ret = FormatMuxerDestroy(formatMuxerHandle_);
     if (ret != SUCCESS) {
         MEDIA_ERR_LOG("FormatMuxerDestroy failed ret:%d", ret);

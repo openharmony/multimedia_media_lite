@@ -27,6 +27,7 @@
 
 namespace OHOS {
 namespace Media {
+constexpr float RECORDER_DEFAULT_SPEED = 1.0;
 constexpr uint32_t RECORDER_AUDIO_THREAD_PRIORITY = 19;
 constexpr uint32_t RECORDER_VIDEO_THREAD_PRIORITY = 20;
 
@@ -59,7 +60,7 @@ static void SetDefaultVideoConfig(RecorderVideoSourceConfig &config)
     config.frameRate = frameRate;
     config.bitRate = bitRate;
     config.captureRate = frameRate;
-    config.speed = 1.0;
+    config.speed = RECORDER_DEFAULT_SPEED;
 }
 
 static void SetDefaultAudioConfig(RecorderAudioSourceConfig &config)
@@ -689,7 +690,7 @@ int32_t RecorderImpl::SetOutputFile(int32_t fd)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_INFO_LOG("Output File :%d Set", fd);
-    if (IsPrepared()) {
+    if (status_ != INITIALIZED && status_ != STOPPED) {
         MEDIA_ERR_LOG("IsPrepared status:%u", status_);
         return ERR_ILLEGAL_STATE;
     }
@@ -888,7 +889,7 @@ int32_t RecorderImpl::GetVideoTrackSource(const RecorderVideoSourceConfig &video
     trackSource.trackSourceInfo.videoInfo.bitRate = videoSourceConfig.bitRate;
     trackSource.trackSourceInfo.videoInfo.frameRate = videoSourceConfig.frameRate;
     trackSource.trackSourceInfo.videoInfo.keyFrameInterval = videoSourceConfig.frameRate;
-    trackSource.trackSourceInfo.videoInfo.speed = 1.0;
+    trackSource.trackSourceInfo.videoInfo.speed = RECORDER_DEFAULT_SPEED;
     return SUCCESS;
 }
 
@@ -951,6 +952,10 @@ int32_t RecorderImpl::GetDataTrackSource(TrackSource &trackSource)
 
 int32_t RecorderImpl::PrepareRecorderSink()
 {
+    if (IsPrepared()) {
+        MEDIA_ERR_LOG("IsPrepared status:%u", status_);
+        return ERR_ILLEGAL_STATE;
+    }
     if (recorderSink_ == nullptr) {
         MEDIA_ERR_LOG("recorderSink_ is null");
         return ERR_UNKNOWN;

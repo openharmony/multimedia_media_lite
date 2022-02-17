@@ -75,11 +75,13 @@ public:
 private:
     int32_t CheckPrepared();
     int32_t CheckStarted() const;
+    void CloseFd();
     void *formatMuxerHandle_;
     bool prepared_;
     bool started_;
     OutputFormat outputFormat_;
     int32_t outputFd_;
+    int32_t outputNextFd_;
     std::string path_;
     int64_t maxFileSize_;
     int64_t maxDuration_;

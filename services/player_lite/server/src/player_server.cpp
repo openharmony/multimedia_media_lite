@@ -289,13 +289,52 @@ int32_t SurfaceRequestHandler(const IpcContext* context, void* ipcMsg, IpcIo* io
     return 0;
 }
 
+void PlayerServer::SetStreamSource(IpcIo *reply)
+{
+    MEDIA_INFO_LOG("process in");
+    stream_ = std::make_shared<ServerStreamSource>();
+    Format formats;
+    formats.PutStringValue(CODEC_MIME, MIME_AUDIO_AAC);
+    Source streamSource(stream_, formats);
+    int32_t ret = player_->SetSource(streamSource);
+    IpcIoPushInt32(reply, ret);
+    if (ret == 0) {
+        Surface* surface = Surface::CreateSurface();
+        surface->SetUsage(BUFFER_CONSUMER_USAGE_HARDWARE);
+        surface->SetSize(READ_LEN);
+        if (sid_ == nullptr) {
+            sid_ = new SvcIdentity();
+        }
+        ret = RegisterIpcCallback(SurfaceRequestHandler, 0, IPC_WAIT_FOREVER, sid_, surface);
+        if (ret != LITEIPC_OK) {
+            MEDIA_ERR_LOG("RegisterIpcCallback failed.");
+        }
+        stream_->SetSurface(surface);
+        IpcIoPushSvc(reply, sid_);
+        pthread_attr_t attr;
+        pthread_mutex_init(&g_streamThreadControl.mutex, nullptr);
+        ServerStreamSource* serverStream = reinterpret_cast<ServerStreamSource*>(stream_.get());
+        serverStream->threadRuning = true;
+        pthread_attr_init(&attr);
+        pthread_create(&g_streamThreadControl.process, &attr, streamProcess, stream_.get());
+    }
+}
+
 void PlayerServer::SetSource(IpcIo *req, IpcIo *reply)
 {
     MEDIA_INFO_LOG("process in");
     int32_t sourceType = IpcIoPopInt32(req);
+
     if (player_ == nullptr) {
         MEDIA_INFO_LOG("player nullptr");
         player_ = PlayerFactory::CreatePlayer();
+    }
+
+    int32_t state = 0;
+    /* only support set source at state idle */
+    if (player_ == nullptr || player_->GetPlayerState(state) != 0 || state != static_cast<int32_t> (PLAYER_IDLE)) {
+        IpcIoPushInt32(reply, -1);
+        return;
     }
     switch ((SourceType)sourceType) {
         case SourceType::SOURCE_TYPE_URI: {
@@ -311,32 +350,7 @@ void PlayerServer::SetSource(IpcIo *req, IpcIo *reply)
             IpcIoPushInt32(reply, -1);
             break;
         case SourceType::SOURCE_TYPE_STREAM:{
-            stream_ = std::make_shared<ServerStreamSource>();
-            Format formats;
-            formats.PutStringValue(CODEC_MIME, MIME_AUDIO_AAC);
-            Source streamSource(stream_, formats);
-            int32_t ret = player_->SetSource(streamSource);
-            IpcIoPushInt32(reply, ret);
-            if (ret == 0) {
-                Surface* surface = Surface::CreateSurface();
-                surface->SetUsage(BUFFER_CONSUMER_USAGE_HARDWARE);
-                surface->SetSize(READ_LEN);
-                if (sid_ == nullptr) {
-                    sid_ = new SvcIdentity();
-                }
-                ret = RegisterIpcCallback(SurfaceRequestHandler, 0, IPC_WAIT_FOREVER, sid_, surface);
-                if (ret != LITEIPC_OK) {
-                    MEDIA_ERR_LOG("RegisterIpcCallback failed.");
-                }
-                stream_->SetSurface(surface);
-                IpcIoPushSvc(reply, sid_);
-                pthread_attr_t attr;
-                pthread_mutex_init(&g_streamThreadControl.mutex, nullptr);
-                ServerStreamSource* serverStream = reinterpret_cast<ServerStreamSource*>(stream_.get());
-                serverStream->threadRuning = true;
-                pthread_attr_init(&attr);
-                pthread_create(&g_streamThreadControl.process, &attr, streamProcess, stream_.get());
-            }
+            SetStreamSource(reply);
             break;
         }
         default:
@@ -528,7 +542,7 @@ void PlayerServer::Reset(IpcIo *req, IpcIo *reply)
         IpcIoPushInt32(reply, player_->Reset());
         return;
     }
-    IpcIoPushInt32(reply, -1);
+    IpcIoPushInt32(reply, 0); /* return success if there is no need to do anything */
 }
 
 void PlayerServer::Release(IpcIo *req, IpcIo *reply)
@@ -556,7 +570,7 @@ void PlayerServer::Release(IpcIo *req, IpcIo *reply)
         IpcIoPushInt32(reply, ret);
         return;
     }
-    IpcIoPushInt32(reply, -1);
+    IpcIoPushInt32(reply, 0); /* return success if there is no need to do anything */
 }
 
 void PlayerServer::SetPlayerCallback(IpcIo *req, IpcIo *reply)
@@ -589,8 +603,8 @@ void PlayerServer::GetPlayerState(IpcIo *req, IpcIo *reply)
         IpcIoPushInt32(reply, state);
         return;
     }
-    IpcIoPushInt32(reply, -1);
-    IpcIoPushInt32(reply, state);
+    IpcIoPushInt32(reply, 0);
+    IpcIoPushInt32(reply, PLAYER_IDLE); /* return inited state if not operate setsource */
 }
 
 void PlayerServer::SetPlaybackSpeed(IpcIo *req, IpcIo *reply)

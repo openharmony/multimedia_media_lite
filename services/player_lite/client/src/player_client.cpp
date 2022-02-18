@@ -236,7 +236,7 @@ int32_t Player::PlayerClient::SetSource(const Source &source)
         case SourceType::SOURCE_TYPE_FD:
             MEDIA_ERR_LOG("unsupport now: SOURCE_TYPE_FD");
             break;
-        case SourceType::SOURCE_TYPE_STREAM:{
+        case SourceType::SOURCE_TYPE_STREAM: {
             break;
         }
         default:
@@ -671,7 +671,7 @@ int32_t Player::PlayerClient::SetParameter(const Format &params)
     std::map<std::string, FormatData *> formatParam = params.GetFormatMap();
     IpcIoPushInt32(&io, formatParam.size()); /* count */
 
-    std::map<std::string, FormatData *>::iterator iter;  
+    std::map<std::string, FormatData *> ::iterator iter;  
     for (iter = formatParam.begin(); iter != formatParam.end(); iter++) {
         IpcIoPushString(&io, iter->first.c_str()); /* key */
         FormatData *data = iter->second;

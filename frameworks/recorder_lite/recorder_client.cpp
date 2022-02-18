@@ -602,7 +602,10 @@ int32_t Recorder::RecorderImpl::SetFileSplitDuration(FileSplitType type, int64_t
     return para.ret;
 }
 
-int32_t Recorder::RecorderImpl::SetParameter(int32_t sourceId, const Format &format) { return -1; }
+int32_t Recorder::RecorderImpl::SetParameter(int32_t sourceId, const Format &format)
+{
+    return -1;
+}
 
 int32_t Recorder::RecorderImpl::SetDataSource(DataSourceType source, int32_t &sourceId)
 {

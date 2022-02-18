@@ -385,8 +385,13 @@ int32_t PlayerControl::Seek(int64_t timeInMs)
         MEDIA_ERR_LOG("invalid event seek at current state");
         return HI_ERR_PLAYERCONTROL_ILLEGAL_STATE_ACTION;
     }
-    seekToTimeMs_ = timeInMs;
-    MEDIA_INFO_LOG("seek out %lld", seekToTimeMs_);
+
+    if (seekTabel_[0] == -1) {
+        seekTabel_[0] = timeInMs;
+    } else if (seekTabel_[1] == -1) {
+        seekTabel_[1] = timeInMs;
+    }
+    MEDIA_INFO_LOG("seek out %lld", timeInMs);
     return HI_SUCCESS;
 }
 
@@ -1455,14 +1460,27 @@ int32_t PlayerControl::DoPause(void)
 
 int32_t PlayerControl::DoSeekIfNeed(void)
 {
-    if (seekToTimeMs_ == -1) {
+    uint32_t index = 0;
+    uint32_t seekCnt = 0;
+    if (seekTabel_[0] == -1 && seekTabel_[1] == -1) {
         return HI_SUCCESS;
     }
-    int32_t ret = AyncSeek(seekToTimeMs_);
-    if (ret != HI_SUCCESS) {
-        MEDIA_ERR_LOG(" AyncSeek  failed , ret:%d", ret);
-        NotifyError(PLAYERCONTROL_ERROR_VID_PLAY_FAIL);
-        return ret;
+
+    while (seekCnt < 0x2) {
+        if (seekTabel_[index] != -1) {
+            int32_t ret = AyncSeek(seekTabel_[index]);
+            if (ret != HI_SUCCESS) {
+                MEDIA_ERR_LOG(" AyncSeek  failed , ret:%d", ret);
+                NotifyError(PLAYERCONTROL_ERROR_VID_PLAY_FAIL);
+                return ret;
+            }
+            seekCnt++;
+        }
+        seekTabel_[index] = -1;
+        if (seekTabel_[0] == -1 && seekTabel_[1] == -1) {
+            break;
+        }
+        index = (index + 1) & 0x1;
     }
     strmReadEnd_ = false;
     isAudPlayEos_ = false;
@@ -1470,7 +1488,7 @@ int32_t PlayerControl::DoSeekIfNeed(void)
     hasRenderVideoEos_ = false;
     hasRenderAudioEos_ = false;
     isPlayEnd_ = false;
-    seekToTimeMs_ = -1;
+
     firstAudioFrameAfterSeek_ = true;
     firstVideoFrameAfterSeek_ = true;
     MEDIA_INFO_LOG("seek end");
@@ -1590,6 +1608,11 @@ int32_t PlayerControl::DoTPlay(TplayAttr &trickPlayAttr)
         MEDIA_ERR_LOG("TPlayResetBuffer failed, ret:%d", ret);
     }
     curSeekOffset_ = TPlayGetSeekOffset(tplayAttr_.speed, tplayAttr_.direction);
+    /* for ts file, double step */
+    if (fmtFileInfo_.formatName != nullptr && strstr(fmtFileInfo_.formatName, "mpegts") != NULL) {
+        curSeekOffset_ = curSeekOffset_ * 0x2;
+    }
+
     tplayMode_ = TPlayGetPlayMode();
 
     lastReadPktStrmIdx_ = (uint32_t)fmtFileInfo_.s32UsedVideoStreamIndex;
@@ -1910,13 +1933,14 @@ int32_t PlayerControl::AyncSeek(int64_t seekTime)
             seekTimeInMs = currentPosition_;
         }
     }
+    currentPosition_ = seekTimeInMs;
 
     if (tplayAttr_.speed != 1.0f) {
         lastReadPktPts_ = currentPosition_;
         isTplayStartRead_ = (currentPosition_ == 0) ? false : true;
         isTplayLastFrame_ = false;
     }
-    currentPosition_ = seekTimeInMs;
+
     EventCallback(PLAYERCONTROL_EVENT_PROGRESS, &currentPosition_);
     EventCallback(PLAYERCONTROL_EVENT_SEEK_END, reinterpret_cast<void *>(&seekTimeInMs));
     return HI_SUCCESS;

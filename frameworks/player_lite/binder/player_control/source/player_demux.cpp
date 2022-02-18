@@ -226,6 +226,7 @@ int32_t PlayerDemuxer::GetFileInfo(FormatFileInfo &fileInfo)
         fileInfo.stSteamResolution[index].u32Height = 0;
     }
 
+    fileInfo.formatName = info.formatName;
     return 0;
 }
 

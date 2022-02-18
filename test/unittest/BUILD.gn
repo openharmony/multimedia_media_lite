@@ -22,6 +22,7 @@ group("lite_medialite_test") {
 
 if (ohos_build_type == "debug") {
   unittest("lite_player_unittest") {
+    output_extension = "bin"
     output_dir = "$root_out_dir/test/unittest/playerlite"
     sources = [ "player_lite/player_lite_test.cpp" ]
     cflags = [ "-Wno-error" ]
@@ -44,6 +45,7 @@ if (ohos_build_type == "debug") {
   }
 
   unittest("lite_recorder_unittest") {
+    output_extension = "bin"
     output_dir = "$root_out_dir/test/unittest/recorder"
     sources = [ "recorder_lite/recorder_lite_test.cpp" ]
     cflags = [ "-Wno-error" ]

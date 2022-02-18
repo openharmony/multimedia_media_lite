@@ -232,7 +232,7 @@ private:
     std::shared_ptr<Decoder> videoDecoder_;
     Surface *surface_;
     std::vector<PalayControlEventItem> eventQueue;
-
+    int64_t seekTabel_[0x2] = {-1, -1};
 private:
     PlayerControl(const PlayerControl &);
     PlayerControl &operator=(const PlayerControl &);

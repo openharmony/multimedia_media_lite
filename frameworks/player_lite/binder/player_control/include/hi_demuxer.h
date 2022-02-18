@@ -69,6 +69,7 @@ typedef struct {
 } StreamResolution;
 
 typedef struct {
+    char *formatName;  /**< File format name, in the unit of byte. */
     int64_t s64FileSize;  /**< File size, in the unit of byte. */
     int64_t s64StartTime; /* the media file begin time */
     int64_t s64Duration;  /**< Total duration of a file, in the unit of ms. */

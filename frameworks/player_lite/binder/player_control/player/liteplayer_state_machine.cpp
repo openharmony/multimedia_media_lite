@@ -43,6 +43,7 @@ namespace {
         { true,  true,  true,  true,  true,  true,  true },  /* Error */
         { false, true,  true,  true,  true,  true,  false },  /* setVolume */
         { true,  true,  true,  true,  true,  true,  true },  /* invoke */
+        { true,  true,  true,  false, false, false, false },  /* set audio stream type */
     };
 
     struct PlayerControlStatusMap {
@@ -183,6 +184,10 @@ int PlayerControlState::HandleMessage(const MsgInfo& msgInfo)
         case PLAYERCONTROL_MSG_INVOKE:
             CHECK_NULL_RETURN(msgInfo.msgData, HI_ERR_PLAYERCONTROL_NULL_PTR, "msgData null");
             ret = playerControlHandle_->DoInvoke(*reinterpret_cast<InvokeParameter *>(msgInfo.msgData));
+            break;
+        case PLAYERCONTROL_MSG_SET_AUDIOSTREAM_TYPE:
+            CHECK_NULL_RETURN(msgInfo.msgData, HI_ERR_PLAYERCONTROL_NULL_PTR, "msgData null");
+            ret = playerControlHandle_->DoSetAudioStreamType(*reinterpret_cast<int32_t *>(msgInfo.msgData));
             break;
         default:
             ret = HI_ERR_PLAYERCONTROL_ILLEGAL_PARAM;

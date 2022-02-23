@@ -63,6 +63,7 @@ public:
     virtual int32_t DoSetMedia(PlayerControlStreamAttr &mediaAttr) = 0;
     virtual int32_t DoTPlay(TplayAttr& trickPlayAttr) = 0;
     virtual int32_t DoInvoke(InvokeParameter& invokeParam) = 0;
+    virtual int32_t DoSetAudioStreamType(int32_t type) = 0;
     virtual void NotifyError(PlayerControlError playerError) = 0;
 };
 

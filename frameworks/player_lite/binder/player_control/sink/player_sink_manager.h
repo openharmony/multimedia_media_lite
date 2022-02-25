@@ -79,6 +79,7 @@ public:
     void RenderEos(bool isAudio);
     int DequeReleaseFrame(bool audioSink, OutputInfo &frame);
     void GetRenderPosition(int64_t &position);
+    void SetAudioStreamType(int32_t &type);
 
 private:
     int32_t Tplay(float speed, TplayDirect  tplayDirect);

@@ -255,10 +255,22 @@ void PlayerImpl::PlayerControlEventCb(void* pPlayer, PlayerControlEvent enEvent,
     }
 }
 
+void PlayerImpl::ReportVideoSizeChange(void)
+{
+    for (int i = 0; i < HI_DEMUXER_RESOLUTION_CNT; i++) {
+        if (formatFileInfo_.stSteamResolution[i].s32VideoStreamIndex == formatFileInfo_.s32UsedVideoStreamIndex) {
+            if (callback_ != nullptr) {
+                callback_->OnVideoSizeChanged(formatFileInfo_.stSteamResolution[i].u32Width,
+                    formatFileInfo_.stSteamResolution[i].u32Height);
+            }
+            break;
+        }
+    }
+}
+
 int32_t PlayerImpl::Prepare()
 {
     std::lock_guard<std::mutex> valueLock(lock_);
-    int ret;
     MEDIA_INFO_LOG("process in");
     CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
     CHK_NULL_RETURN(player_);
@@ -275,7 +287,7 @@ int32_t PlayerImpl::Prepare()
     PlayerCtrlCallbackParam param;
     param.player = this;
     param.callbackFun = PlayerControlEventCb;
-    ret = player_->RegCallback(param);
+    int ret = player_->RegCallback(param);
     if (ret != 0) {
         MEDIA_ERR_LOG("RegCallback exec failed ");
         return -1;
@@ -289,6 +301,7 @@ int32_t PlayerImpl::Prepare()
         return -1;
     }
     currentState_ = PLAYER_PREPARED;
+    (void)player_->SetAudioStreamType(audioStreamType_);
 
     ret = player_->GetFileInfo(formatFileInfo_);
     if (ret != 0) {
@@ -302,15 +315,7 @@ int32_t PlayerImpl::Prepare()
     }
 
     /* report video solution */
-    for (int i = 0; i < HI_DEMUXER_RESOLUTION_CNT; i++) {
-        if (formatFileInfo_.stSteamResolution[i].s32VideoStreamIndex == formatFileInfo_.s32UsedVideoStreamIndex) {
-            if (callback_ != nullptr) {
-                callback_->OnVideoSizeChanged(formatFileInfo_.stSteamResolution[i].u32Width,
-                    formatFileInfo_.stSteamResolution[i].u32Height);
-            }
-            break;
-        }
-    }
+    ReportVideoSizeChange();
     MEDIA_INFO_LOG("process out");
     return 0;
 }
@@ -742,6 +747,10 @@ int32_t PlayerImpl::SetAudioStreamType(int32_t type)
         return -1;
     }
     audioStreamType_ = type;
+
+    if (player_ != nullptr) {
+        player_->SetAudioStreamType(type);
+    }
     return 0;
 }
 

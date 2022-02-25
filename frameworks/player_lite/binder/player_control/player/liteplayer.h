@@ -84,6 +84,7 @@ public:
 
     void OnVideoEndOfStream(void);
     void StateChangeCallback(PlayerStatus state) override;
+    int32_t SetAudioStreamType(int32_t type);
 
 protected:
     int32_t DoRegCallback(PlayerCtrlCallbackParam &observer) override;
@@ -112,7 +113,7 @@ protected:
     int32_t DoTPlay(TplayAttr& trickPlayAttr) override;
 
     int32_t DoInvoke(InvokeParameter& invokeParam) override;
-
+    int32_t DoSetAudioStreamType(int32_t type) override;
     void ClearCachePacket(void);
 
     void NotifyError(PlayerControlError playerError) override;
@@ -232,6 +233,7 @@ private:
     std::shared_ptr<Decoder> videoDecoder_;
     Surface *surface_;
     std::vector<PalayControlEventItem> eventQueue;
+    int32_t audioStreamType_;
     int64_t seekTabel_[0x2] = {-1, -1};
 private:
     PlayerControl(const PlayerControl &);

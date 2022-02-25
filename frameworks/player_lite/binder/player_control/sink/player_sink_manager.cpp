@@ -460,5 +460,14 @@ void SinkManager::GetRenderPosition(int64_t &position)
     videoSinkInfo_[0].sink->GetRenderPosition(videoPos);
     position = (audioPos >= videoPos) ? audioPos : videoPos;
 }
+
+void SinkManager::SetAudioStreamType(int32_t &type)
+{
+    if (audioSinkInfo_[0].sink == nullptr) {
+        MEDIA_ERR_LOG("audioSinkInfo_[0].sink is null");
+        return;
+    }
+    audioSinkInfo_[0].sink->SetAudioStreamType(type);
+}
 }
 }

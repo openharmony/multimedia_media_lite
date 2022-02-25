@@ -151,7 +151,7 @@ PlayerControl::PlayerControl() : stateMachine_(nullptr), observer_(nullptr), isI
     schThreadExit_(false), loop_(false), hasRenderAudioEos_(false), hasRenderVideoEos_(false), renderSleepTime_(0),
     leftVolume_(-1.0f), rightVolume_(-1.0f), schProcess_(0), seekToTimeMs_(-1), firstAudioFrameAfterSeek_(false),
     firstVideoFrameAfterSeek_(false), sourceType_(SOURCE_TYPE_BUT), fd_(-1), playerSource_(nullptr),
-    sinkManager_(nullptr), audioDecoder_(nullptr), videoDecoder_(nullptr)
+    sinkManager_(nullptr), audioDecoder_(nullptr), videoDecoder_(nullptr), audioStreamType_(0)
 {
     eventCallback_.player = nullptr;
     eventCallback_.callbackFun = nullptr;
@@ -872,6 +872,7 @@ int32_t PlayerControl::SinkStart(void)
         ret = AddAudioSink();
         CHECK_FAILED_RETURN(ret, HI_SUCCESS, ret, "AddAudioSink failed");
         isAudioStarted_ = true;
+        sinkManager_->SetAudioStreamType(audioStreamType_);
     }
 
     PlayEventCallback callback;
@@ -2049,6 +2050,27 @@ int32_t PlayerControl::DoInvoke(InvokeParameter& invokeParam)
             break;
     }
     return ret;
+}
+
+int32_t PlayerControl::SetAudioStreamType(int32_t type)
+{
+    CHECK_NULL_RETURN(stateMachine_, HI_ERR_PLAYERCONTROL_NULL_PTR, "stateMachine_ nullptr");
+    MsgInfo msg;
+    int32_t audioStreamType = type;
+
+    msg.what = PLAYERCONTROL_MSG_SET_AUDIOSTREAM_TYPE;
+    msg.msgData = &audioStreamType;
+    msg.msgDataLen = sizeof(int32_t);
+    return stateMachine_->Send(msg);
+}
+
+int32_t PlayerControl::DoSetAudioStreamType(int32_t type)
+{
+    audioStreamType_ = type;
+    if (sinkManager_ != nullptr) {
+        sinkManager_->SetAudioStreamType(type);
+    }
+    return 0;
 }
 }
 }

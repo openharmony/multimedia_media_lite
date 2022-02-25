@@ -116,6 +116,7 @@ private:
     void ResetInner(void);
     int32_t EnablePauseAfterPlay(bool isPauseAfterPlay);
     int32_t SetMediaStream(void);
+    void ReportVideoSizeChange(void);
 
     std::shared_ptr<PlayerControl> player_;
     float speed_;

@@ -48,7 +48,7 @@ AudioSink::AudioSink()
       pauseAfterPlay_(false), syncHdl_(nullptr), renderMode_(RENDER_MODE_NORMAL),
       rendStartTime_(-1), lastRendPts_(AV_INVALID_PTS), lastRendSysTimeMs_(-1), renderDelay_(0),
       leftVolume_(0.0f), rightVolume_(0.0f), eosPts_(AV_INVALID_PTS), receivedEos_(false), audioManager_(nullptr),
-      audioAdapter_(nullptr), audioRender_(nullptr), reportedFirstFrame(false)
+      audioAdapter_(nullptr), audioRender_(nullptr), reportedFirstFrame(false), audioStreamType_(0)
 {
     ResetRendStartTime();
     frameCacheQue_.clear();
@@ -126,6 +126,7 @@ int32_t AudioSink::Init(SinkAttr &atrr)
     param.format = AUDIO_FORMAT_PCM_16_BIT;
     param.channelCount = attr_.audAttr.channel;
     param.interleaved = false;
+    param.type = (audioStreamType_ == 1) ? AUDIO_IN_COMMUNICATION : AUDIO_IN_MEDIA;
     MEDIA_INFO_LOG("sampleRate:%d, channelCount:%d", param.sampleRate, param.channelCount);
 
     struct AudioDeviceDescriptor deviceDesc;
@@ -452,6 +453,11 @@ void AudioSink::GetRenderPosition(int64_t &position)
 void AudioSink::SetRenderMode(RenderMode mode)
 {
     renderMode_ = mode;
+}
+
+void AudioSink::SetAudioStreamType(int32_t &type)
+{
+    audioStreamType_ = type;
 }
 }
 }

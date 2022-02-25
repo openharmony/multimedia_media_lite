@@ -59,6 +59,7 @@ public:
     void RenderEos(void);
     int DequeReleaseFrame(OutputInfo &frame);
     void GetRenderPosition(int64_t &position);
+    void SetAudioStreamType(int32_t &type);
 
 private:
     void ResetRendStartTime();
@@ -97,6 +98,7 @@ private:
     struct AudioRender *audioRender_;
     AudioPort renderPort_;
     bool reportedFirstFrame;
+    int32_t audioStreamType_;
 };
 }  // namespace Media
 }  // namespace OHOS

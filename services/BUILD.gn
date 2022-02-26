@@ -17,20 +17,22 @@ executable("media_server") {
   ldflags = [ "-Wl,-Map=media_server.map" ]
   sources = [ "media_main.cpp" ]
   cflags = [ "-Wall" ]
-  cflags += [ "-Werror" ]
   cflags_cc = cflags
   include_dirs = [
     "//third_party/bounds_checking_function/include",
     "//drivers/peripheral/display/interfaces/include",
     "//foundation/multimedia/media_lite/interfaces/innerkits",
-    "//foundation/multimedia/camera_lite/services/include",
+    "//foundation/multimedia/camera_lite/services/server/include",
+    "//foundation/multimedia/camera_lite/services/impl/include",
     "//foundation/multimedia/utils/lite/interfaces/kits",
     "//foundation/multimedia/utils/lite/hals",
     "//foundation/multimedia/audio_lite/interfaces/kits",
     "//foundation/multimedia/media_lite/services/recorder_lite",
     "//foundation/multimedia/media_lite/services/player_lite",
-    "//foundation/multimedia/audio_lite/frameworks",
-    "//foundation/multimedia/audio_lite/services/include",
+    "//foundation/multimedia/audio_lite/services/impl",
+    "//foundation/multimedia/audio_lite/services/server/include",
+    "//foundation/multimedia/media_lite/services/recorder_lite/impl/include",
+    "//foundation/multimedia/media_lite/services/recorder_lite/server/include",
   ]
   ldflags += [
     "-lstdc++",
@@ -44,7 +46,7 @@ executable("media_server") {
   ]
   deps = [
     "//foundation/distributedschedule/samgr_lite/samgr:samgr",
-    "//foundation/multimedia/audio_lite/frameworks:audio_capturer_impl",
+    "//foundation/multimedia/audio_lite/services:audio_capturer_impl",
     "//foundation/multimedia/audio_lite/services:audio_capturer_server",
     "//foundation/multimedia/camera_lite/services:camera_server",
     "//foundation/multimedia/media_lite/services/player_lite:player_server",
@@ -76,7 +78,6 @@ lite_component("media_lite") {
     "//foundation/multimedia/media_lite/frameworks/player_lite:player_lite",
     "//foundation/multimedia/media_lite/frameworks/recorder_lite:recorder_lite",
     "//foundation/multimedia/media_lite/services/player_lite:player_server",
-    "//foundation/multimedia/media_lite/services/player_lite:player_client",
     "//foundation/multimedia/audio_lite/frameworks:audio_capturer_lite",
   ]
 }

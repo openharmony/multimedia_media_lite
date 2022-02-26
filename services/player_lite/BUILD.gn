@@ -11,21 +11,51 @@
 
 import("//build/lite/config/component/lite_component.gni")
 
-shared_library("player_client") {
-  sources = [ "client/src/player_client.cpp" ]
+shared_library("player_impl") {
+  sources = [
+    "impl/buffersource/src/buffer_source.cpp",
+    "impl/player_control/decoder/decoder.cpp",
+    "impl/player_control/player/fsm/src/fsm_common.cpp",
+    "impl/player_control/player/fsm/src/hi_fsm.cpp",
+    "impl/player_control/player/fsm/src/hi_state.cpp",
+    "impl/player_control/player/fsm/src/hi_state_machine.cpp",
+    "impl/player_control/player/fsm/src/hi_state_machine_observer.cpp",
+    "impl/player_control/player/fsm/src/message_looper.cpp",
+    "impl/player_control/player/fsm/src/mmessage_pool.cpp",
+    "impl/player_control/player/liteplayer.cpp",
+    "impl/player_control/player/liteplayer_comm.cpp",
+    "impl/player_control/player/liteplayer_state_machine.cpp",
+    "impl/player_control/sink/player_audio_sink.cpp",
+    "impl/player_control/sink/player_sink_manager.cpp",
+    "impl/player_control/sink/player_sync.cpp",
+    "impl/player_control/sink/player_video_sink.cpp",
+    "impl/player_control/source/player_demux.cpp",
+    "impl/player_control/source/player_source.cpp",
+    "impl/player_impl.cpp",
+  ]
   include_dirs = [
-    "client/include",
-    "//foundation/multimedia/media_lite/frameworks/player_lite",
+    "//third_party/bounds_checking_function/include",
+    "//foundation/multimedia/utils/lite/hals",
     "//foundation/multimedia/utils/lite/interfaces/kits",
-    "//foundation/multimedia/media_lite/interfaces/kits/player_lite",
+    "//drivers/peripheral/display/interfaces/include",
+    "//drivers/peripheral/base",
+    "//foundation/multimedia/media_lite/interfaces/innerkits",
   ]
-  deps = [
-    "//foundation/communication/ipc_lite:liteipc_adapter",
-    "//foundation/distributedschedule/samgr_lite/samgr:samgr",
+  outdir = rebase_path("$root_out_dir")
+  public_configs = [ ":player_impl_external_library_config" ]
+  ldflags = [ "-L$outdir" ]
+  ldflags += [ "-laudio_hw" ]
+  ldflags += [ "-lcodec" ]
+  ldflags += [ "-lformat_hw" ]
+  ldflags += [ "-lhdi_videodisplayer" ]
+  public_deps = [
+    "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
     "//foundation/graphic/surface:lite_surface",
+    "//foundation/multimedia/utils/lite:media_common",
     "//third_party/bounds_checking_function:libsec_shared",
+    "//third_party/iniparser:iniparser",
   ]
-  ldflags = [ "-lstdc++" ]
+  ldflags += [ "-lstdc++" ]
   cflags = [
     "-fPIC",
     "-Wall",
@@ -34,15 +64,33 @@ shared_library("player_client") {
   cflags_cc = cflags
 }
 
+config("player_impl_external_library_config") {
+  include_dirs = [ "//foundation/multimedia/frameworks/player_lite/binder" ]
+  include_dirs +=
+      [ "//foundation/multimedia/media_lite/interfaces/kits/player_lite" ]
+  include_dirs += [ "//foundation/multimedia/media_lite/services/player_lite/impl/buffersource/include" ]
+  include_dirs += [ "//foundation/multimedia/media_lite/services/player_lite/impl/player_control/include" ]
+  include_dirs += [ "//foundation/multimedia/media_lite/services/player_lite/impl/player_control/player" ]
+  include_dirs += [ "//foundation/multimedia/utils/lite/interfaces/kits" ]
+  include_dirs += [ "//drivers/peripheral/format/interfaces/include" ]
+  include_dirs += [ "//foundation/multimedia/media_lite/services/player_lite/impl/player_control/player/fsm/src" ]
+  include_dirs += [ "//foundation/multimedia/media_lite/services/player_lite/impl/player_control/player/fsm/include" ]
+  include_dirs += [ "//foundation/multimedia/media_lite/services/player_lite/impl/player_control/source" ]
+  include_dirs += [ "//foundation/multimedia/media_lite/services/player_lite/impl/player_control/sink" ]
+  include_dirs += [ "//drivers/peripheral/codec/interfaces/include" ]
+  include_dirs += [ "//foundation/multimedia/media_lite/services/player_lite/impl/player_control/decoder" ]
+  include_dirs += [ "//drivers/peripheral/audio/interfaces/include" ]
+}
 shared_library("player_server") {
   sources = [
-    "server/src/player_factory.cpp",
+    "factory/src/player_factory.cpp",
     "server/src/player_server.cpp",
     "server/src/samgr_player_server.cpp",
   ]
   include_dirs = [
-    "server/include",
-    "client/include",
+    "factory/include",
+    "factory/include",
+    "impl",
     "//drivers/peripheral/audio/interfaces/include",
     "//drivers/peripheral/codec/interfaces/include",
     "//drivers/peripheral/format/interfaces/include",
@@ -52,6 +100,7 @@ shared_library("player_server") {
     "//foundation/multimedia/utils/lite/hals",
     "//foundation/multimedia/utils/lite/interfaces/kits",
     "//foundation/multimedia/media_lite/interfaces/innerkits",
+    "//foundation/multimedia/media_lite/frameworks/player_lite/binder",
     "//foundation/distributedschedule/samgr_lite/interfaces/kits/registry",
     "//foundation/distributedschedule/samgr_lite/interfaces/kits/samgr",
     "//foundation/distributedschedule/samgr_lite/interfaces/kits/communication/broadcast",
@@ -78,7 +127,7 @@ shared_library("player_server") {
   ]
   public_deps = [
     "//base/startup/syspara_lite/frameworks/parameter/src:sysparam",
-    "//foundation/multimedia/media_lite/frameworks/player_lite:player_lite_impl",
+    "//foundation/multimedia/media_lite/services/player_lite:player_impl",
     "//foundation/multimedia/utils/lite:media_common",
   ]
 }
@@ -88,5 +137,5 @@ config("player_server_external_library_config") {
     "//foundation/multimedia/media_lite/services/player_lite/server/include",
   ]
   include_dirs +=
-      [ "//foundation/multimedia/media_lite/frameworks/player_lite" ]
+      [ "//foundation/multimedia/media_lite/frameworks/player_lite/binder" ]
 }

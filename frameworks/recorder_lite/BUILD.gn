@@ -15,38 +15,47 @@ import("//build/lite/ndk/ndk.gni")
 
 shared_library("recorder_lite") {
   sources = [
+    "binder/recorder_client.cpp",
     "recorder.cpp",
-    "recorder_client.cpp",
   ]
-  cflags = [ "-fPIC" ]
-  cflags += [ "-Wall" ]
-  cflags += [ "-Werror" ]
-  cflags_cc = cflags
   include_dirs = [
+    "//foundation/multimedia/media_lite/frameworks/recorder_lite/binder",
     "recorder_sink/include",
     "recorder_source/include",
-    "//third_party/bounds_checking_function/include",
     "//foundation/multimedia/utils/lite/hals",
-    "//drivers/peripheral/audio/interfaces/include",
-    "//drivers/peripheral/codec/interfaces/include",
-    "//drivers/peripheral/format/interfaces/include",
-    "//base/security/permission/interfaces/kits/permission_lite",
     "//foundation/distributedschedule/samgr_lite/interfaces/kits/registry",
     "//foundation/distributedschedule/samgr_lite/interfaces/kits/samgr",
-    "//foundation/multimedia/media_lite/services/recorder_lite",
+    "//foundation/multimedia/media_lite/services/recorder_lite/server/include",
   ]
-  public_configs = [ ":recorder_external_library_config" ]
+
   deps = [
     "//base/security/permission/services/permission_lite/pms_client:pms_client",
     "//foundation/communication/ipc_lite:liteipc_adapter",
+  ]
+
+  cflags = [ "-fPIC" ]
+  cflags += [ "-Wall" ]
+  cflags += [ "-Werror" ]
+  cflags += [ "-Wno-delete-non-abstract-non-virtual-dtor" ]
+  cflags_cc = cflags
+
+  public_configs = [ ":recorder_external_library_config" ]
+  public_deps = [
+    "//foundation/graphic/surface:lite_surface",
     "//foundation/multimedia/audio_lite/frameworks:audio_capturer_lite",
     "//foundation/multimedia/utils/lite:media_common",
     "//third_party/bounds_checking_function:libsec_shared",
   ]
-  public_deps = [ "//foundation/graphic/surface:lite_surface" ]
 }
 config("recorder_external_library_config") {
-  include_dirs =
-      [ "//foundation/multimedia/media_lite/interfaces/kits/recorder_lite" ]
-  include_dirs += [ "//foundation/multimedia/utils/lite/interfaces/kits" ]
+  include_dirs = [
+    "//third_party/bounds_checking_function/include",
+    "//base/security/permission/interfaces/kits/permission_lite",
+    "//drivers/peripheral/audio/interfaces/include",
+    "//drivers/peripheral/codec/interfaces/include",
+    "//drivers/peripheral/format/interfaces/include",
+    "//foundation/multimedia/audio_lite/interfaces/kits",
+    "//foundation/multimedia/media_lite/interfaces/kits/recorder_lite",
+    "//foundation/multimedia/utils/lite/interfaces/kits",
+  ]
 }

@@ -14,13 +14,8 @@ import("//build/lite/config/component/lite_component.gni")
 
 static_library("recorder_server") {
   sources = [
-    "recorder_audio_source.cpp",
-    "recorder_data_source.cpp",
-    "recorder_impl.cpp",
-    "recorder_samgr.cpp",
-    "recorder_service.cpp",
-    "recorder_sink.cpp",
-    "recorder_video_source.cpp",
+    "server/src/recorder_samgr.cpp",
+    "server/src/recorder_service.cpp",
   ]
   cflags = [ "-Wall" ]
   cflags_cc = cflags
@@ -35,11 +30,12 @@ static_library("recorder_server") {
     "//foundation/distributedschedule/samgr_lite/interfaces/kits/registry",
     "//foundation/distributedschedule/samgr_lite/interfaces/kits/samgr",
     "//foundation/distributedschedule/samgr_lite/interfaces/kits/communication/broadcast",
-    "//foundation/multimedia/media_lite/services/recorder_lite",
+    "//foundation/multimedia/media_lite/services/recorder_lite/impl/include",
+    "//foundation/multimedia/media_lite/services/recorder_lite/server/include",
     "//foundation/multimedia/media_lite/interfaces/kits/recorder_lite",
     "//foundation/multimedia/utils/lite/interfaces/kits",
     "//foundation/multimedia/audio_lite/interfaces/kits",
-    "//foundation/multimedia/audio_lite/frameworks",
+    "//foundation/multimedia/audio_lite/services/impl",
   ]
   ldflags = [
     "-lformat_hw",
@@ -50,7 +46,51 @@ static_library("recorder_server") {
     "//foundation/communication/ipc_lite:liteipc_adapter",
     "//foundation/distributedschedule/samgr_lite/samgr:samgr",
     "//foundation/graphic/surface:lite_surface",
-    "//foundation/multimedia/audio_lite/frameworks:audio_capturer_impl",
+    "//foundation/multimedia/audio_lite/services:audio_capturer_impl",
+    "//foundation/multimedia/media_lite/services/recorder_lite:recorder_impl",
+    "//foundation/multimedia/utils/lite:media_common",
+    "//third_party/bounds_checking_function:libsec_shared",
+  ]
+}
+
+shared_library("recorder_impl") {
+  sources = [
+    "impl/src/recorder_audio_source.cpp",
+    "impl/src/recorder_data_source.cpp",
+    "impl/src/recorder_impl.cpp",
+    "impl/src/recorder_sink.cpp",
+    "impl/src/recorder_video_source.cpp",
+  ]
+
+  cflags = [ "-Wall" ]
+
+  #  cflags += [ "-Werror" ]
+  #  cflags += [ "-Wno-delete-non-abstract-non-virtual-dtor" ]
+  cflags_cc = cflags
+
+  include_dirs = [
+    "//foundation/multimedia/media_lite/interfaces/kits/recorder_lite",
+    "//third_party/bounds_checking_function/include",
+    "//drivers/peripheral/audio/interfaces/include",
+    "//drivers/peripheral/codec/interfaces/include",
+    "//drivers/peripheral/format/interfaces/include",
+    "//foundation/multimedia/media_lite/services/recorder_lite/impl/include",
+    "//foundation/multimedia/utils/lite/interfaces/kits",
+    "//foundation/multimedia/audio_lite/interfaces/kits",
+    "//foundation/multimedia/audio_lite/services/impl",
+  ]
+
+  outdir = rebase_path("$root_out_dir")
+  ldflags = [
+    "-L$outdir",
+    "-lcodec",
+    "-laudio_hw",
+    "-lpthread",
+  ]
+  deps = [
+    "//device/soc/hisilicon/common/hal/media:hardware_media_sdk",
+    "//foundation/communication/ipc_lite:liteipc_adapter",
+    "//foundation/multimedia/audio_lite/services:audio_capturer_impl",
     "//foundation/multimedia/utils/lite:media_common",
     "//third_party/bounds_checking_function:libsec_shared",
   ]

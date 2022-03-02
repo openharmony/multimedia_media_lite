@@ -14,10 +14,7 @@
  */
 
 #include "player.h"
-#include <cinttypes>
-#include <sys/stat.h>
 #include "media_log.h"
-#include "player_client.h"
 #include "pms_interface.h"
 
 using namespace std;
@@ -25,14 +22,6 @@ using namespace std;
 namespace OHOS {
 namespace Media {
 class Player;
-
-#define CHK_NULL_RETURN(ptr) \
-do { \
-    if (ptr == nullptr) { \
-        MEDIA_ERR_LOG("ptr null"); \
-        return -1; \
-    } \
-} while (0)
 
 Player::Player()
 {
@@ -49,7 +38,10 @@ int32_t Player::SetSource(const Source &source)
 {
     MEDIA_INFO_LOG("process in");
     int32_t ret;
-    CHK_NULL_RETURN(player_);
+    if (player_ == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     ret = player_->SetSource(source);
     MEDIA_INFO_LOG("process out");
     return ret;
@@ -66,14 +58,21 @@ int32_t Player::Prepare()
         MEDIA_WARNING_LOG("Process can not read media.");
         return MEDIA_PERMISSION_DENIED;
     }
-    CHK_NULL_RETURN(player_);
+
+    if (player_ == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return player_->Prepare();
 }
 
 int32_t Player::Play()
 {
     MEDIA_INFO_LOG("process in");
-    CHK_NULL_RETURN(player_);
+    if (player_ == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return player_->Play();
 }
 
@@ -90,21 +89,30 @@ bool Player::IsPlaying()
 int32_t Player::Pause()
 {
     MEDIA_INFO_LOG("process in");
-    CHK_NULL_RETURN(player_);
+    if (player_ == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return player_->Pause();
 }
 
 int32_t Player::Stop()
 {
     MEDIA_INFO_LOG("process in");
-    CHK_NULL_RETURN(player_);
+    if (player_ == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return player_->Stop();
 }
 
 int32_t Player::Rewind(int64_t mSeconds, int32_t mode)
 {
     MEDIA_INFO_LOG("process in");
-    CHK_NULL_RETURN(player_);
+    if (player_ == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return player_->Rewind(mSeconds, mode);
 }
 
@@ -118,7 +126,10 @@ int32_t Player::SetVolume(float leftVolume, float rightVolume)
 int32_t Player::SetVideoSurface(Surface *surface)
 {
     MEDIA_INFO_LOG("process in");
-    CHK_NULL_RETURN(player_);
+    if (player_ == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return player_->SetSurface(surface);
 }
 
@@ -134,42 +145,60 @@ bool Player::IsSingleLooping()
 
 int32_t Player::GetCurrentTime(int64_t &time) const
 {
-    CHK_NULL_RETURN(player_);
+    if (player_ == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return player_->GetCurrentPosition(time);
 }
 
 int32_t Player::GetDuration(int64_t &durationMs) const
 {
     MEDIA_INFO_LOG("process in");
-    CHK_NULL_RETURN(player_);
+    if (player_ == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return player_->GetDuration(durationMs);
 }
 
 int32_t Player::GetVideoWidth(int32_t &videoWidth)
 {
     MEDIA_INFO_LOG("process in");
-    CHK_NULL_RETURN(player_);
+    if (player_ == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return player_->GetVideoWidth(videoWidth);
 }
 
 int32_t Player::GetVideoHeight(int32_t &videoHeight)
 {
     MEDIA_INFO_LOG("process in");
-    CHK_NULL_RETURN(player_);
+    if (player_ == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return player_->GetVideoHeight(videoHeight);
 }
 
 int32_t Player::Reset()
 {
     MEDIA_INFO_LOG("process in");
-    CHK_NULL_RETURN(player_);
+    if (player_ == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return player_->Reset();
 }
 
 int32_t Player::Release()
 {
     MEDIA_INFO_LOG("process in");
-    CHK_NULL_RETURN(player_);
+    if (player_ == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return player_->Release();
 }
 
@@ -186,35 +215,50 @@ void Player::SetPlayerCallback(const std::shared_ptr<PlayerCallback> &cb)
 int32_t Player::EnableSingleLooping(bool loop)
 {
     MEDIA_INFO_LOG("process in");
-    CHK_NULL_RETURN(player_);
+    if (player_ == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return player_->SetLoop(loop);
 }
 
 int32_t Player::GetPlayerState(int32_t &state) const
 {
     MEDIA_INFO_LOG("process in");
-    CHK_NULL_RETURN(player_);
+    if (player_ == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return PLAYER_STATE_ERROR;
+    }
     return player_->GetPlayerState(state);
 }
 
 int32_t Player::SetPlaybackSpeed(float speed)
 {
     MEDIA_INFO_LOG("process in");
-    CHK_NULL_RETURN(player_);
+    if (player_ == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return player_->SetPlaybackSpeed(speed);
 }
 
 int32_t Player::GetPlaybackSpeed(float &speed)
 {
     MEDIA_INFO_LOG("process in");
-    CHK_NULL_RETURN(player_);
+    if (player_ == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return player_->GetPlaybackSpeed(speed);
 }
 
 int32_t Player::SetAudioStreamType(int32_t type)
 {
     MEDIA_INFO_LOG("process in");
-    CHK_NULL_RETURN(player_);
+    if (player_ == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return player_->SetAudioStreamType(type);
 }
 
@@ -231,7 +275,10 @@ void Player::GetAudioStreamType(int32_t &type)
 int32_t Player::SetParameter(const Format &params)
 {
     MEDIA_INFO_LOG("process in");
-    CHK_NULL_RETURN(player_);
+    if (player_ == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return player_->SetParameter(params);
 }
 }  // namespace Media

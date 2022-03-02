@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,8 +16,7 @@
 #ifndef RECORDER_CLIENT_H
 #define RECORDER_CLIENT_H
 
-#include "iproxy_client.h"
-#include "recorder.h"
+#include "recorder_impl.h"
 
 namespace OHOS {
 namespace Media {
@@ -55,10 +54,8 @@ public:
     int32_t SetParameter(int32_t sourceId, const Format &format);
     int32_t SetDataSource(DataSourceType source, int32_t &sourceId);
 
-    std::shared_ptr<RecorderCallback> callback_;
 private:
-    IClientProxy *proxy_ = nullptr;
-    SvcIdentity sid_;
+    RecorderImpl *impl_ = nullptr;
 };
 } /* namespace Media */
 } /* namespace OHOS */

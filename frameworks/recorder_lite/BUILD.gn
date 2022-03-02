@@ -12,27 +12,39 @@
 # limitations under the License.
 import("//build/lite/config/component/lite_component.gni")
 import("//build/lite/ndk/ndk.gni")
+import("//foundation/multimedia/utils/lite/config.gni")
 
 shared_library("recorder_lite") {
-  sources = [
-    "binder/recorder_client.cpp",
-    "recorder.cpp",
-  ]
-  include_dirs = [
-    "//foundation/multimedia/media_lite/frameworks/recorder_lite/binder",
-    "recorder_sink/include",
-    "recorder_source/include",
-    "//foundation/multimedia/utils/lite/hals",
-    "//foundation/distributedschedule/samgr_lite/interfaces/kits/registry",
-    "//foundation/distributedschedule/samgr_lite/interfaces/kits/samgr",
-    "//foundation/multimedia/media_lite/services/recorder_lite/server/include",
-  ]
+  sources = [ "recorder.cpp" ]
 
-  deps = [
-    "//base/security/permission/services/permission_lite/pms_client:pms_client",
-    "//foundation/communication/ipc_lite:liteipc_adapter",
-  ]
+  if (enable_media_passthrough_mode == true) {
+    sources += [ "passthrough/recorder_client.cpp" ]
+    include_dirs = [
+      "passthrough",
+      "//foundation/multimedia/media_lite/services/recorder_lite/impl/include",
+      "//foundation/multimedia/audio_lite/services/impl",
+    ]
+    ldflags = [ "-lformat_hw" ]
+    deps = [
+      "//foundation/multimedia/media_lite/services/recorder_lite:recorder_impl",
+    ]
+  } else {
+    sources += [ "binder/recorder_client.cpp" ]
+    include_dirs = [
+      "binder",
+      "recorder_sink/include",
+      "recorder_source/include",
+      "//foundation/multimedia/utils/lite/hals",
+      "//foundation/distributedschedule/samgr_lite/interfaces/kits/registry",
+      "//foundation/distributedschedule/samgr_lite/interfaces/kits/samgr",
+      "//foundation/multimedia/media_lite/services/recorder_lite/server/include",
+    ]
 
+    deps = [
+      "//base/security/permission/services/permission_lite/pms_client:pms_client",
+      "//foundation/communication/ipc_lite:liteipc_adapter",
+    ]
+  }
   cflags = [ "-fPIC" ]
   cflags += [ "-Wall" ]
   cflags += [ "-Werror" ]
@@ -42,7 +54,6 @@ shared_library("recorder_lite") {
   public_configs = [ ":recorder_external_library_config" ]
   public_deps = [
     "//foundation/graphic/surface:lite_surface",
-    "//foundation/multimedia/audio_lite/frameworks:audio_capturer_lite",
     "//foundation/multimedia/utils/lite:media_common",
     "//third_party/bounds_checking_function:libsec_shared",
   ]

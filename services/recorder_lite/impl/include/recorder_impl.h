@@ -22,7 +22,6 @@
 #include "recorder_data_source.h"
 #include "recorder_sink.h"
 #include "recorder_video_source.h"
-#include "serializer.h"
 
 namespace OHOS {
 namespace Media {
@@ -126,19 +125,6 @@ private:
     RecorderSink *recorderSink_;
     RecState status_ = RELEASED;
     std::mutex mutex_;
-};
-
-class RecorderCallbackClient : public RecorderCallback {
-public:
-    RecorderCallbackClient() = delete;
-    ~RecorderCallbackClient() = default;
-    RecorderCallbackClient(SvcIdentity *sid) : sid_(sid) {}
-
-    void OnError(int32_t errorType, int32_t errorCode) override;
-    void OnInfo(int32_t type, int32_t extra) override;
-
-private:
-    SvcIdentity *sid_ = nullptr;
 };
 } // namespace Media
 } // namespace OHOS

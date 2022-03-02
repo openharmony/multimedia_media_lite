@@ -623,8 +623,8 @@ public:
     int32_t SetParameter(int32_t sourceId, const Format &format);
 
 private:
-    class RecorderImpl;
-    std::unique_ptr<RecorderImpl> impl_;
+    class RecorderClient;
+    std::unique_ptr<RecorderClient> client_;
 };
 }  // namespace Media
 }  // namespace OHOS

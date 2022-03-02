@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import("//build/lite/config/component/lite_component.gni")
+import("//foundation/multimedia/utils/lite/config.gni")
 
 executable("test_play_file_h265") {
   sources = [ "test_play_file_h265.cpp" ]
@@ -22,6 +23,11 @@ executable("test_play_file_h265") {
     "//drivers/peripheral/codec/interfaces/include",
     "//foundation/multimedia/utils/lite/hals",
   ]
+
+  if (enable_media_passthrough_mode == true) {
+    defines = [ "ENABLE_PASSTHROUGH_MODE" ]
+  }
+
   ldflags = [ "-lstdc++" ]
   ldflags += [ "-lcodec" ]
   ldflags += [ "-Wl,-rpath-link=$ohos_root_path/$root_out_dir" ]

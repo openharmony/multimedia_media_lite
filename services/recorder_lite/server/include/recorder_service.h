@@ -19,6 +19,7 @@
 #include "liteipc_adapter.h"
 #include "recorder_common.h"
 #include "recorder_impl.h"
+#include "serializer.h"
 
 namespace OHOS {
 namespace Media {
@@ -38,6 +39,19 @@ private:
     SvcIdentity svc_;
     pid_t client_ = -1;
     RecorderImpl *rec_ = nullptr;
+};
+
+class RecorderCallbackClient : public RecorderCallback {
+public:
+    RecorderCallbackClient() = delete;
+    ~RecorderCallbackClient() = default;
+    RecorderCallbackClient(SvcIdentity *sid) : sid_(sid) {}
+
+    void OnError(int32_t errorType, int32_t errorCode) override;
+    void OnInfo(int32_t type, int32_t extra) override;
+
+private:
+    SvcIdentity *sid_ = nullptr;
 };
 
 void RecorderServiceReg();

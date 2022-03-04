@@ -14,11 +14,12 @@
  */
 
 #include "player.h"
-#include "histreamer/hiplayer.h"
-#include "media_log.h"
+
 #include <cinttypes>
 #include <memory>
 #include <sys/stat.h>
+#include "histreamer/hiplayer.h"
+#include "media_log.h"
 
 using namespace std;
 
@@ -26,23 +27,15 @@ namespace OHOS {
 namespace Media {
 class Player;
 
-#define CHK_NULL_RETURN(ptr)                                                   \
-  do {                                                                         \
-    if (ptr == nullptr) {                                                      \
-      MEDIA_ERR_LOG("ptr null");                                               \
-      return -1;                                                               \
-    }                                                                          \
-  } while (0)
-
 namespace {
 std::shared_ptr<Media::PlayerInterface> g_player;
 }
 
 Player::Player()
 {
-  MEDIA_INFO_LOG("Player constructor in");
-  g_player = CreateHiPlayer();
-  MEDIA_INFO_LOG("Player constructor out");
+    MEDIA_INFO_LOG("Player constructor in");
+    g_player = CreateHiPlayer();
+    MEDIA_INFO_LOG("Player constructor out");
 }
 
 Player::~Player()
@@ -54,7 +47,10 @@ int32_t Player::SetSource(const Source &source)
 {
     MEDIA_INFO_LOG("Player SetSource in");
     int32_t ret;
-    CHK_NULL_RETURN(g_player);
+    if (g_player == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     ret = g_player->SetSource(source);
     MEDIA_INFO_LOG("Player SetSource out, ret: %d", ret);
     return ret;
@@ -63,98 +59,140 @@ int32_t Player::SetSource(const Source &source)
 int32_t Player::Prepare()
 {
     MEDIA_INFO_LOG("Player Prepare in");
-    CHK_NULL_RETURN(g_player);
+    if (g_player == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return g_player->Prepare();
 }
 
 int32_t Player::Play()
 {
     MEDIA_INFO_LOG("Player Play in");
-    CHK_NULL_RETURN(g_player);
+    if (g_player == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return g_player->Play();
 }
 
 bool Player::IsPlaying()
 {
     MEDIA_INFO_LOG("Player IsPlaying in");
-    CHK_NULL_RETURN(g_player);
+    if (g_player == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return false;
+    }
     return g_player->IsPlaying();
 }
 
 int32_t Player::Pause()
 {
     MEDIA_INFO_LOG("Player Pause in");
-    CHK_NULL_RETURN(g_player);
+    if (g_player == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return g_player->Pause();
 }
 
 int32_t Player::Stop()
 {
     MEDIA_INFO_LOG("Player Stop in");
-    CHK_NULL_RETURN(g_player);
+    if (g_player == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return g_player->Stop();
 }
 
 int32_t Player::Rewind(int64_t mSeconds, int32_t mode)
 {
     MEDIA_INFO_LOG("Player Rewind in");
-    CHK_NULL_RETURN(g_player);
+    if (g_player == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return g_player->Rewind(mSeconds, mode);
 }
 
 int32_t Player::SetVolume(float leftVolume, float rightVolume)
 {
     MEDIA_INFO_LOG("Player SetVolume in");
-    CHK_NULL_RETURN(g_player);
+    if (g_player == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return g_player->SetVolume(leftVolume, rightVolume);
 }
 
 bool Player::IsSingleLooping()
 {
     MEDIA_INFO_LOG("Player IsSingleLooping in");
-    CHK_NULL_RETURN(g_player);
+    if (g_player == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return false;
+    }
     return g_player->IsSingleLooping();
 }
 
 int32_t Player::GetCurrentTime(int64_t &time) const
 {
     MEDIA_INFO_LOG("Player GetCurrentTime in");
-    CHK_NULL_RETURN(g_player);
+    if (g_player == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return g_player->GetCurrentPosition(time);
 }
 
 int32_t Player::GetDuration(int64_t &durationMs) const
 {
     MEDIA_INFO_LOG("Player GetDuration in");
-    CHK_NULL_RETURN(g_player);
+    if (g_player == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return g_player->GetDuration(durationMs);
 }
 
 int32_t Player::GetVideoWidth(int32_t &videoWidth)
 {
     MEDIA_INFO_LOG("Player GetVideoWidth in");
-    CHK_NULL_RETURN(g_player);
+    if (g_player == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return g_player->GetVideoWidth(videoWidth);
 }
 
 int32_t Player::GetVideoHeight(int32_t &videoHeight)
 {
     MEDIA_INFO_LOG("Player GetVideoHeight in");
-    CHK_NULL_RETURN(g_player);
+    if (g_player == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return g_player->GetVideoHeight(videoHeight);
 }
 
 int32_t Player::Reset()
 {
     MEDIA_INFO_LOG("Player Reset in");
-    CHK_NULL_RETURN(g_player);
+    if (g_player == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return g_player->Reset();
 }
 
 int32_t Player::Release()
 {
     MEDIA_INFO_LOG("Player Release in");
-    CHK_NULL_RETURN(g_player);
+    if (g_player == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return g_player->Release();
 }
 
@@ -171,35 +209,50 @@ void Player::SetPlayerCallback(const std::shared_ptr<PlayerCallback> &cb)
 int32_t Player::EnableSingleLooping(bool loop)
 {
     MEDIA_INFO_LOG("Player EnableSingleLooping in");
-    CHK_NULL_RETURN(g_player);
+    if (g_player == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return g_player->SetLoop(loop);
 }
 
 int32_t Player::GetPlayerState(int32_t &state) const
 {
     MEDIA_INFO_LOG("Player GetPlayerState in");
-    CHK_NULL_RETURN(g_player);
+    if (g_player == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return PLAYER_STATE_ERROR;
+    }
     return g_player->GetPlayerState(state);
 }
 
 int32_t Player::SetPlaybackSpeed(float speed)
 {
     MEDIA_INFO_LOG("Player SetPlaybackSpeed in");
-    CHK_NULL_RETURN(g_player);
+    if (g_player == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return g_player->SetPlaybackSpeed(speed);
 }
 
 int32_t Player::GetPlaybackSpeed(float &speed)
 {
     MEDIA_INFO_LOG("Player GetPlaybackSpeed in");
-    CHK_NULL_RETURN(g_player);
+    if (g_player == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return g_player->GetPlaybackSpeed(speed);
 }
 
 int32_t Player::SetAudioStreamType(int32_t type)
 {
     MEDIA_INFO_LOG("Player SetAudioStreamType in");
-    CHK_NULL_RETURN(g_player);
+    if (g_player == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return g_player->SetAudioStreamType(type);
 }
 
@@ -216,7 +269,10 @@ void Player::GetAudioStreamType(int32_t &type)
 int32_t Player::SetParameter(const Format &params)
 {
     MEDIA_INFO_LOG("Player SetParameter in");
-    CHK_NULL_RETURN(g_player);
+    if (g_player == nullptr) {
+        MEDIA_ERR_LOG("player null");
+        return -1;
+    }
     return g_player->SetParameter(params);
 }
 } // namespace Media

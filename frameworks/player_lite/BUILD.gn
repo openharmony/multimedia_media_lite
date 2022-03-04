@@ -12,27 +12,69 @@
 # limitations under the License.
 import("//build/lite/config/component/lite_component.gni")
 import("//build/lite/ndk/ndk.gni")
+import("//foundation/multimedia/utils/lite/config.gni")
 
 if (ohos_kernel_type != "liteos_m") {
   shared_library("player_lite") {
-    sources = [
-      "binder/player.cpp",
-      "binder/player_client.cpp",
-    ]
+    if (enable_media_passthrough_mode == false) {
+      sources = [
+        "binder/player.cpp",
+        "binder/player_client.cpp",
+      ]
+    } else {
+      sources = [
+        "passthrough/liteplayer/player.cpp",
+        "passthrough/liteplayer/player_client.cpp",
+      ]
+    }
     cflags = [ "-fPIC" ]
     cflags += [ "-Wall" ]
     cflags += [ "-Werror" ]
     cflags_cc = cflags
-    include_dirs = [
-      "//base/security/permission/interfaces/kits/permission_lite",
-      "//foundation/multimedia/media_lite/frameworks/player_lite/binder",
-    ]
+
     outdir = rebase_path("$root_out_dir")
-    public_configs = [ ":player_external_library_config" ]
     ldflags = [ "-L$outdir" ]
+    include_dirs =
+        [ "//base/security/permission/interfaces/kits/permission_lite" ]
+
+    if (enable_media_passthrough_mode == false) {
+      include_dirs +=
+          [ "//foundation/multimedia/media_lite/frameworks/player_lite/binder" ]
+      deps = [
+        "//foundation/communication/ipc_lite:liteipc_adapter",
+        "//foundation/distributedschedule/samgr_lite/samgr:samgr",
+        "//foundation/graphic/surface:lite_surface",
+      ]
+    } else {
+      include_dirs += [
+        "//foundation/multimedia/media_lite/frameworks/player_lite/passthrough/liteplayer",
+        "//foundation/multimedia/media_lite/services/player_lite/impl",
+        "//foundation/multimedia/media_lite/services/player_lite/impl/buffersource/include",
+        "//foundation/multimedia/media_lite/services/player_lite/impl/player_control/include",
+        "//foundation/multimedia/media_lite/services/player_lite/impl/player_control/player",
+        "//foundation/multimedia/media_lite/services/player_lite/impl/player_control/player/fsm/src",
+        "//foundation/multimedia/media_lite/services/player_lite/impl/player_control/player/fsm/include",
+        "//foundation/multimedia/media_lite/services/player_lite/impl/player_control/source",
+        "//foundation/multimedia/media_lite/services/player_lite/impl/player_control/sink",
+        "//foundation/multimedia/media_lite/services/player_lite/impl/player_control/decoder",
+        "//drivers/peripheral/display/interfaces/include",
+        "//drivers/peripheral/base",
+        "//drivers/peripheral/format/interfaces/include",
+        "//drivers/peripheral/audio/interfaces/include",
+        "//drivers/peripheral/codec/interfaces/include",
+      ]
+      deps = [
+        "//foundation/multimedia/media_lite/services/player_lite:player_impl",
+      ]
+      ldflags += [ "-laudio_hw" ]
+      ldflags += [ "-lcodec" ]
+      ldflags += [ "-lformat_hw" ]
+      ldflags += [ "-lhdi_videodisplayer" ]
+    }
+
+    public_configs = [ ":player_external_library_config" ]
     public_deps = [
       "//base/security/permission/services/permission_lite/pms_client:pms_client",
-      "//foundation/distributedschedule/samgr_lite/samgr:samgr",
       "//foundation/graphic/surface:lite_surface",
       "//foundation/multimedia/utils/lite:media_common",
       "//third_party/bounds_checking_function:libsec_shared",
@@ -42,6 +84,8 @@ if (ohos_kernel_type != "liteos_m") {
   config("player_external_library_config") {
     include_dirs =
         [ "//foundation/multimedia/media_lite/interfaces/kits/player_lite" ]
+    include_dirs +=
+        [ "//foundation/multimedia/media_lite/interfaces/innerkits" ]
     include_dirs += [ "//foundation/multimedia/utils/lite/interfaces/kits" ]
   }
 
@@ -53,7 +97,7 @@ if (ohos_kernel_type != "liteos_m") {
   }
 } else {
   static_library("player_lite") {
-    sources = [ "passthrough/player.cpp" ]
+    sources = [ "passthrough/histreamer/player.cpp" ]
     include_dirs =
         [ "//base/hiviewdfx/hilog_lite/interfaces/native/innerkits/hilog" ]
     public_deps = [

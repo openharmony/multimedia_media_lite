@@ -97,7 +97,7 @@ static int32_t RecorderCallbackSvc(const IpcContext *context, void *ipcMsg, IpcI
     return MEDIA_OK;
 }
 
-Recorder::RecorderImpl::RecorderImpl()
+Recorder::RecorderClient::RecorderClient()
 {
     OHOS_SystemInit();
 
@@ -119,7 +119,6 @@ Recorder::RecorderImpl::RecorderImpl()
         MEDIA_ERR_LOG("Connect recorder server failed, ret=%d", ret);
         throw runtime_error("Ipc proxy Invoke failed.");
     }
-
     MEDIA_ERR_LOG("Create recorder client succeed.");
 }
 
@@ -139,7 +138,7 @@ static int32_t DisConnectCallback(void *owner, int code, IpcIo *reply)
 }
 
 
-Recorder::RecorderImpl::~RecorderImpl()
+Recorder::RecorderClient::~RecorderClient()
 {
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
@@ -170,7 +169,7 @@ static int32_t SetSourceCallback(void *owner, int code, IpcIo *reply)
     return 0;
 }
 
-int32_t Recorder::RecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId)
+int32_t Recorder::RecorderClient::SetVideoSource(VideoSourceType source, int32_t &sourceId)
 {
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
@@ -187,7 +186,7 @@ int32_t Recorder::RecorderImpl::SetVideoSource(VideoSourceType source, int32_t &
     return para.ret;
 }
 
-int32_t Recorder::RecorderImpl::SetVideoEncoder(int32_t sourceId, VideoCodecFormat encoder)
+int32_t Recorder::RecorderClient::SetVideoEncoder(int32_t sourceId, VideoCodecFormat encoder)
 {
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
@@ -202,7 +201,7 @@ int32_t Recorder::RecorderImpl::SetVideoEncoder(int32_t sourceId, VideoCodecForm
     return para.ret;
 }
 
-int32_t Recorder::RecorderImpl::SetVideoSize(int32_t sourceId, int32_t width, int32_t height)
+int32_t Recorder::RecorderClient::SetVideoSize(int32_t sourceId, int32_t width, int32_t height)
 {
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
@@ -219,7 +218,7 @@ int32_t Recorder::RecorderImpl::SetVideoSize(int32_t sourceId, int32_t width, in
     return para.ret;
 }
 
-int32_t Recorder::RecorderImpl::SetVideoFrameRate(int32_t sourceId, int32_t frameRate)
+int32_t Recorder::RecorderClient::SetVideoFrameRate(int32_t sourceId, int32_t frameRate)
 {
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
@@ -234,7 +233,7 @@ int32_t Recorder::RecorderImpl::SetVideoFrameRate(int32_t sourceId, int32_t fram
     return para.ret;
 }
 
-int32_t Recorder::RecorderImpl::SetVideoEncodingBitRate(int32_t sourceId, int32_t rate)
+int32_t Recorder::RecorderClient::SetVideoEncodingBitRate(int32_t sourceId, int32_t rate)
 {
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
@@ -249,7 +248,7 @@ int32_t Recorder::RecorderImpl::SetVideoEncodingBitRate(int32_t sourceId, int32_
     return para.ret;
 }
 
-int32_t Recorder::RecorderImpl::SetCaptureRate(int32_t sourceId, double fps)
+int32_t Recorder::RecorderClient::SetCaptureRate(int32_t sourceId, double fps)
 {
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
@@ -279,7 +278,7 @@ static int32_t GetSurfaceCallback(void *owner, int code, IpcIo *io)
     return 0;
 }
 
-std::shared_ptr<OHOS::Surface> Recorder::RecorderImpl::GetSurface(int32_t sourceId)
+std::shared_ptr<OHOS::Surface> Recorder::RecorderClient::GetSurface(int32_t sourceId)
 {
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
@@ -290,11 +289,11 @@ std::shared_ptr<OHOS::Surface> Recorder::RecorderImpl::GetSurface(int32_t source
     if (ret != 0) {
         MEDIA_ERR_LOG("SetSource failed, ret=%d", ret);
     }
-    printf("Recorder::RecorderImpl::GetSurface surface=%p", surface);
+
     return std::shared_ptr<OHOS::Surface>(surface);
 }
 
-int32_t Recorder::RecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId)
+int32_t Recorder::RecorderClient::SetAudioSource(AudioSourceType source, int32_t &sourceId)
 {
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
@@ -311,7 +310,7 @@ int32_t Recorder::RecorderImpl::SetAudioSource(AudioSourceType source, int32_t &
     return para.ret;
 }
 
-int32_t Recorder::RecorderImpl::SetAudioEncoder(int32_t sourceId, AudioCodecFormat encoder)
+int32_t Recorder::RecorderClient::SetAudioEncoder(int32_t sourceId, AudioCodecFormat encoder)
 {
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
@@ -326,7 +325,7 @@ int32_t Recorder::RecorderImpl::SetAudioEncoder(int32_t sourceId, AudioCodecForm
     return para.ret;
 }
 
-int32_t Recorder::RecorderImpl::SetAudioSampleRate(int32_t sourceId, int32_t rate)
+int32_t Recorder::RecorderClient::SetAudioSampleRate(int32_t sourceId, int32_t rate)
 {
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
@@ -341,7 +340,7 @@ int32_t Recorder::RecorderImpl::SetAudioSampleRate(int32_t sourceId, int32_t rat
     return para.ret;
 }
 
-int32_t Recorder::RecorderImpl::SetAudioChannels(int32_t sourceId, int32_t num)
+int32_t Recorder::RecorderClient::SetAudioChannels(int32_t sourceId, int32_t num)
 {
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
@@ -356,7 +355,7 @@ int32_t Recorder::RecorderImpl::SetAudioChannels(int32_t sourceId, int32_t num)
     return para.ret;
 }
 
-int32_t Recorder::RecorderImpl::SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRate)
+int32_t Recorder::RecorderClient::SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRate)
 {
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
@@ -371,7 +370,7 @@ int32_t Recorder::RecorderImpl::SetAudioEncodingBitRate(int32_t sourceId, int32_
     return para.ret;
 }
 
-int32_t Recorder::RecorderImpl::SetMaxDuration(int32_t duration)
+int32_t Recorder::RecorderClient::SetMaxDuration(int32_t duration)
 {
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
@@ -385,7 +384,7 @@ int32_t Recorder::RecorderImpl::SetMaxDuration(int32_t duration)
     return para.ret;
 }
 
-int32_t Recorder::RecorderImpl::SetOutputFormat(OutputFormatType format)
+int32_t Recorder::RecorderClient::SetOutputFormat(OutputFormatType format)
 {
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
@@ -399,7 +398,7 @@ int32_t Recorder::RecorderImpl::SetOutputFormat(OutputFormatType format)
     return para.ret;
 }
 
-int32_t Recorder::RecorderImpl::SetOutputPath(const string &path)
+int32_t Recorder::RecorderClient::SetOutputPath(const string &path)
 {
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
@@ -429,7 +428,7 @@ static int32_t IsValidFileFd(int32_t fd)
     return SUCCESS;
 }
 
-int32_t Recorder::RecorderImpl::SetOutputFile(int32_t fd)
+int32_t Recorder::RecorderClient::SetOutputFile(int32_t fd)
 {
     if (fd < 0 || IsValidFileFd(fd) != SUCCESS) {
         MEDIA_ERR_LOG("Fail to get File Status Flags from fd: %d", fd);
@@ -449,7 +448,7 @@ int32_t Recorder::RecorderImpl::SetOutputFile(int32_t fd)
     return para.ret;
 }
 
-int32_t Recorder::RecorderImpl::SetNextOutputFile(int32_t fd)
+int32_t Recorder::RecorderClient::SetNextOutputFile(int32_t fd)
 {
     if (fd < 0 || IsValidFileFd(fd) != SUCCESS) {
         MEDIA_ERR_LOG("Fail to get File Status Flags from fd: %d", fd);
@@ -469,7 +468,7 @@ int32_t Recorder::RecorderImpl::SetNextOutputFile(int32_t fd)
     return para.ret;
 }
 
-int32_t Recorder::RecorderImpl::SetMaxFileSize(int64_t size)
+int32_t Recorder::RecorderClient::SetMaxFileSize(int64_t size)
 {
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
@@ -483,12 +482,13 @@ int32_t Recorder::RecorderImpl::SetMaxFileSize(int64_t size)
     return para.ret;
 }
 
-int32_t Recorder::RecorderImpl::SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback)
+int32_t Recorder::RecorderClient::SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback)
 {
     if (callback == nullptr || callback.get() == nullptr) {
         MEDIA_ERR_LOG("SetRecorderCallback callback is nullptr");
         return ERR_INVALID_PARAM;
     }
+
     callback_ = callback;
     int32_t ret = RegisterIpcCallback(RecorderCallbackSvc, 0, IPC_WAIT_FOREVER, &sid_, callback_.get());
     if (ret != LITEIPC_OK) {
@@ -512,7 +512,7 @@ int32_t Recorder::RecorderImpl::SetRecorderCallback(const std::shared_ptr<Record
     return para.ret;
 }
 
-int32_t Recorder::RecorderImpl::Prepare()
+int32_t Recorder::RecorderClient::Prepare()
 {
     CallBackPara para = {.funcId = REC_FUNC_PREPARE, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_PREPARE, nullptr, &para, SimpleCallback);
@@ -522,7 +522,7 @@ int32_t Recorder::RecorderImpl::Prepare()
     return para.ret;
 }
 
-int32_t Recorder::RecorderImpl::Start()
+int32_t Recorder::RecorderClient::Start()
 {
     CallBackPara para = {.funcId = REC_FUNC_START, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_START, nullptr, &para, SimpleCallback);
@@ -532,7 +532,7 @@ int32_t Recorder::RecorderImpl::Start()
     return para.ret;
 }
 
-int32_t Recorder::RecorderImpl::Pause()
+int32_t Recorder::RecorderClient::Pause()
 {
     CallBackPara para = {.funcId = REC_FUNC_PAUSE, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_PAUSE, nullptr, &para, SimpleCallback);
@@ -542,7 +542,7 @@ int32_t Recorder::RecorderImpl::Pause()
     return para.ret;
 }
 
-int32_t Recorder::RecorderImpl::Resume()
+int32_t Recorder::RecorderClient::Resume()
 {
     CallBackPara para = {.funcId = REC_FUNC_RESUME, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_RESUME, nullptr, &para, SimpleCallback);
@@ -552,7 +552,7 @@ int32_t Recorder::RecorderImpl::Resume()
     return para.ret;
 }
 
-int32_t Recorder::RecorderImpl::Stop(bool block)
+int32_t Recorder::RecorderClient::Stop(bool block)
 {
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
@@ -566,7 +566,7 @@ int32_t Recorder::RecorderImpl::Stop(bool block)
     return para.ret;
 }
 
-int32_t Recorder::RecorderImpl::Reset()
+int32_t Recorder::RecorderClient::Reset()
 {
     CallBackPara para = {.funcId = REC_FUNC_RESET, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_RESET, nullptr, &para, SimpleCallback);
@@ -576,7 +576,7 @@ int32_t Recorder::RecorderImpl::Reset()
     return para.ret;
 }
 
-int32_t Recorder::RecorderImpl::Release()
+int32_t Recorder::RecorderClient::Release()
 {
     CallBackPara para = {.funcId = REC_FUNC_RELEASE, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_RELEASE, nullptr, &para, SimpleCallback);
@@ -586,7 +586,7 @@ int32_t Recorder::RecorderImpl::Release()
     return para.ret;
 }
 
-int32_t Recorder::RecorderImpl::SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration)
+int32_t Recorder::RecorderClient::SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration)
 {
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
@@ -602,12 +602,12 @@ int32_t Recorder::RecorderImpl::SetFileSplitDuration(FileSplitType type, int64_t
     return para.ret;
 }
 
-int32_t Recorder::RecorderImpl::SetParameter(int32_t sourceId, const Format &format)
+int32_t Recorder::RecorderClient::SetParameter(int32_t sourceId, const Format &format)
 {
     return -1;
 }
 
-int32_t Recorder::RecorderImpl::SetDataSource(DataSourceType source, int32_t &sourceId)
+int32_t Recorder::RecorderClient::SetDataSource(DataSourceType source, int32_t &sourceId)
 {
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];

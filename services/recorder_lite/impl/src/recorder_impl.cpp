@@ -889,7 +889,7 @@ int32_t RecorderImpl::GetVideoTrackSource(const RecorderVideoSourceConfig &video
     trackSource.trackSourceInfo.videoInfo.bitRate = videoSourceConfig.bitRate;
     trackSource.trackSourceInfo.videoInfo.frameRate = videoSourceConfig.frameRate;
     trackSource.trackSourceInfo.videoInfo.keyFrameInterval = videoSourceConfig.frameRate;
-    trackSource.trackSourceInfo.videoInfo.speed = RECORDER_DEFAULT_SPEED;
+    trackSource.trackSourceInfo.videoInfo.speed = videoSourceConfig.speed;
     return SUCCESS;
 }
 

@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import("//build/lite/config/component/lite_component.gni")
+import("//foundation/multimedia/utils/lite/config.gni")
 
 static_library("recorder_server") {
   sources = [
@@ -62,6 +63,10 @@ shared_library("recorder_impl") {
     "impl/src/recorder_video_source.cpp",
   ]
 
+  if (enable_media_passthrough_mode == true) {
+    defines = [ "ENABLE_PASSTHROUGH_MODE" ]
+  }
+
   cflags = [ "-Wall" ]
 
   #  cflags += [ "-Werror" ]
@@ -89,7 +94,6 @@ shared_library("recorder_impl") {
   ]
   deps = [
     "//device/soc/hisilicon/common/hal/media:hardware_media_sdk",
-    "//foundation/communication/ipc_lite:liteipc_adapter",
     "//foundation/multimedia/audio_lite/services:audio_capturer_impl",
     "//foundation/multimedia/utils/lite:media_common",
     "//third_party/bounds_checking_function:libsec_shared",

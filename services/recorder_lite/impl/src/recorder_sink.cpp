@@ -232,10 +232,12 @@ int32_t RecorderSink::SendCallbackInfo(int32_t type, int32_t extra)
         case MUXER_INFO_FILE_START_TIME_MS:
         case MUXER_INFO_NEXT_FILE_FD_NOT_SET:
         case MUXER_INFO_NO_FRAME_DATA:
+#ifndef ENABLE_PASSTHROUGH_MODE
             if (type == MUXER_INFO_NEXT_OUTPUT_FILE_STARTED && outputFd_ != -1 && outputNextFd_ != -1) {
                 close(outputFd_);
                 outputFd_ = outputNextFd_;
             }
+#endif
             recCallBack_->OnInfo(type, extra);
             return SUCCESS;
         default:
@@ -372,6 +374,7 @@ int32_t RecorderSink::Start()
 
 void RecorderSink::CloseFd()
 {
+#ifndef ENABLE_PASSTHROUGH_MODE
     if (outputFd_ > 0) {
         FILE *fp = fdopen(outputFd_, "r");
         if (fp == nullptr) {
@@ -387,6 +390,7 @@ void RecorderSink::CloseFd()
         close(outputNextFd_);
         outputNextFd_ = -1;
     }
+#endif
 }
 
 int32_t RecorderSink::Stop(bool block)

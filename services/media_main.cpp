@@ -14,7 +14,9 @@
  */
 #include "hal_camera.h"
 #include "samgr_lite.h"
+#ifndef ENABLE_PASSTHROUGH_MODE
 #include "player_server.h"
+#endif
 #include "camera_server.h"
 #include "recorder_service.h"
 #include "audio_capturer_server.h"
@@ -39,13 +41,13 @@ int main()
 
     cout << "Camera server start." << endl;
     CameraServer::GetInstance()->InitCameraServer();
-
+#ifndef ENABLE_PASSTHROUGH_MODE
     cout << "Player server start" << endl;
     PlayerServer::GetInstance()->PlayerServerInit();
 
     cout << "AudioCapturer server start" << endl;
     AudioCapturerServer::GetInstance()->AudioCapturerServerInit();
-
+#endif
     cout << "Media server initialize succeed." << endl;
 
     sigset_t signalSet;
@@ -58,6 +60,7 @@ int main()
     sigwait(&signalSet, &sig);
     return 0;
 }
-
+#ifndef ENABLE_PASSTHROUGH_MODE
 SYSEX_SERVICE_INIT(RecorderServiceReg);
 SYSEX_SERVICE_INIT(AudioCapturerServiceReg);
+#endif

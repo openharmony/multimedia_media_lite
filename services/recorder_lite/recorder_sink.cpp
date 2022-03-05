@@ -80,7 +80,7 @@ int32_t RecorderSink::Prepare()
         return SUCCESS;
     }
 
-    FormatOutputConfig outputConfig;
+    FormatOutputConfig outputConfig = {};
     outputConfig.format = outputFormat_;
     if (outputFd_ != -1) {
         outputConfig.type = OUTPUT_TYPE_FD;

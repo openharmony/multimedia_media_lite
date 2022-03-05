@@ -24,19 +24,7 @@ static_library("recorder_server") {
   ]
   cflags = [ "-Wall" ]
   cflags_cc = cflags
-  public_configs = [ ":recorder_server_public_config" ]
-  public_deps = [
-    "//base/security/permission/services/permission_lite/pms_client:pms_client",
-    "//foundation/communication/ipc_lite:liteipc_adapter",
-    "//foundation/distributedschedule/samgr_lite/samgr:samgr",
-    "//foundation/graphic/surface:lite_surface",
-    "//foundation/multimedia/audio_lite/frameworks:audio_capturer_lite",
-    "//foundation/multimedia/utils/lite:media_common",
-    "//third_party/bounds_checking_function:libsec_shared",
-  ]
-}
 
-config("recorder_server_public_config") {
   include_dirs = [
     "//foundation/multimedia/media_lite/interfaces/kits/recorder_lite",
     "//third_party/bounds_checking_function/include",
@@ -49,9 +37,21 @@ config("recorder_server_public_config") {
     "//foundation/distributedschedule/samgr_lite/interfaces/kits/communication/broadcast",
     "//foundation/multimedia/media_lite/services/recorder_lite",
     "//foundation/multimedia/media_lite/interfaces/kits/recorder_lite",
+    "//foundation/multimedia/utils/lite/interfaces/kits",
+    "//foundation/multimedia/audio_lite/interfaces/kits",
+    "//foundation/multimedia/audio_lite/frameworks",
   ]
   ldflags = [
     "-lformat_hw",
     "-lcodec",
+  ]
+  public_deps = [
+    "//base/security/permission/services/permission_lite/pms_client:pms_client",
+    "//foundation/communication/ipc_lite:liteipc_adapter",
+    "//foundation/distributedschedule/samgr_lite/samgr:samgr",
+    "//foundation/graphic/surface:lite_surface",
+    "//foundation/multimedia/audio_lite/frameworks:audio_capturer_impl",
+    "//foundation/multimedia/utils/lite:media_common",
+    "//third_party/bounds_checking_function:libsec_shared",
   ]
 }

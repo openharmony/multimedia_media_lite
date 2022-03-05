@@ -1630,7 +1630,7 @@ int32_t RecorderImpl::SetParameter(int32_t sourceId, const Format &format)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (status_ == RELEASED) {
-        MEDIA_ERR_LOG("when RELEASED can not Set Parameter:%u");
+        MEDIA_ERR_LOG("when RELEASED can not Set Parameter");
         return ERR_ILLEGAL_STATE;
     }
     if (recorderSink_ == nullptr) {

@@ -16,24 +16,11 @@ import("//foundation/multimedia/utils/lite/config.gni")
 
 shared_library("recorder_lite") {
   sources = [ "recorder.cpp" ]
-
-  if (enable_media_passthrough_mode == true) {
-    sources += [ "passthrough/recorder_client.cpp" ]
-    include_dirs = [
-      "passthrough",
-      "//foundation/multimedia/media_lite/services/recorder_lite/impl/include",
-      "//foundation/multimedia/audio_lite/services/impl",
-    ]
-    ldflags = [ "-lformat_hw" ]
-    deps = [
-      "//foundation/multimedia/media_lite/services/recorder_lite:recorder_impl",
-    ]
-  } else {
+  if (enable_media_passthrough_mode == false) {
     sources += [ "binder/recorder_client.cpp" ]
     include_dirs = [
-      "binder",
-      "recorder_sink/include",
-      "recorder_source/include",
+      "//foundation/multimedia/media_lite/frameworks/recorder_lite/binder",
+      "//foundation/multimedia/media_lite/services/recorder_lite/impl/include",
       "//foundation/multimedia/utils/lite/hals",
       "//foundation/distributedschedule/samgr_lite/interfaces/kits/registry",
       "//foundation/distributedschedule/samgr_lite/interfaces/kits/samgr",
@@ -43,6 +30,17 @@ shared_library("recorder_lite") {
     deps = [
       "//base/security/permission/services/permission_lite/pms_client:pms_client",
       "//foundation/communication/ipc_lite:liteipc_adapter",
+    ]
+  } else {
+    sources += [ "passthrough/recorder_client.cpp" ]
+    include_dirs = [
+      "//foundation/multimedia/media_lite/frameworks/recorder_lite/passthrough",
+      "//foundation/multimedia/media_lite/services/recorder_lite/impl/include",
+      "//foundation/multimedia/audio_lite/services/impl",
+    ]
+    ldflags = [ "-lformat_hw" ]
+    deps = [
+      "//foundation/multimedia/media_lite/services/recorder_lite:recorder_impl",
     ]
   }
   cflags = [ "-fPIC" ]

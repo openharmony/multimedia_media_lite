@@ -340,9 +340,12 @@ void PlayerServer::SetSource(IpcIo *req, IpcIo *reply)
         case SourceType::SOURCE_TYPE_URI: {
             size_t size;
             char* str = (char*)IpcIoPopString(req, &size);
-            std::string uri(str);
-            Source sourceUri(uri);
-            IpcIoPushInt32(reply, player_->SetSource(sourceUri));
+            if (str != nullptr)
+            {
+                std::string uri(str);
+                Source sourceUri(uri);
+                IpcIoPushInt32(reply, player_->SetSource(sourceUri));
+            }
             break;
         }
         case SourceType::SOURCE_TYPE_FD:

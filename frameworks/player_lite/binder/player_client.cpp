@@ -475,7 +475,7 @@ int32_t Player::PlayerClient::GetVideoWidth(int32_t &videoWidth)
     para.funcId = PLAYER_SERVER_GET_VIDEO_WIDTH;
     para.ret = &ans;
     para.data = &videoWidth;
-    uint32_t ret = proxy_->Invoke(proxy_, PLAYER_SERVER_GET_VIDEO_WIDTH, &io, &para, Callback);
+    int32_t ret = proxy_->Invoke(proxy_, PLAYER_SERVER_GET_VIDEO_WIDTH, &io, &para, Callback);
     if (ret != 0) {
         MEDIA_ERR_LOG("GetVideoWidth failed, ret=%d\n", ret);
     }
@@ -709,7 +709,7 @@ int32_t Player::PlayerClient::SetParameter(const Format &params)
     CallBackPara para = {};
     para.funcId = PLAYER_SERVER_SET_PARAMETER;
     para.ret = &ans;
-    uint32_t ret = proxy_->Invoke(proxy_, PLAYER_SERVER_SET_PARAMETER, &io, &para, Callback);
+    int32_t ret = proxy_->Invoke(proxy_, PLAYER_SERVER_SET_PARAMETER, &io, &para, Callback);
     if (ret != 0) {
         MEDIA_ERR_LOG("PlayerClient::SetParameter failed, ret=%d\n", ret);
     }

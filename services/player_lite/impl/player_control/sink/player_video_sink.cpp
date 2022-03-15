@@ -106,7 +106,7 @@ void VideoSink::GetStatus(VideoSinkStatus &status)
 {
     status.vidFrameCount = renderFrameCnt_;
     status.decHeight = attr_.vidAttr.height;
-    status.decWidth = attr_.vidAttr.width;
+    status.decWidth = static_cast<uint32_t>(attr_.vidAttr.width);
     if (vidRendStartTime_ != AV_INVALID_PTS) {
         int64_t diffTimeMs = GetCurTimeMs() - vidRendStartTime_;
         if (diffTimeMs > MS_SCALE) {

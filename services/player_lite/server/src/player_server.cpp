@@ -221,7 +221,7 @@ static void* streamProcess(void* arg)
     int sleepTime = 20000;
     while (true) {
         pthread_mutex_lock(&g_streamThreadControl.mutex);
-        if (stream->threadRuning == false) {
+        if (!(stream->threadRuning)) {
             pthread_mutex_unlock(&g_streamThreadControl.mutex);
             break;
         }
@@ -237,7 +237,7 @@ static void* streamProcess(void* arg)
         }
         while (true) {
             pthread_mutex_lock(&g_streamThreadControl.mutex);
-            if (stream->threadRuning == false) {
+            if (!(stream->threadRuning)) {
                 pthread_mutex_unlock(&g_streamThreadControl.mutex);
                 break;
             }
@@ -278,7 +278,7 @@ static void* streamProcess(void* arg)
             break;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 int32_t SurfaceRequestHandler(const IpcContext* context, void* ipcMsg, IpcIo* io, void* arg)
@@ -349,7 +349,7 @@ void PlayerServer::SetSource(IpcIo *req, IpcIo *reply)
             MEDIA_ERR_LOG("unsupport now: SOURCE_TYPE_FD");
             IpcIoPushInt32(reply, -1);
             break;
-        case SourceType::SOURCE_TYPE_STREAM:{
+        case SourceType::SOURCE_TYPE_STREAM: {
             SetStreamSource(reply);
             break;
         }

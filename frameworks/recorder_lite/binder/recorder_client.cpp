@@ -194,7 +194,7 @@ int32_t Recorder::RecorderClient::SetVideoEncoder(int32_t sourceId, VideoCodecFo
     IpcIoPushInt32(&io, sourceId);
     IpcIoPushFlatObj(&io, &encoder, sizeof(encoder));
     CallBackPara para = {.funcId = REC_FUNC_SET_VIDEOENCODER, .ret = MEDIA_IPC_FAILED};
-    uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_VIDEOENCODER, &io, &para, SimpleCallback);
+    int32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_VIDEOENCODER, &io, &para, SimpleCallback);
     if (ret != 0) {
         MEDIA_ERR_LOG("SetSource failed, ret=%d", ret);
     }

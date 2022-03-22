@@ -1092,7 +1092,7 @@ void AdapterStreamCallback::QueueBuffer(size_t index, size_t offset, size_t size
     }
 
     buffer.idx = index;
-    buffer.flag = flags;
+    buffer.flag = static_cast<int32_t>(flags);
     buffer.offset = offset;
     buffer.size = size;
     buffer.timestamp = timestampUs;

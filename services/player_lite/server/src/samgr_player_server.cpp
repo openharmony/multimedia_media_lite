@@ -55,7 +55,7 @@ static BOOL Initialize(Service* service, Identity identity)
 
 static BOOL MessageHandle(Service* service, Request* msg)
 {
-    MEDIA_INFO_LOG("MessageHandle(%s)! Request<%d, %d, %p>\n",
+    MEDIA_INFO_LOG("MessageHandle(%s)! Request<%d, %d, %s>\n",
         service->GetName(service), msg->msgId, msg->msgValue, msg->data);
     return FALSE;
 }

@@ -158,7 +158,7 @@ int32_t RecorderImpl::GetFreeVideoSourceID(int32_t &sourceId, uint32_t &freeInde
 {
     for (uint32_t i = 0; i < RECORDER_SOURCE_MAX_CNT; i++) {
         if (sourceManager_[i].videoSource == nullptr) {
-            sourceId = RECORDER_VIDEO_SOURCE_ID_MASK + i;
+            sourceId = static_cast<int32_t>(RECORDER_VIDEO_SOURCE_ID_MASK + i);
             freeIndex = i;
             return SUCCESS;
         }
@@ -171,7 +171,7 @@ int32_t RecorderImpl::GetFreeAudioSourceID(int32_t &sourceId, uint32_t &freeInde
 {
     for (uint32_t i = 0; i < RECORDER_SOURCE_MAX_CNT; i++) {
         if (sourceManager_[i].audioSource == nullptr) {
-            sourceId = RECORDER_AUDIO_SOURCE_ID_MASK + i;
+            sourceId = static_cast<int32_t>(RECORDER_AUDIO_SOURCE_ID_MASK + i);
             freeIndex = i;
             return SUCCESS;
         }

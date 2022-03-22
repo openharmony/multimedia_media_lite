@@ -252,7 +252,7 @@ static void* streamProcess(void* arg)
                 if (readLen != 0) {
                     void* acquireBufVirAddr = acquireBuffer->GetVirAddr();
                     if (acquireBufVirAddr != nullptr) {
-                        if (buffer.size < readLen) {
+                        if (buffer.size < static_cast<uint32_t>(readLen)) {
                             MEDIA_ERR_LOG("[%s,%d] error:buffer.size < readLen", __func__, __LINE__);
                         }
                         if (memcpy_s(data + buffer.offset, buffer.size, acquireBufVirAddr, readLen) != EOK) {

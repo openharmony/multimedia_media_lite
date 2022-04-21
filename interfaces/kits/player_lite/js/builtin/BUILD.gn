@@ -13,7 +13,7 @@
 
 import("//build/lite/config/component/lite_component.gni")
 import("//build/lite/ndk/ndk.gni")
-import("//foundation/ace/ace_engine_lite/ace_lite.gni")
+import("//foundation/arkui/ace_engine_lite/ace_lite.gni")
 
 declare_args() {
   # player lite implement path, if not the null, vendor could

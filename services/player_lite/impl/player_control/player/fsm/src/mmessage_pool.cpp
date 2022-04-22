@@ -87,7 +87,7 @@ int32_t MMessagePool::Deinit()
     }
     if (!m_msgBusyList.empty()) {
         MEDIA_ERR_LOG(
-                      "pool: %s: %d msgs not released", m_name.c_str(), (uint32_t)m_msgBusyList.size());
+                      "pool: %s: %u msgs not released", m_name.c_str(), (uint32_t)m_msgBusyList.size());
     }
 
     if (m_msgFreeList.size() != m_maxMsgNum) {
@@ -148,7 +148,7 @@ MsgInfo *MMessagePool::GetMsg(const MsgInfo &msg)
     MsgInfo *msgInfo = nullptr;
 
     if (msg.msgDataLen > m_maxMsgPayloadLen) {
-        MEDIA_ERR_LOG("getMsg input msg len: %d large than maxlen: %d",
+        MEDIA_ERR_LOG("getMsg input msg len: %u large than maxlen: %u",
                       msg.msgDataLen, m_maxMsgPayloadLen);
         return nullptr;
     }
@@ -230,7 +230,7 @@ int32_t MMessagePool::PutMsg(MsgInfo &msg)
 void MMessagePool::Dump()
 {
     FSM_LOCK(m_listLock);
-    MEDIA_INFO_LOG( "pool: %s, free msg: %zd, busy msg: %zd",
+    MEDIA_INFO_LOG( "pool: %s, free msg: %zu, busy msg: %zu",
         m_name.c_str(), m_msgFreeList.size(), m_msgBusyList.size());
     std::list<MsgInfo *>::iterator msgIter = m_msgBusyList.begin();
     for (; msgIter != m_msgBusyList.end(); msgIter++) {

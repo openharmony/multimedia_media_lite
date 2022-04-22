@@ -838,7 +838,7 @@ int32_t RecorderImpl::PrepareVideoSource()
             TrackSource trackSource;
             ret = GetVideoTrackSource(sourceManager_[i].videoSourceConfig, trackSource);
             if (ret != SUCCESS) {
-                MEDIA_ERR_LOG("GetVideoTrackSource failed. index:%d ret:0x%x", i, ret);
+                MEDIA_ERR_LOG("GetVideoTrackSource failed. index:%u ret:0x%x", i, ret);
                 return ret;
             }
 

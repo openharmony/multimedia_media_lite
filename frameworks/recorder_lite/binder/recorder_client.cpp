@@ -74,7 +74,7 @@ static int32_t RecorderCallbackSvc(const IpcContext *context, void *ipcMsg, IpcI
 
     uint32_t funcId;
     (void)GetCode(ipcMsg, &funcId);
-    MEDIA_INFO_LOG("DeviceCallback, funcId=%d", funcId);
+    MEDIA_INFO_LOG("DeviceCallback, funcId=%u", funcId);
     switch (funcId) {
         case REC_ANONYMOUS_FUNC_ON_ERROR: {
             int32_t type = IpcIoPopInt32(io);
@@ -89,7 +89,7 @@ static int32_t RecorderCallbackSvc(const IpcContext *context, void *ipcMsg, IpcI
             break;
         }
         default: {
-            MEDIA_ERR_LOG("Unsupport callback service.(fundId=%d)", funcId);
+            MEDIA_ERR_LOG("Unsupport callback service.(fundId=%u)", funcId);
             break;
         }
     }
@@ -146,7 +146,7 @@ Recorder::RecorderClient::~RecorderClient()
     CallBackPara para = {.funcId = REC_FUNC_DISCONNECT, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_DISCONNECT, &io, &para, DisConnectCallback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("Disconnect recorder server failed, ret=%d", ret);
+        MEDIA_ERR_LOG("Disconnect recorder server failed, ret=%u", ret);
     }
     UnregisterIpcCallback(sid_);
 }
@@ -178,7 +178,7 @@ int32_t Recorder::RecorderClient::SetVideoSource(VideoSourceType source, int32_t
     CallBackPara para = {.funcId = REC_FUNC_SET_VIDEOSOURCE, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_VIDEOSOURCE, &io, &para, SetSourceCallback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("SetSource failed, ret=%d", ret);
+        MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
     if (para.ret == 0) {
         sourceId = para.data;
@@ -213,7 +213,7 @@ int32_t Recorder::RecorderClient::SetVideoSize(int32_t sourceId, int32_t width, 
     CallBackPara para = {.funcId = REC_FUNC_SET_VIDEOSIZE, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_VIDEOSIZE, &io, &para, SimpleCallback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("SetSource failed, ret=%d", ret);
+        MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
     return para.ret;
 }
@@ -228,7 +228,7 @@ int32_t Recorder::RecorderClient::SetVideoFrameRate(int32_t sourceId, int32_t fr
     CallBackPara para = {.funcId = REC_FUNC_SET_VIDEOFRAMERATE, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_VIDEOFRAMERATE, &io, &para, SimpleCallback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("SetSource failed, ret=%d", ret);
+        MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
     return para.ret;
 }
@@ -243,7 +243,7 @@ int32_t Recorder::RecorderClient::SetVideoEncodingBitRate(int32_t sourceId, int3
     CallBackPara para = {.funcId = REC_FUNC_SET_VIDEOENCODINGBITRATE, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_VIDEOENCODINGBITRATE, &io, &para, SimpleCallback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("SetSource failed, ret=%d", ret);
+        MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
     return para.ret;
 }
@@ -258,7 +258,7 @@ int32_t Recorder::RecorderClient::SetCaptureRate(int32_t sourceId, double fps)
     CallBackPara para = {.funcId = REC_FUNC_SET_CAPTURERATE, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_CAPTURERATE, &io, &para, SimpleCallback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("SetSource failed, ret=%d", ret);
+        MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
     return para.ret;
 }
@@ -287,7 +287,7 @@ std::shared_ptr<OHOS::Surface> Recorder::RecorderClient::GetSurface(int32_t sour
     Surface *surface = nullptr;
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_GET_SURFACE, &io, &surface, GetSurfaceCallback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("SetSource failed, ret=%d", ret);
+        MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
 
     return std::shared_ptr<OHOS::Surface>(surface);
@@ -302,7 +302,7 @@ int32_t Recorder::RecorderClient::SetAudioSource(AudioSourceType source, int32_t
     CallBackPara para = {.funcId = REC_FUNC_SET_AUDIOSOURCE, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_AUDIOSOURCE, &io, &para, SetSourceCallback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("SetSource failed, ret=%d", ret);
+        MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
     if (para.ret == 0) {
         sourceId = para.data;
@@ -320,7 +320,7 @@ int32_t Recorder::RecorderClient::SetAudioEncoder(int32_t sourceId, AudioCodecFo
     CallBackPara para = {.funcId = REC_FUNC_SET_AUDIOENCODER, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_AUDIOENCODER, &io, &para, SimpleCallback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("SetSource failed, ret=%d", ret);
+        MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
     return para.ret;
 }
@@ -335,7 +335,7 @@ int32_t Recorder::RecorderClient::SetAudioSampleRate(int32_t sourceId, int32_t r
     CallBackPara para = {.funcId = REC_FUNC_SET_AUDIOSAMPLERATE, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_AUDIOSAMPLERATE, &io, &para, SimpleCallback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("SetSource failed, ret=%d", ret);
+        MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
     return para.ret;
 }
@@ -350,7 +350,7 @@ int32_t Recorder::RecorderClient::SetAudioChannels(int32_t sourceId, int32_t num
     CallBackPara para = {.funcId = REC_FUNC_SET_AUDIOCHANNELS, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_AUDIOCHANNELS, &io, &para, SimpleCallback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("SetSource failed, ret=%d", ret);
+        MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
     return para.ret;
 }
@@ -365,7 +365,7 @@ int32_t Recorder::RecorderClient::SetAudioEncodingBitRate(int32_t sourceId, int3
     CallBackPara para = {.funcId = REC_FUNC_SET_AUDIOENCODINGBITRATE, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_AUDIOENCODINGBITRATE, &io, &para, SimpleCallback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("SetSource failed, ret=%d", ret);
+        MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
     return para.ret;
 }
@@ -379,7 +379,7 @@ int32_t Recorder::RecorderClient::SetMaxDuration(int32_t duration)
     CallBackPara para = {.funcId = REC_FUNC_SET_MAXDURATION, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_MAXDURATION, &io, &para, SimpleCallback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("SetSource failed, ret=%d", ret);
+        MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
     return para.ret;
 }
@@ -393,7 +393,7 @@ int32_t Recorder::RecorderClient::SetOutputFormat(OutputFormatType format)
     CallBackPara para = {.funcId = REC_FUNC_SET_OUTPUTFORMAT, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_OUTPUTFORMAT, &io, &para, SimpleCallback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("SetSource failed, ret=%d", ret);
+        MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
     return para.ret;
 }
@@ -407,7 +407,7 @@ int32_t Recorder::RecorderClient::SetOutputPath(const string &path)
     CallBackPara para = {.funcId = REC_FUNC_SET_OUTPUTPATH, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_OUTPUTPATH, &io, &para, SimpleCallback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("SetSource failed, ret=%d", ret);
+        MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
     return para.ret;
 }
@@ -477,7 +477,7 @@ int32_t Recorder::RecorderClient::SetMaxFileSize(int64_t size)
     CallBackPara para = {.funcId = REC_FUNC_SET_MAXFILESIZE, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_MAXFILESIZE, &io, &para, SimpleCallback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("SetSource failed, ret=%d", ret);
+        MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
     return para.ret;
 }
@@ -517,7 +517,7 @@ int32_t Recorder::RecorderClient::Prepare()
     CallBackPara para = {.funcId = REC_FUNC_PREPARE, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_PREPARE, nullptr, &para, SimpleCallback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("SetSource failed, ret=%d", ret);
+        MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
     return para.ret;
 }
@@ -527,7 +527,7 @@ int32_t Recorder::RecorderClient::Start()
     CallBackPara para = {.funcId = REC_FUNC_START, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_START, nullptr, &para, SimpleCallback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("SetSource failed, ret=%d", ret);
+        MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
     return para.ret;
 }
@@ -537,7 +537,7 @@ int32_t Recorder::RecorderClient::Pause()
     CallBackPara para = {.funcId = REC_FUNC_PAUSE, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_PAUSE, nullptr, &para, SimpleCallback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("SetSource failed, ret=%d", ret);
+        MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
     return para.ret;
 }
@@ -547,7 +547,7 @@ int32_t Recorder::RecorderClient::Resume()
     CallBackPara para = {.funcId = REC_FUNC_RESUME, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_RESUME, nullptr, &para, SimpleCallback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("SetSource failed, ret=%d", ret);
+        MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
     return para.ret;
 }
@@ -561,7 +561,7 @@ int32_t Recorder::RecorderClient::Stop(bool block)
     CallBackPara para = {.funcId = REC_FUNC_STOP, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_STOP, &io, &para, SimpleCallback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("SetSource failed, ret=%d", ret);
+        MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
     return para.ret;
 }
@@ -571,7 +571,7 @@ int32_t Recorder::RecorderClient::Reset()
     CallBackPara para = {.funcId = REC_FUNC_RESET, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_RESET, nullptr, &para, SimpleCallback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("SetSource failed, ret=%d", ret);
+        MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
     return para.ret;
 }
@@ -581,7 +581,7 @@ int32_t Recorder::RecorderClient::Release()
     CallBackPara para = {.funcId = REC_FUNC_RELEASE, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_RELEASE, nullptr, &para, SimpleCallback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("SetSource failed, ret=%d", ret);
+        MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
     return para.ret;
 }
@@ -597,7 +597,7 @@ int32_t Recorder::RecorderClient::SetFileSplitDuration(FileSplitType type, int64
     CallBackPara para = {.funcId = REC_FUNC_SET_FILESPLITDURATION, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_FILESPLITDURATION, &io, &para, SimpleCallback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("SetSource failed, ret=%d", ret);
+        MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
     return para.ret;
 }
@@ -616,7 +616,7 @@ int32_t Recorder::RecorderClient::SetDataSource(DataSourceType source, int32_t &
     CallBackPara para = {.funcId = REC_FUNC_SET_DATASOURCE, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_DATASOURCE, &io, &para, SetSourceCallback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("SetDataSource failed, ret=%d", ret);
+        MEDIA_ERR_LOG("SetDataSource failed, ret=%u", ret);
     }
     if (para.ret == 0) {
         sourceId = para.data;

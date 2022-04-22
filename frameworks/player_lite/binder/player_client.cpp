@@ -250,7 +250,7 @@ int32_t Player::PlayerClient::SetSource(const Source &source)
     para.data = (void *)&source;
     uint32_t ret = proxy_->Invoke(proxy_, PLAYER_SERVER_SET_SOURCE, &io, &para, Callback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("SetSource failed, ret=%d", ret);
+        MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
     return ans;
 }
@@ -266,7 +266,7 @@ int32_t Player::PlayerClient::Prepare()
     para.ret = &ans;
     uint32_t ret = proxy_->Invoke(proxy_, PLAYER_SERVER_PREPARE, &io, &para, Callback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("Prepare failed, ret=%d\n", ret);
+        MEDIA_ERR_LOG("Prepare failed, ret=%u\n", ret);
     }
     return ans;
 }
@@ -282,7 +282,7 @@ int32_t Player::PlayerClient::Play()
     para.ret = &ans;
     uint32_t ret = proxy_->Invoke(proxy_, PLAYER_SERVER_PLAY, &io, &para, Callback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("Play failed, ret=%d\n", ret);
+        MEDIA_ERR_LOG("Play failed, ret=%u\n", ret);
     }
     return ans;
 }
@@ -298,7 +298,7 @@ bool Player::PlayerClient::IsPlaying()
     para.ret = &ans;
     uint32_t ret = proxy_->Invoke(proxy_, PLAYER_SERVER_IS_PLAYING, &io, &para, Callback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("IsPlaying failed, ret=%d\n", ret);
+        MEDIA_ERR_LOG("IsPlaying failed, ret=%u\n", ret);
     }
     return ans;
 }
@@ -314,7 +314,7 @@ int32_t Player::PlayerClient::Pause()
     para.ret = &ans;
     uint32_t ret = proxy_->Invoke(proxy_, PLAYER_SERVER_PAUSE, &io, &para, Callback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("Pause failed, ret=%d\n", ret);
+        MEDIA_ERR_LOG("Pause failed, ret=%u\n", ret);
     }
     return ans;
 }
@@ -330,7 +330,7 @@ int32_t Player::PlayerClient::Stop()
     para.ret = &ans;
     uint32_t ret = proxy_->Invoke(proxy_, PLAYER_SERVER_STOP, &io, &para, Callback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("Stop failed, ret=%d\n", ret);
+        MEDIA_ERR_LOG("Stop failed, ret=%u\n", ret);
     }
     return ans;
 }
@@ -347,7 +347,7 @@ int32_t Player::PlayerClient::Rewind(int64_t mSeconds, int32_t mode)
     para.ret = &ans;
     uint32_t ret = proxy_->Invoke(proxy_, PLAYER_SERVER_REWIND, &io, &para, Callback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("Rewind failed, ret=%d\n", ret);
+        MEDIA_ERR_LOG("Rewind failed, ret=%u\n", ret);
     }
     return ans;
 }
@@ -365,7 +365,7 @@ int32_t Player::PlayerClient::SetVolume(float leftVolume, float rightVolume)
     para.ret = &ans;
     uint32_t ret = proxy_->Invoke(proxy_, PLAYER_SERVER_SET_VOLUME, &io, &para, Callback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("SetVolume failed, ret=%d\n", ret);
+        MEDIA_ERR_LOG("SetVolume failed, ret=%u\n", ret);
     }
     return ans;
 }
@@ -393,7 +393,7 @@ int32_t Player::PlayerClient::SetSurface(Surface *surface)
     para.ret = &ans;
     uint32_t ret = proxy_->Invoke(proxy_, PLAYER_SERVER_SET_VIDEO_SURFACE, &io, &para, Callback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("SetVideoSurfacee failed, ret=%d\n", ret);
+        MEDIA_ERR_LOG("SetVideoSurfacee failed, ret=%u\n", ret);
     }
     return ans;
 }
@@ -410,7 +410,7 @@ int32_t Player::PlayerClient::SetLoop(bool loop)
     para.ret = &ans;
     uint32_t ret = proxy_->Invoke(proxy_, PLAYER_SERVER_ENABLE_SINGLE_LOOPING, &io, &para, Callback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("SetLoop failed, ret=%d\n", ret);
+        MEDIA_ERR_LOG("SetLoop failed, ret=%u\n", ret);
     }
     return ans;
 }
@@ -426,7 +426,7 @@ bool Player::PlayerClient::IsSingleLooping()
     para.ret = &ans;
     uint32_t ret = proxy_->Invoke(proxy_, PLAYER_SERVER_IS_SINGLE_LOOPING, &io, &para, Callback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("IsSingleLooping failed, ret=%d\n", ret);
+        MEDIA_ERR_LOG("IsSingleLooping failed, ret=%u\n", ret);
     }
     return ans;
 }
@@ -444,7 +444,7 @@ int32_t Player::PlayerClient::GetCurrentPosition(int64_t &time) const
     para.data = &time;
     uint32_t ret = proxy_->Invoke(proxy_, PLAYER_SERVER_GET_CURRENT_TIME, &io, &para, Callback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("GetCurrentPosition failed, ret=%d\n", ret);
+        MEDIA_ERR_LOG("GetCurrentPosition failed, ret=%u\n", ret);
     }
     return ans;
 }
@@ -461,7 +461,7 @@ int32_t Player::PlayerClient::GetDuration(int64_t &duration) const
     para.data = &duration;
     uint32_t ret = proxy_->Invoke(proxy_, PLAYER_SERVER_GET_DURATION, &io, &para, Callback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("GetDuration failed, ret=%d\n", ret);
+        MEDIA_ERR_LOG("GetDuration failed, ret=%u\n", ret);
     }
     return ans;
 }
@@ -494,7 +494,7 @@ int32_t Player::PlayerClient::GetVideoHeight(int32_t &videoHeight)
     para.data = &videoHeight;
     uint32_t ret = proxy_->Invoke(proxy_, PLAYER_SERVER_GET_VIDEO_HEIGHT, &io, &para, Callback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("GetVideoHeight failed, ret=%d\n", ret);
+        MEDIA_ERR_LOG("GetVideoHeight failed, ret=%u\n", ret);
     }
     return ans;
 }
@@ -510,7 +510,7 @@ int32_t Player::PlayerClient::Reset()
     para.ret = &ans;
     uint32_t ret = proxy_->Invoke(proxy_, PLAYER_SERVER_RESET, &io, &para, Callback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("Reset failed, ret=%d\n", ret);
+        MEDIA_ERR_LOG("Reset failed, ret=%u\n", ret);
     }
     return ans;
 }
@@ -531,7 +531,7 @@ int32_t Player::PlayerClient::Release()
     para.ret = &ans;
     uint32_t ret = proxy_->Invoke(proxy_, PLAYER_SERVER_RELEASE, &io, &para, Callback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("Release failed, ret=%d\n", ret);
+        MEDIA_ERR_LOG("Release failed, ret=%u\n", ret);
     }
     return ans;
 }
@@ -550,7 +550,7 @@ int32_t Player::PlayerClient::PlayerCommonCallback(const IpcContext* context, vo
     }
     uint32_t funcId = COMMAND_ERROR;
     (void)GetCode(ipcMsg, &funcId);
-    MEDIA_INFO_LOG("PlayerCommonCallback, funcId=%d", funcId);
+    MEDIA_INFO_LOG("PlayerCommonCallback, funcId=%u", funcId);
     switch (funcId) {
         case ON_PALYBACK_COMPLETE: {
             playerCallback->OnPlaybackComplete();
@@ -607,7 +607,7 @@ void Player::PlayerClient::SetPlayerCallback(const std::shared_ptr<PlayerCallbac
     para.funcId = PLAYER_SERVER_SET_PLAYER_CALLBACK;
     uint32_t ans = proxy_->Invoke(proxy_, PLAYER_SERVER_SET_PLAYER_CALLBACK, &io, &para, Callback);
     if (ans != 0) {
-        MEDIA_ERR_LOG("SetPlayerCallback : Invoke failed, ret=%d\n", ans);
+        MEDIA_ERR_LOG("SetPlayerCallback : Invoke failed, ret=%u\n", ans);
     }
 }
 
@@ -623,7 +623,7 @@ int32_t Player::PlayerClient::GetPlayerState(int32_t &state) const
     para.data = &state;
     uint32_t ret = proxy_->Invoke(proxy_, PLAYER_SERVER_GET_STATE, &io, &para, Callback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("GetPlayerState failed, ret=%d\n", ret);
+        MEDIA_ERR_LOG("GetPlayerState failed, ret=%u\n", ret);
     }
     return ans;
 }
@@ -640,7 +640,7 @@ int32_t Player::PlayerClient::SetPlaybackSpeed(float speed)
     para.ret = &ans;
     uint32_t ret = proxy_->Invoke(proxy_, PLAYER_SERVER_SET_SPEED, &io, &para, Callback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("SetPlaybackSpeed failed, ret=%d\n", ret);
+        MEDIA_ERR_LOG("SetPlaybackSpeed failed, ret=%u\n", ret);
     }
     return ans;
 }
@@ -657,7 +657,7 @@ int32_t Player::PlayerClient::GetPlaybackSpeed(float &speed)
     para.data = &speed;
     uint32_t ret = proxy_->Invoke(proxy_, PLAYER_SERVER_GET_SPEED, &io, &para, Callback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("GetPlaybackSpeed failed, ret=%d\n", ret);
+        MEDIA_ERR_LOG("GetPlaybackSpeed failed, ret=%u\n", ret);
     }
     return ans;
 }
@@ -728,7 +728,7 @@ int32_t Player::PlayerClient::SetAudioStreamType(int32_t type)
     para.ret = &ans;
     uint32_t ret = proxy_->Invoke(proxy_, PLAYER_SERVER_SET_AUDIO_STREAM_TYPE, &io, &para, Callback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("SetPlaybackSpeed failed, ret=%d\n", ret);
+        MEDIA_ERR_LOG("SetPlaybackSpeed failed, ret=%u\n", ret);
     }
     return ans;
 }
@@ -745,7 +745,7 @@ void Player::PlayerClient::GetAudioStreamType(int32_t &type)
     para.data = &type;
     uint32_t ret = proxy_->Invoke(proxy_, PLAYER_SERVER_GET_AUDIO_STREAM_TYPE, &io, &para, Callback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("GetPlaybackSpeed failed, ret=%d\n", ret);
+        MEDIA_ERR_LOG("GetPlaybackSpeed failed, ret=%u\n", ret);
     }
 }
 }

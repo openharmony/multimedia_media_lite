@@ -140,7 +140,7 @@ int32_t PlayerImpl::SetSource(const Source &source)
     MEDIA_INFO_LOG("process in");
     CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
     if (currentState_ != PLAYER_IDLE) {
-        MEDIA_ERR_LOG("failed, current state is:%d", currentState_);
+        MEDIA_ERR_LOG("failed, current state is:%u", currentState_);
         return -1;
     }
 
@@ -280,7 +280,7 @@ int32_t PlayerImpl::Prepare()
         return 0;
     }
     if (currentState_ != PLAYER_INITIALIZED) {
-        MEDIA_ERR_LOG("Can not Prepare, currentState_ is %d", currentState_);
+        MEDIA_ERR_LOG("Can not Prepare, currentState_ is %u", currentState_);
         return -1;
     }
 
@@ -355,7 +355,7 @@ int32_t PlayerImpl::Play()
         return 0;
     }
     if (currentState_ != PLAYER_PREPARED && currentState_ != PLAYER_PAUSED) {
-        MEDIA_ERR_LOG("Can not Play, currentState is %d", currentState_);
+        MEDIA_ERR_LOG("Can not Play, currentState is %u", currentState_);
         return -1;
     }
     if (currentState_ == PLAYER_PAUSED) {
@@ -411,7 +411,7 @@ int32_t PlayerImpl::Pause()
         return 0;
     }
     if (currentState_ != PLAYER_STARTED) {
-        MEDIA_ERR_LOG("Can not Pause, currentState_ is %d", currentState_);
+        MEDIA_ERR_LOG("Can not Pause, currentState_ is %u", currentState_);
         return -1;
     }
 
@@ -430,7 +430,7 @@ int32_t PlayerImpl::Stop()
     }
     if ((currentState_ != PLAYER_STARTED) && (currentState_ != PLAYER_PAUSED) &&
         (currentState_ != PLAYER_PLAYBACK_COMPLETE) && (currentState_ != PLAYER_STATE_ERROR)) {
-        MEDIA_INFO_LOG("current state: %d, no need to do stop", currentState_);
+        MEDIA_INFO_LOG("current state: %u, no need to do stop", currentState_);
         return -1;
     }
 
@@ -499,7 +499,7 @@ int32_t PlayerImpl::Rewind(int64_t mSeconds, int32_t mode)
     MEDIA_INFO_LOG("process in");
     CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
     if (currentState_ != PLAYER_STARTED && currentState_ != PLAYER_PAUSED && currentState_ != PLAYER_PREPARED) {
-        MEDIA_ERR_LOG("Can not Rewind, currentState_ is %d", currentState_);
+        MEDIA_ERR_LOG("Can not Rewind, currentState_ is %u", currentState_);
         return -1;
     }
     if (speed_ != 1.0) {
@@ -538,7 +538,7 @@ int32_t PlayerImpl::SetVolume(float leftVolume, float rightVolume)
     CHK_NULL_RETURN(player_);
     if ((currentState_ != PLAYER_STARTED) && (currentState_ != PLAYER_PAUSED) &&
         (currentState_ != PLAYER_PREPARED) && (currentState_ != PLAYER_INITIALIZED)) {
-        MEDIA_ERR_LOG("SetVolume failed, currentState_ is %d", currentState_);
+        MEDIA_ERR_LOG("SetVolume failed, currentState_ is %u", currentState_);
         return -1;
     }
     if (leftVolume < 0 || leftVolume > MAX_MEDIA_VOLUME || rightVolume < 0 || rightVolume > MAX_MEDIA_VOLUME) {
@@ -561,7 +561,7 @@ int32_t PlayerImpl::SetSurface(Surface *surface)
     MEDIA_INFO_LOG("process in");
     CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
     if ((currentState_ != PLAYER_PREPARED) && (currentState_ != PLAYER_INITIALIZED)) {
-        MEDIA_ERR_LOG("SetSurface failed, currentState_ is %d", currentState_);
+        MEDIA_ERR_LOG("SetSurface failed, currentState_ is %u", currentState_);
         return -1;
     }
     surface_ = surface;
@@ -620,7 +620,7 @@ int32_t PlayerImpl::GetVideoWidth(int32_t &videoWidth)
     videoWidth = 0;
     if (currentState_ != PLAYER_PREPARED && currentState_ != PLAYER_STARTED && currentState_ != PLAYER_PAUSED &&
         currentState_ != PLAYER_STOPPED && currentState_ != PLAYER_PLAYBACK_COMPLETE) {
-        MEDIA_ERR_LOG("Can not GetVideoWidth, currentState_ is %d", currentState_);
+        MEDIA_ERR_LOG("Can not GetVideoWidth, currentState_ is %u", currentState_);
         return -1;
     }
 
@@ -645,7 +645,7 @@ int32_t PlayerImpl::GetVideoHeight(int32_t &videoHeight)
     videoHeight = 0;
     if (currentState_ != PLAYER_PREPARED && currentState_ != PLAYER_STARTED && currentState_ != PLAYER_PAUSED &&
         currentState_ != PLAYER_STOPPED && currentState_ != PLAYER_PLAYBACK_COMPLETE) {
-        MEDIA_ERR_LOG("Can not GetVideoHeight, currentState_ is %d", currentState_);
+        MEDIA_ERR_LOG("Can not GetVideoHeight, currentState_ is %u", currentState_);
         return -1;
     }
     if (formatFileInfo_.s32UsedVideoStreamIndex == -1) {
@@ -689,7 +689,7 @@ int32_t PlayerImpl::SetPlaybackSpeed(float speed)
     }
     CHK_NULL_RETURN(player_);
     if (currentState_ != PLAYER_STARTED) {
-        MEDIA_ERR_LOG("currentState_ is %d", currentState_);
+        MEDIA_ERR_LOG("currentState_ is %u", currentState_);
         return -1;
     }
     if (speed == speed_) {
@@ -743,7 +743,7 @@ int32_t PlayerImpl::SetAudioStreamType(int32_t type)
     MEDIA_INFO_LOG("process in");
     CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
     if (currentState_ != PLAYER_IDLE && currentState_ != PLAYER_INITIALIZED) {
-        MEDIA_ERR_LOG("failed, state %d,type:%d", currentState_, type);
+        MEDIA_ERR_LOG("failed, state %u,type:%d", currentState_, type);
         return -1;
     }
     audioStreamType_ = type;
@@ -944,7 +944,7 @@ int32_t PlayerImpl::SetLoop(bool loop)
     CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
     CHECK_FAILED_RETURN(isStreamSource_, false, -1, "stream source not support loop player");
     if (currentState_ == PLAYER_STOPPED || currentState_ == PLAYER_PLAYBACK_COMPLETE || currentState_ == PLAYER_IDLE) {
-        MEDIA_ERR_LOG("currentState_ is %d", currentState_);
+        MEDIA_ERR_LOG("currentState_ is %u", currentState_);
         return -1;
     }
     isSingleLoop_ = loop;
@@ -1226,7 +1226,7 @@ int32_t PlayerImpl::SetStreamSource(const Source &source)
 int32_t PlayerImpl::EnablePauseAfterPlay(bool isPauseAfterPlay)
 {
     if (currentState_ != PLAYER_IDLE && currentState_ != PLAYER_INITIALIZED) {
-        MEDIA_ERR_LOG("currentState_ is %d", currentState_);
+        MEDIA_ERR_LOG("currentState_ is %u", currentState_);
         return -1;
     }
     if (pauseAfterPlay_ == isPauseAfterPlay) {

@@ -347,7 +347,7 @@ void MessageLooper::Dump()
     FSM_LOCK(m_queueLock);
 
     MEDIA_INFO_LOG(
-                  "looper[%s], msg cnt: %zd", m_name.c_str(), m_eventQueue.size());
+                  "looper[%s], msg cnt: %zu", m_name.c_str(), m_eventQueue.size());
     std::list<MsgEvent>::iterator it = m_eventQueue.begin();
     while (it != m_eventQueue.end()) {
         MEDIA_INFO_LOG("msg id[%d], handleWhen[%llu]", it->msg->what, it->whenUs);

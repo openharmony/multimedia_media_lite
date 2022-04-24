@@ -127,7 +127,7 @@ int32_t AudioSink::Init(SinkAttr &atrr)
     param.channelCount = attr_.audAttr.channel;
     param.interleaved = false;
     param.type = (audioStreamType_ == 1) ? AUDIO_IN_COMMUNICATION : AUDIO_IN_MEDIA;
-    MEDIA_INFO_LOG("sampleRate:%d, channelCount:%d", param.sampleRate, param.channelCount);
+    MEDIA_INFO_LOG("sampleRate:%u, channelCount:%u", param.sampleRate, param.channelCount);
 
     struct AudioDeviceDescriptor deviceDesc;
     deviceDesc.portId = 0;

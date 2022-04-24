@@ -72,7 +72,7 @@ int32_t RecorderAudioSource::Init(const RecorderAudioSourceConfig &sourceConfig)
         MEDIA_ERR_LOG("new buffer_ nullptr");
         return ERR_UNKNOWN;
     }
-    MEDIA_DEBUG_LOG("framesize_ %d", framesize_);
+    MEDIA_DEBUG_LOG("framesize_ %u", framesize_);
     return SUCCESS;
 }
 

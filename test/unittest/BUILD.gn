@@ -31,8 +31,8 @@ if (ohos_build_type == "debug") {
     ldflags += [ "-Wl,-rpath-link=$ohos_root_path/$root_out_dir" ]
     include_dirs = [
       "//third_party/bounds_checking_function/include",
-      "//foundation/ace/ace_engine_lite/interfaces/innerkits/builtin/base",
-      "//foundation/ace/ace_engine_lite/interfaces/innerkits/builtin/async",
+      "//foundation/arkui/ace_engine_lite/interfaces/inner_api/builtin/base",
+      "//foundation/arkui/ace_engine_lite/interfaces/inner_api/builtin/async",
       "//foundation/multimedia/media_lite/interfaces/kits/player_lite",
       "//foundation/multimedia/utils/lite/include",
       "//foundation/multimedia/media_lite/test/unittest/player_lite",

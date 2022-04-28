@@ -44,7 +44,7 @@ static_library("recorder_server") {
   ]
   public_deps = [
     "//base/security/permission/services/permission_lite/pms_client:pms_client",
-    "//foundation/communication/ipc_lite:liteipc_adapter",
+    "//foundation/communication/ipc/interfaces/innerkits/c/ipc:ipc_single",
     "//foundation/distributedschedule/samgr_lite/samgr:samgr",
     "//foundation/graphic/surface:lite_surface",
     "//foundation/multimedia/audio_lite/services:audio_capturer_impl",

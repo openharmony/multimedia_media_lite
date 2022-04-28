@@ -23,7 +23,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include "liteipc_adapter.h"
+#include "ipc_skeleton.h"
 #include "media_log.h"
 #include "pms_interface.h"
 #include "recorder_common.h"
@@ -58,42 +58,42 @@ static int32_t SimpleCallback(void *owner, int code, IpcIo *reply)
     }
     CallBackPara *para = (CallBackPara *)owner;
     MEDIA_INFO_LOG("Callback, funcId = %d", para->funcId);
-    para->ret = IpcIoPopInt32(reply);
+    ReadInt32(reply, &(para->ret));
     return 0;
 }
 
-static int32_t RecorderCallbackSvc(const IpcContext *context, void *ipcMsg, IpcIo *io, void *arg)
+static int32_t RecorderCallbackSvc(uint32_t code, IpcIo *data, IpcIo *reply, MessageOption option)
 {
-    if (ipcMsg == nullptr || arg == nullptr) {
-        MEDIA_ERR_LOG("call back error, ipcMsg is null\n");
+    if (option.args == nullptr) {
+        MEDIA_ERR_LOG("call back error, option.args is null\n");
         return MEDIA_ERR;
     }
-
     /* Not need to check if callback is valid because message will not arrive before callback ready */
-    RecorderCallback *callback = static_cast<RecorderCallback *>(arg);
+    RecorderCallback *callback = static_cast<RecorderCallback *>(option.args);
 
-    uint32_t funcId;
-    (void)GetCode(ipcMsg, &funcId);
-    MEDIA_INFO_LOG("DeviceCallback, funcId=%u", funcId);
-    switch (funcId) {
+    MEDIA_INFO_LOG("DeviceCallback, code=%d", code);
+    switch (code) {
         case REC_ANONYMOUS_FUNC_ON_ERROR: {
-            int32_t type = IpcIoPopInt32(io);
-            int32_t code = IpcIoPopInt32(io);
+            int32_t type;
+            ReadInt32(data, &type);
+            int32_t code;
+            ReadInt32(data, &code);
             callback->OnError(type, code);
             break;
         }
         case REC_ANONYMOUS_FUNC_ON_INFO: {
-            int32_t type = IpcIoPopInt32(io);
-            int32_t code = IpcIoPopInt32(io);
+            int32_t type;
+            ReadInt32(data, &type);
+            int32_t code;
+            ReadInt32(data, &code);
             callback->OnInfo(type, code);
             break;
         }
         default: {
-            MEDIA_ERR_LOG("Unsupport callback service.(fundId=%u)", funcId);
+            MEDIA_ERR_LOG("Unsupport callback service.(code=%d)", code);
             break;
         }
     }
-    FreeBuffer(nullptr, ipcMsg);
     return MEDIA_OK;
 }
 
@@ -112,9 +112,11 @@ Recorder::RecorderClient::RecorderClient()
         MEDIA_ERR_LOG("QueryInterface failed");
         throw runtime_error("Ipc proxy init failed.");
     }
-
+    IpcIo io;
+    uint8_t tmpData[DEFAULT_IPC_SIZE];
+    IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
     CallBackPara para = {.funcId = REC_FUNC_CONNECT, .ret = MEDIA_IPC_FAILED};
-    int32_t ret = proxy_->Invoke(proxy_, REC_FUNC_CONNECT, nullptr, &para, SimpleCallback);
+    int32_t ret = proxy_->Invoke(proxy_, REC_FUNC_CONNECT, &io, &para, SimpleCallback);
     if (ret != 0) {
         MEDIA_ERR_LOG("Connect recorder server failed, ret=%d", ret);
         throw runtime_error("Ipc proxy Invoke failed.");
@@ -148,7 +150,6 @@ Recorder::RecorderClient::~RecorderClient()
     if (ret != 0) {
         MEDIA_ERR_LOG("Disconnect recorder server failed, ret=%u", ret);
     }
-    UnregisterIpcCallback(sid_);
 }
 
 static int32_t SetSourceCallback(void *owner, int code, IpcIo *reply)
@@ -163,9 +164,8 @@ static int32_t SetSourceCallback(void *owner, int code, IpcIo *reply)
     }
     CallBackPara *para = (CallBackPara *)owner;
     MEDIA_INFO_LOG("Callback, funcId = %d", para->funcId);
-    para->ret = IpcIoPopInt32(reply);
-    para->data = IpcIoPopInt32(reply);
-
+    ReadInt32(reply, &(para->ret));
+    ReadInt32(reply, &(para->data));
     return 0;
 }
 
@@ -174,7 +174,8 @@ int32_t Recorder::RecorderClient::SetVideoSource(VideoSourceType source, int32_t
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
-    IpcIoPushFlatObj(&io, &source, sizeof(source));
+
+    WriteRawData(&io, &source, sizeof(source));
     CallBackPara para = {.funcId = REC_FUNC_SET_VIDEOSOURCE, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_VIDEOSOURCE, &io, &para, SetSourceCallback);
     if (ret != 0) {
@@ -191,8 +192,9 @@ int32_t Recorder::RecorderClient::SetVideoEncoder(int32_t sourceId, VideoCodecFo
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
-    IpcIoPushInt32(&io, sourceId);
-    IpcIoPushFlatObj(&io, &encoder, sizeof(encoder));
+    WriteInt32(&io, sourceId);
+    WriteRawData(&io, &encoder, sizeof(encoder));
+
     CallBackPara para = {.funcId = REC_FUNC_SET_VIDEOENCODER, .ret = MEDIA_IPC_FAILED};
     int32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_VIDEOENCODER, &io, &para, SimpleCallback);
     if (ret != 0) {
@@ -207,9 +209,9 @@ int32_t Recorder::RecorderClient::SetVideoSize(int32_t sourceId, int32_t width, 
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
     MEDIA_DEBUG_LOG("RecorderClient SetVideoSize. (sourceId=%d, width=%d, height=%d)", sourceId, width, height);
-    IpcIoPushInt32(&io, sourceId);
-    IpcIoPushInt32(&io, width);
-    IpcIoPushInt32(&io, height);
+    WriteInt32(&io, sourceId);
+    WriteInt32(&io, width);
+    WriteInt32(&io, height);
     CallBackPara para = {.funcId = REC_FUNC_SET_VIDEOSIZE, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_VIDEOSIZE, &io, &para, SimpleCallback);
     if (ret != 0) {
@@ -223,8 +225,8 @@ int32_t Recorder::RecorderClient::SetVideoFrameRate(int32_t sourceId, int32_t fr
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
-    IpcIoPushInt32(&io, sourceId);
-    IpcIoPushInt32(&io, frameRate);
+    WriteInt32(&io, sourceId);
+    WriteInt32(&io, frameRate);
     CallBackPara para = {.funcId = REC_FUNC_SET_VIDEOFRAMERATE, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_VIDEOFRAMERATE, &io, &para, SimpleCallback);
     if (ret != 0) {
@@ -238,8 +240,8 @@ int32_t Recorder::RecorderClient::SetVideoEncodingBitRate(int32_t sourceId, int3
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
-    IpcIoPushInt32(&io, sourceId);
-    IpcIoPushInt32(&io, rate);
+    WriteInt32(&io, sourceId);
+    WriteInt32(&io, rate);
     CallBackPara para = {.funcId = REC_FUNC_SET_VIDEOENCODINGBITRATE, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_VIDEOENCODINGBITRATE, &io, &para, SimpleCallback);
     if (ret != 0) {
@@ -253,8 +255,8 @@ int32_t Recorder::RecorderClient::SetCaptureRate(int32_t sourceId, double fps)
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
-    IpcIoPushInt32(&io, sourceId);
-    IpcIoPushFlatObj(&io, &fps, sizeof(fps));
+    WriteInt32(&io, sourceId);
+    WriteRawData(&io, &fps, sizeof(fps));
     CallBackPara para = {.funcId = REC_FUNC_SET_CAPTURERATE, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_CAPTURERATE, &io, &para, SimpleCallback);
     if (ret != 0) {
@@ -283,7 +285,7 @@ std::shared_ptr<OHOS::Surface> Recorder::RecorderClient::GetSurface(int32_t sour
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
-    IpcIoPushInt32(&io, sourceId);
+    WriteInt32(&io, sourceId);
     Surface *surface = nullptr;
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_GET_SURFACE, &io, &surface, GetSurfaceCallback);
     if (ret != 0) {
@@ -298,7 +300,7 @@ int32_t Recorder::RecorderClient::SetAudioSource(AudioSourceType source, int32_t
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
-    IpcIoPushFlatObj(&io, &source, sizeof(source));
+    WriteRawData(&io, &source, sizeof(source));
     CallBackPara para = {.funcId = REC_FUNC_SET_AUDIOSOURCE, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_AUDIOSOURCE, &io, &para, SetSourceCallback);
     if (ret != 0) {
@@ -315,8 +317,8 @@ int32_t Recorder::RecorderClient::SetAudioEncoder(int32_t sourceId, AudioCodecFo
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
-    IpcIoPushInt32(&io, sourceId);
-    IpcIoPushFlatObj(&io, &encoder, sizeof(encoder));
+    WriteInt32(&io, sourceId);
+    WriteRawData(&io, &encoder, sizeof(encoder));
     CallBackPara para = {.funcId = REC_FUNC_SET_AUDIOENCODER, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_AUDIOENCODER, &io, &para, SimpleCallback);
     if (ret != 0) {
@@ -330,8 +332,8 @@ int32_t Recorder::RecorderClient::SetAudioSampleRate(int32_t sourceId, int32_t r
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
-    IpcIoPushInt32(&io, sourceId);
-    IpcIoPushInt32(&io, rate);
+    WriteInt32(&io, sourceId);
+    WriteInt32(&io, rate);
     CallBackPara para = {.funcId = REC_FUNC_SET_AUDIOSAMPLERATE, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_AUDIOSAMPLERATE, &io, &para, SimpleCallback);
     if (ret != 0) {
@@ -345,8 +347,8 @@ int32_t Recorder::RecorderClient::SetAudioChannels(int32_t sourceId, int32_t num
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
-    IpcIoPushInt32(&io, sourceId);
-    IpcIoPushInt32(&io, num);
+    WriteInt32(&io, sourceId);
+    WriteInt32(&io, num);
     CallBackPara para = {.funcId = REC_FUNC_SET_AUDIOCHANNELS, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_AUDIOCHANNELS, &io, &para, SimpleCallback);
     if (ret != 0) {
@@ -360,8 +362,8 @@ int32_t Recorder::RecorderClient::SetAudioEncodingBitRate(int32_t sourceId, int3
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
-    IpcIoPushInt32(&io, sourceId);
-    IpcIoPushInt32(&io, bitRate);
+    WriteInt32(&io, sourceId);
+    WriteInt32(&io, bitRate);
     CallBackPara para = {.funcId = REC_FUNC_SET_AUDIOENCODINGBITRATE, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_AUDIOENCODINGBITRATE, &io, &para, SimpleCallback);
     if (ret != 0) {
@@ -375,7 +377,7 @@ int32_t Recorder::RecorderClient::SetMaxDuration(int32_t duration)
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
-    IpcIoPushInt32(&io, duration);
+    WriteInt32(&io, duration);
     CallBackPara para = {.funcId = REC_FUNC_SET_MAXDURATION, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_MAXDURATION, &io, &para, SimpleCallback);
     if (ret != 0) {
@@ -389,7 +391,8 @@ int32_t Recorder::RecorderClient::SetOutputFormat(OutputFormatType format)
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
-    IpcIoPushFlatObj(&io, &format, sizeof(format));
+    WriteRawData(&io, &format, sizeof(format));
+
     CallBackPara para = {.funcId = REC_FUNC_SET_OUTPUTFORMAT, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_OUTPUTFORMAT, &io, &para, SimpleCallback);
     if (ret != 0) {
@@ -403,7 +406,7 @@ int32_t Recorder::RecorderClient::SetOutputPath(const string &path)
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
-    IpcIoPushString(&io, path.c_str());
+    WriteString(&io, path.c_str());
     CallBackPara para = {.funcId = REC_FUNC_SET_OUTPUTPATH, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_OUTPUTPATH, &io, &para, SimpleCallback);
     if (ret != 0) {
@@ -438,7 +441,7 @@ int32_t Recorder::RecorderClient::SetOutputFile(int32_t fd)
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 1);
-    IpcIoPushFd(&io, fd);
+    WriteFileDescriptor(&io, fd);
     CallBackPara para = {.funcId = REC_FUNC_SET_OUTPUTFILE, .ret = MEDIA_IPC_FAILED};
     int32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_OUTPUTFILE, &io, &para, SimpleCallback);
     if (ret != 0) {
@@ -458,7 +461,7 @@ int32_t Recorder::RecorderClient::SetNextOutputFile(int32_t fd)
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 1);
-    IpcIoPushFd(&io, fd);
+    WriteFileDescriptor(&io, fd);
     CallBackPara para = {.funcId = REC_FUNC_SET_NEXTOUTPUTFILE, .ret = MEDIA_IPC_FAILED};
     int32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_NEXTOUTPUTFILE, &io, &para, SimpleCallback);
     if (ret != 0) {
@@ -473,7 +476,7 @@ int32_t Recorder::RecorderClient::SetMaxFileSize(int64_t size)
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
-    IpcIoPushInt64(&io, size);
+    WriteInt64(&io, size);
     CallBackPara para = {.funcId = REC_FUNC_SET_MAXFILESIZE, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_MAXFILESIZE, &io, &para, SimpleCallback);
     if (ret != 0) {
@@ -490,17 +493,21 @@ int32_t Recorder::RecorderClient::SetRecorderCallback(const std::shared_ptr<Reco
     }
 
     callback_ = callback;
-    int32_t ret = RegisterIpcCallback(RecorderCallbackSvc, 0, IPC_WAIT_FOREVER, &sid_, callback_.get());
-    if (ret != LITEIPC_OK) {
-        MEDIA_ERR_LOG("RegisteIpcCallback failed, ret=%d", ret);
-        throw runtime_error("Ipc proxy RegisterIpcCallback failed.");
-    }
+    objectStub_.func = RecorderCallbackSvc;
+    objectStub_.args = callback_.get();
+    objectStub_.isRemote = false;
+    sid_.handle = IPC_INVALID_HANDLE;
+    sid_.token = SERVICE_TYPE_ANONYMOUS;
+    sid_.cookie = reinterpret_cast<uintptr_t>(&objectStub_);
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 1);
-    IpcIoPushSvc(&io, &sid_);
+    bool writeRemote = WriteRemoteObject(&io, &sid_);
+    if (!writeRemote) {
+        return -1;
+    }
     CallBackPara para = {.funcId = REC_FUNC_SET_RECORDERCALLBACK, .ret = MEDIA_IPC_FAILED};
-    ret = proxy_->Invoke(proxy_, REC_FUNC_SET_RECORDERCALLBACK, &io, &para, SimpleCallback);
+    int32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_RECORDERCALLBACK, &io, &para, SimpleCallback);
     if (ret != 0) {
         MEDIA_ERR_LOG("SetRecorderCallback failed, ret=%d", ret);
         return -1;
@@ -514,8 +521,11 @@ int32_t Recorder::RecorderClient::SetRecorderCallback(const std::shared_ptr<Reco
 
 int32_t Recorder::RecorderClient::Prepare()
 {
+    IpcIo io;
+    uint8_t tmpData[DEFAULT_IPC_SIZE];
+    IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
     CallBackPara para = {.funcId = REC_FUNC_PREPARE, .ret = MEDIA_IPC_FAILED};
-    uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_PREPARE, nullptr, &para, SimpleCallback);
+    uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_PREPARE, &io, &para, SimpleCallback);
     if (ret != 0) {
         MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
@@ -524,8 +534,11 @@ int32_t Recorder::RecorderClient::Prepare()
 
 int32_t Recorder::RecorderClient::Start()
 {
+    IpcIo io;
+    uint8_t tmpData[DEFAULT_IPC_SIZE];
+    IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
     CallBackPara para = {.funcId = REC_FUNC_START, .ret = MEDIA_IPC_FAILED};
-    uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_START, nullptr, &para, SimpleCallback);
+    uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_START, &io, &para, SimpleCallback);
     if (ret != 0) {
         MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
@@ -534,8 +547,11 @@ int32_t Recorder::RecorderClient::Start()
 
 int32_t Recorder::RecorderClient::Pause()
 {
+    IpcIo io;
+    uint8_t tmpData[DEFAULT_IPC_SIZE];
+    IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
     CallBackPara para = {.funcId = REC_FUNC_PAUSE, .ret = MEDIA_IPC_FAILED};
-    uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_PAUSE, nullptr, &para, SimpleCallback);
+    uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_PAUSE, &io, &para, SimpleCallback);
     if (ret != 0) {
         MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
@@ -544,8 +560,11 @@ int32_t Recorder::RecorderClient::Pause()
 
 int32_t Recorder::RecorderClient::Resume()
 {
+    IpcIo io;
+    uint8_t tmpData[DEFAULT_IPC_SIZE];
+    IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
     CallBackPara para = {.funcId = REC_FUNC_RESUME, .ret = MEDIA_IPC_FAILED};
-    uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_RESUME, nullptr, &para, SimpleCallback);
+    uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_RESUME, &io, &para, SimpleCallback);
     if (ret != 0) {
         MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
@@ -557,7 +576,7 @@ int32_t Recorder::RecorderClient::Stop(bool block)
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
-    IpcIoPushBool(&io, block);
+    WriteBool(&io, block);
     CallBackPara para = {.funcId = REC_FUNC_STOP, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_STOP, &io, &para, SimpleCallback);
     if (ret != 0) {
@@ -568,8 +587,11 @@ int32_t Recorder::RecorderClient::Stop(bool block)
 
 int32_t Recorder::RecorderClient::Reset()
 {
+    IpcIo io;
+    uint8_t tmpData[DEFAULT_IPC_SIZE];
+    IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
     CallBackPara para = {.funcId = REC_FUNC_RESET, .ret = MEDIA_IPC_FAILED};
-    uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_RESET, nullptr, &para, SimpleCallback);
+    uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_RESET, &io, &para, SimpleCallback);
     if (ret != 0) {
         MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
@@ -578,8 +600,11 @@ int32_t Recorder::RecorderClient::Reset()
 
 int32_t Recorder::RecorderClient::Release()
 {
+    IpcIo io;
+    uint8_t tmpData[DEFAULT_IPC_SIZE];
+    IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
     CallBackPara para = {.funcId = REC_FUNC_RELEASE, .ret = MEDIA_IPC_FAILED};
-    uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_RELEASE, nullptr, &para, SimpleCallback);
+    uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_RELEASE, &io, &para, SimpleCallback);
     if (ret != 0) {
         MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
@@ -591,9 +616,9 @@ int32_t Recorder::RecorderClient::SetFileSplitDuration(FileSplitType type, int64
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
-    IpcIoPushFlatObj(&io, &type, sizeof(type));
-    IpcIoPushInt64(&io, timestamp);
-    IpcIoPushUint32(&io, duration);
+    WriteRawData(&io, &type, sizeof(type));
+    WriteInt64(&io, timestamp);
+    WriteUint32(&io, duration);
     CallBackPara para = {.funcId = REC_FUNC_SET_FILESPLITDURATION, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_FILESPLITDURATION, &io, &para, SimpleCallback);
     if (ret != 0) {
@@ -612,7 +637,7 @@ int32_t Recorder::RecorderClient::SetDataSource(DataSourceType source, int32_t &
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
-    IpcIoPushFlatObj(&io, &source, sizeof(source));
+    WriteRawData(&io, &source, sizeof(source));
     CallBackPara para = {.funcId = REC_FUNC_SET_DATASOURCE, .ret = MEDIA_IPC_FAILED};
     uint32_t ret = proxy_->Invoke(proxy_, REC_FUNC_SET_DATASOURCE, &io, &para, SetSourceCallback);
     if (ret != 0) {

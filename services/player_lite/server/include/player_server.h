@@ -16,8 +16,7 @@
 #ifndef PLAYER_SERVER_H
 #define PLAYER_SERVER_H
 
-#include "liteipc_adapter.h"
-#include "serializer.h"
+#include "ipc_skeleton.h"
 #include "player_interface.h"
 
 namespace OHOS {
@@ -50,6 +49,7 @@ private:
     std::shared_ptr<StreamSource> stream_;
     std::shared_ptr<PlayerCallback> playerCallback_;
     SvcIdentity *sid_;
+    IpcObjectStub objectStub_;
     PlayerServer() : player_(nullptr), stream_(nullptr), sid_(nullptr) {}
     ~PlayerServer() {}
 

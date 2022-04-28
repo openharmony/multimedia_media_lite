@@ -24,8 +24,7 @@
 #include "format.h"
 #include "media_log.h"
 #include "player_type.h"
-#include "liteipc_adapter.h"
-#include "serializer.h"
+#include "ipc_skeleton.h"
 #include "surface.h"
 #include "source.h"
 #include "player.h"
@@ -44,8 +43,7 @@ public:
     }
 
     bool InitPlayerClient();
-    static void ClearIpcMsg(void *ipcMsg);
-    static int32_t PlayerCommonCallback(const IpcContext* context, void *ipcMsg, IpcIo *io, void *arg);
+    static int32_t PlayerCommonCallback(uint32_t code, IpcIo *data, IpcIo *reply, MessageOption option);
 
     static int Callback(void* owner, int code, IpcIo *reply);
     int32_t SetSource(const Source &source);
@@ -78,6 +76,7 @@ private:
     ~PlayerClient() {}
     IClientProxy *proxy_;
     SvcIdentity *sid_;
+    IpcObjectStub objectStub_;
 };
 }
 }

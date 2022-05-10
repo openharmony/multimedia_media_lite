@@ -16,7 +16,7 @@
 #ifndef RECORDER_SERVICE_H
 #define RECORDER_SERVICE_H
 
-#include "liteipc_adapter.h"
+#include "ipc_skeleton.h"
 #include "recorder_common.h"
 #include "recorder_impl.h"
 #include "serializer.h"
@@ -45,13 +45,13 @@ class RecorderCallbackClient : public RecorderCallback {
 public:
     RecorderCallbackClient() = delete;
     ~RecorderCallbackClient() = default;
-    RecorderCallbackClient(SvcIdentity *sid) : sid_(sid) {}
+    RecorderCallbackClient(SvcIdentity *sid) : sid_(*sid) {}
 
     void OnError(int32_t errorType, int32_t errorCode) override;
     void OnInfo(int32_t type, int32_t extra) override;
 
 private:
-    SvcIdentity *sid_ = nullptr;
+    SvcIdentity sid_;
 };
 
 void RecorderServiceReg();

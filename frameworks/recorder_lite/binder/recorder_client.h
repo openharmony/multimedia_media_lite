@@ -18,7 +18,7 @@
 
 #include "iproxy_client.h"
 #include "recorder.h"
-
+#include "ipc_skeleton.h"
 namespace OHOS {
 namespace Media {
 class Recorder::RecorderClient {
@@ -59,6 +59,7 @@ public:
 private:
     IClientProxy *proxy_ = nullptr;
     SvcIdentity sid_;
+    IpcObjectStub objectStub_;
 };
 } /* namespace Media */
 } /* namespace OHOS */

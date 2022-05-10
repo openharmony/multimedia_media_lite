@@ -44,21 +44,6 @@ bool Player::PlayerClient::InitPlayerClient()
     return true;
 }
 
-void Player::PlayerClient::ClearIpcMsg(void *ipcMsg)
-{
-    if (ipcMsg == nullptr) {
-        return;
-    }
-    uint32_t flag = 0;
-    GetFlag(ipcMsg, &flag);
-    if (flag == LITEIPC_FLAG_DEFAULT) {
-        // send reply to client, the second param is reply
-        SendReply(nullptr, ipcMsg, nullptr);
-    } else {
-        FreeBuffer(nullptr, ipcMsg);
-    }
-}
-
 int Player::PlayerClient::Callback(void* owner, int code, IpcIo *reply)
 {
     if (code != 0) {
@@ -73,7 +58,7 @@ int Player::PlayerClient::Callback(void* owner, int code, IpcIo *reply)
     switch (para->funcId) {
         case PLAYER_SERVER_SET_SOURCE: {
             int32_t* ret = static_cast<int32_t*>(para->ret);
-            *ret = IpcIoPopInt32(reply);
+            ReadInt32(reply, ret);
             if ((*ret == 0) && (para->type == (int32_t)SourceType::SOURCE_TYPE_STREAM) && (para->data != nullptr)) {
                 Source* source = (Source*)para->data;
                 auto stream = source->GetSourceStream();
@@ -88,90 +73,90 @@ int Player::PlayerClient::Callback(void* owner, int code, IpcIo *reply)
         }
         case PLAYER_SERVER_PREPARE: {
             int32_t* ret = static_cast<int32_t*>(para->ret);
-            *ret = IpcIoPopInt32(reply);
+            ReadInt32(reply, ret);
             break;
         }
         case PLAYER_SERVER_PLAY: {
             int32_t* ret = static_cast<int32_t*>(para->ret);
-            *ret = IpcIoPopInt32(reply);
+            ReadInt32(reply, ret);
             break;
         }
         case PLAYER_SERVER_IS_PLAYING: {
             bool* ret = static_cast<bool*>(para->ret);
-            *ret = IpcIoPopInt32(reply);
+            ReadBool(reply, ret);
             break;
         }
         case PLAYER_SERVER_PAUSE: {
             int32_t* ret = static_cast<int32_t*>(para->ret);
-            *ret = IpcIoPopInt32(reply);
+            ReadInt32(reply, ret);
             break;
         }
         case PLAYER_SERVER_STOP: {
             int32_t* ret = static_cast<int32_t*>(para->ret);
-            *ret = IpcIoPopInt32(reply);
+            ReadInt32(reply, ret);
             break;
         }
         case PLAYER_SERVER_REWIND: {
             int32_t* ret = static_cast<int32_t*>(para->ret);
-            *ret = IpcIoPopInt32(reply);
+            ReadInt32(reply, ret);
             break;
         }
         case PLAYER_SERVER_SET_VOLUME: {
             int32_t* ret = static_cast<int32_t*>(para->ret);
-            *ret = IpcIoPopInt32(reply);
+            ReadInt32(reply, ret);
             break;
         }
         case PLAYER_SERVER_SET_VIDEO_SURFACE: {
             int32_t* ret = static_cast<int32_t*>(para->ret);
-            *ret = IpcIoPopInt32(reply);
+            ReadInt32(reply, ret);
             break;
         }
         case PLAYER_SERVER_ENABLE_SINGLE_LOOPING: {
             int32_t* ret = static_cast<int32_t*>(para->ret);
-            *ret = IpcIoPopInt32(reply);
+            ReadInt32(reply, ret);
             break;
         }
         case PLAYER_SERVER_IS_SINGLE_LOOPING: {
             int32_t* ret = static_cast<int32_t*>(para->ret);
-            *ret = IpcIoPopInt32(reply);
+            ReadInt32(reply, ret);
             break;
         }
         case PLAYER_SERVER_GET_CURRENT_TIME: {
             int32_t* ret = static_cast<int32_t*>(para->ret);
-            *ret = IpcIoPopInt32(reply);
+            ReadInt32(reply, ret);
             int64_t* data = static_cast<int64_t*>(para->data);
-            *data = IpcIoPopInt64(reply);
+            ReadInt64(reply, data);
             break;
         }
         case PLAYER_SERVER_GET_DURATION: {
             int32_t* ret = static_cast<int32_t*>(para->ret);
-            *ret = IpcIoPopInt32(reply);
+            ReadInt32(reply, ret);
             int64_t* data = static_cast<int64_t*>(para->data);
-            *data = IpcIoPopInt64(reply);
+            ReadInt64(reply, data);
             break;
         }
         case PLAYER_SERVER_GET_VIDEO_WIDTH: {
             int32_t* ret = static_cast<int32_t*>(para->ret);
-            *ret = IpcIoPopInt32(reply);
+            ReadInt32(reply, ret);
             int32_t* data = static_cast<int32_t*>(para->data);
-            *data = IpcIoPopInt32(reply);
+            ReadInt32(reply, data);
             break;
         }
         case PLAYER_SERVER_GET_VIDEO_HEIGHT: {
             int32_t* ret = static_cast<int32_t*>(para->ret);
-            *ret = IpcIoPopInt32(reply);
+            ReadInt32(reply, ret);
             int32_t* data = static_cast<int32_t*>(para->data);
-            *data = IpcIoPopInt32(reply);
+            ReadInt32(reply, data);
             break;
         }
         case PLAYER_SERVER_RESET: {
             int32_t* ret = static_cast<int32_t*>(para->ret);
-            *ret = IpcIoPopInt32(reply);
+            ReadInt32(reply, ret);
             break;
         }
         case PLAYER_SERVER_RELEASE: {
             int32_t* ret = static_cast<int32_t*>(para->ret);
-            *ret = IpcIoPopInt32(reply);
+            ReadInt32(reply, ret);
             break;
         }
         case PLAYER_SERVER_SET_PLAYER_CALLBACK: {
@@ -179,38 +164,38 @@ int Player::PlayerClient::Callback(void* owner, int code, IpcIo *reply)
         }
         case PLAYER_SERVER_GET_STATE: {
             int32_t *ret = static_cast<int32_t *>(para->ret);
-            *ret = IpcIoPopInt32(reply);
+            ReadInt32(reply, ret);
             int32_t *data = static_cast<int32_t *>(para->data);
-            *data = IpcIoPopInt32(reply);
+            ReadInt32(reply, data);
             break;
         }
         case PLAYER_SERVER_SET_SPEED: {
             int32_t *ret = static_cast<int32_t *>(para->ret);
-            *ret = IpcIoPopInt32(reply);
+            ReadInt32(reply, ret);
             break;
         }
         case PLAYER_SERVER_GET_SPEED: {
             int32_t *ret = static_cast<int32_t *>(para->ret);
-            *ret = IpcIoPopInt32(reply);
+            ReadInt32(reply, ret);
             float *data = static_cast<float *>(para->data);
-            *data = IpcIoPopFloat(reply);
+            ReadFloat(reply, data);
             break;
         }
         case PLAYER_SERVER_SET_AUDIO_STREAM_TYPE: {
             int32_t *ret = static_cast<int32_t *>(para->ret);
-            *ret = IpcIoPopInt32(reply);
+            ReadInt32(reply, ret);
             break;
         }
         case PLAYER_SERVER_GET_AUDIO_STREAM_TYPE: {
             int32_t *ret = static_cast<int32_t *>(para->ret);
-            *ret = IpcIoPopInt32(reply);
+            ReadInt32(reply, ret);
             int32_t *data = static_cast<int32_t *>(para->data);
-            *data = IpcIoPopInt32(reply);
+            ReadInt32(reply, data);
             break;
         }
         case PLAYER_SERVER_SET_PARAMETER: {
             int32_t *ret = static_cast<int32_t *>(para->ret);
-            *ret = IpcIoPopInt32(reply);
+            ReadInt32(reply, ret);
             break;
         }
         default:
@@ -225,12 +210,12 @@ int32_t Player::PlayerClient::SetSource(const Source &source)
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
     int32_t sourceType = (int32_t)source.GetSourceType();
-    IpcIoPushInt32(&io, sourceType);
+    WriteInt32(&io, sourceType);
     switch ((SourceType)sourceType) {
         case SourceType::SOURCE_TYPE_URI: {
             std::string uri = source.GetSourceUri();
             const char* str = uri.c_str();
-            IpcIoPushString(&io, str);
+            WriteString(&io, str);
             break;
         }
         case SourceType::SOURCE_TYPE_FD:
@@ -339,8 +324,8 @@ int32_t Player::PlayerClient::Rewind(int64_t mSeconds, int32_t mode)
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
-    IpcIoPushInt64(&io, mSeconds);
-    IpcIoPushInt32(&io, mode);
+    WriteInt64(&io, mSeconds);
+    WriteInt32(&io, mode);
     int32_t ans = -1;
     CallBackPara para = {};
     para.funcId = PLAYER_SERVER_REWIND;
@@ -357,8 +342,8 @@ int32_t Player::PlayerClient::SetVolume(float leftVolume, float rightVolume)
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
-    IpcIoPushFlatObj(&io, &leftVolume, sizeof(float));
-    IpcIoPushFlatObj(&io, &rightVolume, sizeof(float));
+    WriteRawData(&io, &leftVolume, sizeof(float));
+    WriteRawData(&io, &rightVolume, sizeof(float));
     int32_t ans = -1;
     CallBackPara para = {};
     para.funcId = PLAYER_SERVER_SET_VOLUME;
@@ -377,16 +362,16 @@ int32_t Player::PlayerClient::SetSurface(Surface *surface)
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
     std::string position_x = surface->GetUserData("region_position_x");
     const char* str_x = position_x.c_str();
-    IpcIoPushString(&io, str_x);
+    WriteString(&io, str_x);
     std::string position_y = surface->GetUserData("region_position_y");
     const char* str_y = position_y.c_str();
-    IpcIoPushString(&io, str_y);
+    WriteString(&io, str_y);
     std::string width = surface->GetUserData("region_width");
     const char* str_width = width.c_str();
-    IpcIoPushString(&io, str_width);
+    WriteString(&io, str_width);
     std::string height = surface->GetUserData("region_height");
     const char* str_height = height.c_str();
-    IpcIoPushString(&io, str_height);
+    WriteString(&io, str_height);
     int32_t ans = -1;
     CallBackPara para = {};
     para.funcId = PLAYER_SERVER_SET_VIDEO_SURFACE;
@@ -403,7 +388,7 @@ int32_t Player::PlayerClient::SetLoop(bool loop)
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
-    IpcIoPushBool(&io, loop);
+    WriteBool(&io, loop);
     int32_t ans = -1;
     CallBackPara para = {};
     para.funcId = PLAYER_SERVER_ENABLE_SINGLE_LOOPING;
@@ -518,7 +503,6 @@ int32_t Player::PlayerClient::Reset()
 int32_t Player::PlayerClient::Release()
 {
     if (sid_ != nullptr) {
-        UnregisterIpcCallback(*sid_);
         delete sid_;
         sid_ = nullptr;
     }
@@ -536,41 +520,40 @@ int32_t Player::PlayerClient::Release()
     return ans;
 }
 
-int32_t Player::PlayerClient::PlayerCommonCallback(const IpcContext* context, void *ipcMsg, IpcIo *io, void *arg)
+int32_t Player::PlayerClient::PlayerCommonCallback(uint32_t code, IpcIo *data, IpcIo *reply, MessageOption option)
 {
-    if (ipcMsg == nullptr) {
-        MEDIA_ERR_LOG("call back error, ipcMsg is null\n");
-        return -1;
-    }
-    auto playerCallback = static_cast<PlayerCallback*>(arg);
+    auto playerCallback = static_cast<PlayerCallback *>(option.args);
     if (playerCallback == nullptr) {
         MEDIA_ERR_LOG("call back error, playerCallback is null");
-        ClearIpcMsg(ipcMsg);
         return -1;
     }
-    uint32_t funcId = COMMAND_ERROR;
-    (void)GetCode(ipcMsg, &funcId);
-    MEDIA_INFO_LOG("PlayerCommonCallback, funcId=%u", funcId);
-    switch (funcId) {
+    MEDIA_INFO_LOG("PlayerCommonCallback, funcId=%d", code);
+    switch (code) {
         case ON_PALYBACK_COMPLETE: {
             playerCallback->OnPlaybackComplete();
             break;
         }
         case ON_ERROR: {
-            int32_t errorType = IpcIoPopInt32(io);
-            int32_t errorCode = IpcIoPopInt32(io);
+            int32_t errorType;
+            ReadInt32(data, &errorType);
+            int32_t errorCode;
+            ReadInt32(data, &errorCode);
             playerCallback->OnError(errorType, errorCode);
             break;
         }
         case ON_INFO: {
-            int type = static_cast<int32_t>(IpcIoPopInt32(io));
-            int extra = static_cast<int32_t>(IpcIoPopInt32(io));
+            int32_t type;
+            ReadInt32(data, &type);
+            int32_t extra;
+            ReadInt32(data, &extra);
             playerCallback->OnInfo(type, extra);
             break;
         }
         case ON_VIDEO_SIZE_CHANGED: {
-            int width = static_cast<int32_t>(IpcIoPopInt32(io));
-            int height = static_cast<int32_t>(IpcIoPopInt32(io));
+            int32_t width;
+            ReadInt32(data, &width);
+            int32_t height;
+            ReadInt32(data, &height);
             playerCallback->OnVideoSizeChanged(width, height);
             break;
         }
@@ -583,7 +566,6 @@ int32_t Player::PlayerClient::PlayerCommonCallback(const IpcContext* context, vo
             break;
         }
     }
-    ClearIpcMsg(ipcMsg);
     return 0;
 }
 
@@ -593,16 +575,19 @@ void Player::PlayerClient::SetPlayerCallback(const std::shared_ptr<PlayerCallbac
     if (sid_ == nullptr) {
         sid_ = new SvcIdentity();
     }
-    int32_t ret = RegisterIpcCallback(PlayerCommonCallback, 0, IPC_WAIT_FOREVER, sid_, cb.get());
-    if (ret != LITEIPC_OK) {
-        MEDIA_ERR_LOG("RegisteIpcCallback failed\n");
-        return;
-    }
+    objectStub_.func = PlayerCommonCallback;
+    objectStub_.args = (void*)cb.get();
+    objectStub_.isRemote = false;
+    sid_->handle = IPC_INVALID_HANDLE;
+    sid_->token = SERVICE_TYPE_ANONYMOUS;
+    sid_->cookie = reinterpret_cast<uintptr_t>(&objectStub_);
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 1);
-    IpcIoPushInt32(&io, ret);
-    IpcIoPushSvc(&io, sid_);
+    bool writeRemote = WriteRemoteObject(&io, sid_);
+    if (!writeRemote) {
+        return;
+    }
     CallBackPara para = {};
     para.funcId = PLAYER_SERVER_SET_PLAYER_CALLBACK;
     uint32_t ans = proxy_->Invoke(proxy_, PLAYER_SERVER_SET_PLAYER_CALLBACK, &io, &para, Callback);
@@ -633,7 +618,7 @@ int32_t Player::PlayerClient::SetPlaybackSpeed(float speed)
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
-    IpcIoPushFloat(&io, speed);
+    WriteFloat(&io, speed);
     int32_t ans = -1;
     CallBackPara para = {};
     para.funcId = PLAYER_SERVER_SET_SPEED;
@@ -669,36 +654,36 @@ int32_t Player::PlayerClient::SetParameter(const Format &params)
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
     
     std::map<std::string, FormatData *> formatParam = params.GetFormatMap();
-    IpcIoPushInt32(&io, formatParam.size()); /* count */
+    WriteInt32(&io, formatParam.size()); /* count */
 
     std::map<std::string, FormatData *> ::iterator iter;  
     for (iter = formatParam.begin(); iter != formatParam.end(); iter++) {
-        IpcIoPushString(&io, iter->first.c_str()); /* key */
+        WriteString(&io, iter->first.c_str()); /* key */
         FormatData *data = iter->second;
         FormatDataType type = data->GetType();
-        IpcIoPushInt32(&io, type); /* type */
+        WriteInt32(&io, (int32_t)type); /* type */
 
         /* value */
         if (type == FORMAT_TYPE_INT32) {
             int32_t value;
             data->GetInt32Value(value);
-            IpcIoPushInt32(&io, value);
+            WriteInt32(&io, value);
         } else if (type == FORMAT_TYPE_INT64) {
             int64_t value;
             data->GetInt64Value(value);
-            IpcIoPushInt64(&io, value);
+            WriteInt64(&io, value);
         } else if (type == FORMAT_TYPE_FLOAT) {
             float value;
             data->GetFloatValue(value);
-            IpcIoPushFloat(&io, value);
+            WriteFloat(&io, value);
         } else if (type == FORMAT_TYPE_DOUBLE) {
             double value;
             data->GetDoubleValue(value);
-            IpcIoPushDouble(&io, value);
+            WriteDouble(&io, value);
         } else if (type == FORMAT_TYPE_STRING) {
             std::string value;
             data->GetStringValue(value);
-            IpcIoPushString(&io, value.c_str());
+            WriteString(&io, value.c_str());
         } else {
             MEDIA_ERR_LOG("SetParameter failed, type:%d\n", type);
             return -1;
@@ -721,7 +706,7 @@ int32_t Player::PlayerClient::SetAudioStreamType(int32_t type)
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
-    IpcIoPushInt32(&io, type);
+    WriteInt32(&io, type);
     int32_t ans = -1;
     CallBackPara para = {};
     para.funcId = PLAYER_SERVER_SET_AUDIO_STREAM_TYPE;

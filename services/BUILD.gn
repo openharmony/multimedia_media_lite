@@ -53,23 +53,23 @@ executable("media_server") {
     "//foundation/multimedia/media_lite/services/recorder_lite:recorder_server",
   ]
 }
-copy("camera_config") {
-  if (board_name == "hi3516dv300" || board_name == "hispark_taurus") {
-    sources = [ "cameradev_imx335_5M.ini" ]
-  } else if ((board_name == "hi3518ev300" || board_name == "hispark_aries") &&
-             ohos_build_compiler == "clang") {
-    sources = [ "cameradev_jxf23.ini" ]
-  } else {
-    sources = [ "cameradev_imx307.ini" ]
-  }
-  outputs = [ "$root_out_dir/data/cameradev00.ini" ]
-}
-if (board_name == "hi3516dv300" || board_name == "hispark_taurus") {
-  copy("camera_config01") {
-    sources = [ "cameradev_imx335_4M.ini" ]
-    outputs = [ "$root_out_dir/data/cameradev01.ini" ]
-  }
-}
+#copy("camera_config") {
+#  if (board_name == "hi3516dv300" || board_name == "hispark_taurus") {
+#    sources = [ "cameradev_imx335_5M.ini" ]
+#  } else if ((board_name == "hi3518ev300" || board_name == "hispark_aries") &&
+#             ohos_build_compiler == "clang") {
+#    sources = [ "cameradev_jxf23.ini" ]
+#  } else {
+#    sources = [ "cameradev_imx307.ini" ]
+#  }
+#  outputs = [ "$root_out_dir/data/cameradev00.ini" ]
+#}
+#if (board_name == "hi3516dv300" || board_name == "hispark_taurus") {
+#  copy("camera_config01") {
+#    sources = [ "cameradev_imx335_4M.ini" ]
+#    outputs = [ "$root_out_dir/data/cameradev01.ini" ]
+#  }
+#}
 lite_component("media_lite") {
   features = [
     ":media_server",

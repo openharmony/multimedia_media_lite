@@ -53,7 +53,6 @@ shared_library("player_impl") {
     "//foundation/graphic/surface:lite_surface",
     "//foundation/multimedia/utils/lite:media_common",
     "//third_party/bounds_checking_function:libsec_shared",
-    "//third_party/iniparser:iniparser",
   ]
   ldflags += [ "-lstdc++" ]
   cflags = [

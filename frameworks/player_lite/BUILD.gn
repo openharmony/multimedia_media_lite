@@ -41,7 +41,7 @@ if (ohos_kernel_type != "liteos_m") {
       include_dirs +=
           [ "//foundation/multimedia/media_lite/frameworks/player_lite/binder" ]
       deps = [
-        "//foundation/communication/ipc_lite:liteipc_adapter",
+        "//foundation/communication/ipc/interfaces/innerkits/c/ipc:ipc_single",
         "//foundation/distributedschedule/samgr_lite/samgr:samgr",
         "//foundation/graphic/surface:lite_surface",
       ]

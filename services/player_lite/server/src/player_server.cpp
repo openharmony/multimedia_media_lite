@@ -22,6 +22,7 @@
 #include "surface.h"
 #include "surface_impl.h"
 #include "player_factory.h"
+#include "rpc_errno.h"
 extern "C"
 {
 #include "codec_interface.h"
@@ -281,11 +282,11 @@ static void* streamProcess(void* arg)
     return nullptr;
 }
 
-int32_t SurfaceRequestHandler(const IpcContext* context, void* ipcMsg, IpcIo* io, void* arg)
+int32_t SurfaceRequestHandler(uint32_t code, IpcIo* data, IpcIo* reply, MessageOption option)
 {
-    Surface* surface = (Surface*)arg;
+    Surface* surface =  reinterpret_cast<Surface*>(option.args);
     SurfaceImpl* liteSurface = reinterpret_cast<SurfaceImpl*>(surface);
-    liteSurface->DoIpcMsg(ipcMsg, io);
+    liteSurface->DoIpcMsg(code, data, reply, option);
     return 0;
 }
 
@@ -297,7 +298,7 @@ void PlayerServer::SetStreamSource(IpcIo *reply)
     formats.PutStringValue(CODEC_MIME, MIME_AUDIO_AAC);
     Source streamSource(stream_, formats);
     int32_t ret = player_->SetSource(streamSource);
-    IpcIoPushInt32(reply, ret);
+    WriteInt32(reply, ret);
     if (ret == 0) {
         Surface* surface = Surface::CreateSurface();
         surface->SetUsage(BUFFER_CONSUMER_USAGE_HARDWARE);
@@ -305,12 +306,17 @@ void PlayerServer::SetStreamSource(IpcIo *reply)
         if (sid_ == nullptr) {
             sid_ = new SvcIdentity();
         }
-        ret = RegisterIpcCallback(SurfaceRequestHandler, 0, IPC_WAIT_FOREVER, sid_, surface);
-        if (ret != LITEIPC_OK) {
-            MEDIA_ERR_LOG("RegisterIpcCallback failed.");
-        }
+        objectStub_.func = SurfaceRequestHandler;
+        objectStub_.args = surface;
+        objectStub_.isRemote = false;
+        sid_->handle = IPC_INVALID_HANDLE;
+        sid_->token = SERVICE_TYPE_ANONYMOUS;
+        sid_->cookie = reinterpret_cast<uintptr_t>(&objectStub_);
         stream_->SetSurface(surface);
-        IpcIoPushSvc(reply, sid_);
+        bool writeRemote = WriteRemoteObject(reply, sid_);
+        if (!writeRemote) {
+            MEDIA_ERR_LOG("WriteRemoteObject failed.");
+        }
         pthread_attr_t attr;
         pthread_mutex_init(&g_streamThreadControl.mutex, nullptr);
         ServerStreamSource* serverStream = reinterpret_cast<ServerStreamSource*>(stream_.get());
@@ -323,8 +329,8 @@ void PlayerServer::SetStreamSource(IpcIo *reply)
 void PlayerServer::SetSource(IpcIo *req, IpcIo *reply)
 {
     MEDIA_INFO_LOG("process in");
-    int32_t sourceType = IpcIoPopInt32(req);
-
+    int32_t sourceType;
+    ReadInt32(req, &sourceType);
     if (player_ == nullptr) {
         MEDIA_INFO_LOG("player nullptr");
         player_ = PlayerFactory::CreatePlayer();
@@ -333,23 +339,23 @@ void PlayerServer::SetSource(IpcIo *req, IpcIo *reply)
     int32_t state = 0;
     /* only support set source at state idle */
     if (player_ == nullptr || player_->GetPlayerState(state) != 0 || state != static_cast<int32_t> (PLAYER_IDLE)) {
-        IpcIoPushInt32(reply, -1);
+        WriteInt32(reply, -1);
         return;
     }
     switch ((SourceType)sourceType) {
         case SourceType::SOURCE_TYPE_URI: {
             size_t size;
-            char* str = (char*)IpcIoPopString(req, &size);
+            char* str = (char*)ReadString(req, &size);
             if (str != nullptr) {
                 std::string uri(str);
                 Source sourceUri(uri);
-                IpcIoPushInt32(reply, player_->SetSource(sourceUri));
+                WriteInt32(reply, player_->SetSource(sourceUri));
             }
             break;
         }
         case SourceType::SOURCE_TYPE_FD:
             MEDIA_ERR_LOG("unsupport now: SOURCE_TYPE_FD");
-            IpcIoPushInt32(reply, -1);
+            WriteInt32(reply, -1);
             break;
         case SourceType::SOURCE_TYPE_STREAM: {
             SetStreamSource(reply);
@@ -365,40 +371,40 @@ void PlayerServer::Prepare(IpcIo *req, IpcIo *reply)
 {
     MEDIA_INFO_LOG("process in");
     if (player_ != nullptr) {
-        IpcIoPushInt32(reply, player_->Prepare());
+        WriteInt32(reply, player_->Prepare());
         return;
     }
-    IpcIoPushInt32(reply, -1);
+    WriteInt32(reply, -1);
 }
 
 void PlayerServer::Play(IpcIo *req, IpcIo *reply)
 {
     MEDIA_INFO_LOG("process in");
     if (player_ != nullptr) {
-        IpcIoPushInt32(reply, player_->Play());
+        WriteInt32(reply, player_->Play());
         return;
     }
-    IpcIoPushInt32(reply, -1);
+    WriteInt32(reply, -1);
 }
 
 void PlayerServer::IsPlaying(IpcIo *req, IpcIo *reply)
 {
     MEDIA_INFO_LOG("process in");
     if (player_ != nullptr) {
-        IpcIoPushBool(reply, player_->IsPlaying());
+        WriteBool(reply, player_->IsPlaying());
         return;
     }
-    IpcIoPushBool(reply, false);
+    WriteBool(reply, false);
 }
 
 void PlayerServer::Pause(IpcIo *req, IpcIo *reply)
 {
     MEDIA_INFO_LOG("process in");
     if (player_ != nullptr) {
-        IpcIoPushInt32(reply, player_->Pause());
+        WriteInt32(reply, player_->Pause());
         return;
     }
-    IpcIoPushInt32(reply, -1);
+    WriteInt32(reply, -1);
 }
 
 void PlayerServer::Stop(IpcIo *req, IpcIo *reply)
@@ -412,45 +418,46 @@ void PlayerServer::Stop(IpcIo *req, IpcIo *reply)
             serverStream->threadRuning = false;
             pthread_mutex_unlock(&g_streamThreadControl.mutex);
         }
-        IpcIoPushInt32(reply, ret);
+        WriteInt32(reply, ret);
         return;
     }
-    IpcIoPushInt32(reply, -1);
+    WriteInt32(reply, -1);
 }
 
 void PlayerServer::Rewind(IpcIo *req, IpcIo *reply)
 {
     MEDIA_INFO_LOG("process in");
-    int64_t mSecond = IpcIoPopInt64(req);
-    int32_t mode = IpcIoPopInt32(req);
+    int64_t mSecond;
+    ReadInt64(req, &mSecond);
+    int32_t mode;
+    ReadInt32(req, &mode);
     if (player_ != nullptr) {
-        IpcIoPushInt32(reply, player_->Rewind(mSecond, mode));
+        WriteInt32(reply, player_->Rewind(mSecond, mode));
         return;
     }
-    IpcIoPushInt32(reply, -1);
+    WriteInt32(reply, -1);
 }
 
 void PlayerServer::SetVolume(IpcIo *req, IpcIo *reply)
 {
     MEDIA_INFO_LOG("process in");
-    uint32_t size;
-    float leftVolume = *static_cast<float *>(IpcIoPopFlatObj(req, &size));
-    float rightVolume = *static_cast<float *>(IpcIoPopFlatObj(req, &size));
+    float *leftVolume = static_cast<float *>(ReadRawData(req, sizeof(float)));
+    float *rightVolume = static_cast<float *>(ReadRawData(req, sizeof(float)));
     if (player_ != nullptr) {
-        IpcIoPushInt32(reply, player_->SetVolume(leftVolume, rightVolume));
+        WriteInt32(reply, player_->SetVolume(*leftVolume, *rightVolume));
         return;
     }
-    IpcIoPushInt32(reply, -1);
+    WriteInt32(reply, -1);
 }
 
 void PlayerServer::SetSurface(IpcIo *req, IpcIo *reply)
 {
     MEDIA_INFO_LOG("process in");
     size_t size;
-    char* str_x = (char*)IpcIoPopString(req, &size);
-    char* str_y = (char*)IpcIoPopString(req, &size);
-    char* str_width = (char*)IpcIoPopString(req, &size);
-    char* str_height = (char*)IpcIoPopString(req, &size);
+    char* str_x = (char*)ReadString(req, &size);
+    char* str_y = (char*)ReadString(req, &size);
+    char* str_width = (char*)ReadString(req, &size);
+    char* str_height = (char*)ReadString(req, &size);
     Surface* surface = Surface::CreateSurface();
     if (surface != nullptr) {
         surface->SetUserData("region_position_x", std::string(str_x));
@@ -458,44 +465,45 @@ void PlayerServer::SetSurface(IpcIo *req, IpcIo *reply)
         surface->SetUserData("region_width", std::string(str_width));
         surface->SetUserData("region_height", std::string(str_height));
         if (player_ != nullptr) {
-            IpcIoPushInt32(reply, player_->SetSurface(surface));
+            WriteInt32(reply, player_->SetSurface(surface));
             return;
         }
     }
-    IpcIoPushInt32(reply, -1);
+    WriteInt32(reply, -1);
 }
 
 void PlayerServer::SetLoop(IpcIo *req, IpcIo *reply)
 {
     MEDIA_INFO_LOG("process in");
-    bool loop = IpcIoPopBool(req);
+    bool loop;
+    ReadBool(req, &loop);
     if (player_ != nullptr) {
-        IpcIoPushInt32(reply, player_->SetLoop(loop));
+        WriteBool(reply, player_->SetLoop(loop));
         return;
     }
-    IpcIoPushInt32(reply, -1);
+    WriteInt32(reply, -1);
 }
 
 void PlayerServer::IsSingleLooping(IpcIo *req, IpcIo *reply)
 {
     MEDIA_INFO_LOG("process in");
     if (player_ != nullptr) {
-        IpcIoPushBool(reply, player_->IsSingleLooping());
+        WriteBool(reply, player_->IsSingleLooping());
         return;
     }
-    IpcIoPushBool(reply, false);
+    WriteBool(reply, false);
 }
 
 void PlayerServer::GetCurrentPosition(IpcIo *req, IpcIo *reply)
 {
     int64_t time = 0;
     if (player_ != nullptr) {
-        IpcIoPushInt32(reply, player_->GetCurrentPosition(time));
-        IpcIoPushInt64(reply, time);
+        WriteInt32(reply, player_->GetCurrentPosition(time));
+        WriteInt64(reply, time);
         return;
     }
-    IpcIoPushInt32(reply, -1);
-    IpcIoPushInt64(reply, time);
+    WriteInt32(reply, -1);
+    WriteInt64(reply, time);
 }
 
 void PlayerServer::GetDuration(IpcIo *req, IpcIo *reply)
@@ -503,12 +511,12 @@ void PlayerServer::GetDuration(IpcIo *req, IpcIo *reply)
     MEDIA_INFO_LOG("process in");
     int64_t duration = 0;
     if (player_ != nullptr) {
-        IpcIoPushInt32(reply, player_->GetDuration(duration));
-        IpcIoPushInt64(reply, duration);
+        WriteInt32(reply, player_->GetDuration(duration));
+        WriteInt64(reply, duration);
         return;
     }
-    IpcIoPushInt32(reply, -1);
-    IpcIoPushInt64(reply, duration);
+    WriteInt32(reply, -1);
+    WriteInt64(reply, duration);
 }
 
 void PlayerServer::GetVideoWidth(IpcIo *req, IpcIo *reply)
@@ -516,12 +524,12 @@ void PlayerServer::GetVideoWidth(IpcIo *req, IpcIo *reply)
     MEDIA_INFO_LOG("process in");
     int32_t width = 0;
     if (player_ != nullptr) {
-        IpcIoPushInt32(reply, player_->GetVideoWidth(width));
-        IpcIoPushInt32(reply, width);
+        WriteInt32(reply, player_->GetVideoWidth(width));
+        WriteInt32(reply, width);
         return;
     }
-    IpcIoPushInt32(reply, -1);
-    IpcIoPushInt32(reply, width);
+    WriteInt32(reply, -1);
+    WriteInt32(reply, width);
 }
 
 void PlayerServer::GetVideoHeight(IpcIo *req, IpcIo *reply)
@@ -529,22 +537,22 @@ void PlayerServer::GetVideoHeight(IpcIo *req, IpcIo *reply)
     MEDIA_INFO_LOG("process in");
     int32_t hight = 0;
     if (player_ != nullptr) {
-        IpcIoPushInt32(reply, player_->GetVideoHeight(hight));
-        IpcIoPushInt32(reply, hight);
+        WriteInt32(reply, player_->GetVideoHeight(hight));
+        WriteInt32(reply, hight);
         return;
     }
-    IpcIoPushInt32(reply, -1);
-    IpcIoPushInt32(reply, hight);
+    WriteInt32(reply, -1);
+    WriteInt32(reply, hight);
 }
 
 void PlayerServer::Reset(IpcIo *req, IpcIo *reply)
 {
     MEDIA_INFO_LOG("process in");
     if (player_ != nullptr) {
-        IpcIoPushInt32(reply, player_->Reset());
+        WriteInt32(reply, player_->Reset());
         return;
     }
-    IpcIoPushInt32(reply, 0); /* return success if there is no need to do anything */
+    WriteInt32(reply, -1);
 }
 
 void PlayerServer::Release(IpcIo *req, IpcIo *reply)
@@ -563,32 +571,23 @@ void PlayerServer::Release(IpcIo *req, IpcIo *reply)
             stream_ = nullptr;
         }
         if (sid_ != nullptr) {
-            UnregisterIpcCallback(*sid_);
             delete sid_;
             sid_ = nullptr;
         }
         playerCallback_.reset();
         player_ = nullptr;
-        IpcIoPushInt32(reply, ret);
+        WriteInt32(reply, ret);
         return;
     }
-    IpcIoPushInt32(reply, 0); /* return success if there is no need to do anything */
+    WriteInt32(reply, -1);
 }
 
 void PlayerServer::SetPlayerCallback(IpcIo *req, IpcIo *reply)
 {
     MEDIA_INFO_LOG("process in");
-    int32_t ret = IpcIoPopInt32(req);
-    if (ret != LITEIPC_OK) {
-        MEDIA_ERR_LOG("SetPlayerCallback failed\n");
-        return;
-    }
-    SvcIdentity *sid = IpcIoPopSvc(req);
-#ifdef __LINUX__
-    BinderAcquire(sid->ipcContext, sid->handle);
-#endif
-    if (sid != nullptr) {
-        playerCallback_ = std::make_shared<PalyerCallbackImpl>(*sid);
+    SvcIdentity sid;
+    if (ReadRemoteObject(req, &sid)) {
+        playerCallback_ = std::make_shared<PalyerCallbackImpl>(sid);
         if (player_ != nullptr) {
             player_->SetPlayerCallback(playerCallback_);
             return;
@@ -601,23 +600,24 @@ void PlayerServer::GetPlayerState(IpcIo *req, IpcIo *reply)
     MEDIA_INFO_LOG("process in");
     int32_t state = 0;
     if (player_ != nullptr) {
-        IpcIoPushInt32(reply, player_->GetPlayerState(state));
-        IpcIoPushInt32(reply, state);
+        WriteInt32(reply, player_->GetPlayerState(state));
+        WriteInt32(reply, state);
         return;
     }
-    IpcIoPushInt32(reply, 0);
-    IpcIoPushInt32(reply, PLAYER_IDLE); /* return inited state if not operate setsource */
+    WriteInt32(reply, -1);
+    WriteInt32(reply, state);
 }
 
 void PlayerServer::SetPlaybackSpeed(IpcIo *req, IpcIo *reply)
 {
     MEDIA_INFO_LOG("process in");
-    float speed = IpcIoPopFloat(req);
+    float speed;
+    ReadFloat(req, &speed);
     if (player_ != nullptr) {
-        IpcIoPushInt32(reply, player_->SetPlaybackSpeed(speed));
+        WriteInt32(reply, player_->SetPlaybackSpeed(speed));
         return;
     }
-    IpcIoPushInt32(reply, -1);
+    WriteInt32(reply, -1);
 }
 
 void PlayerServer::GetPlaybackSpeed(IpcIo *req, IpcIo *reply)
@@ -625,12 +625,12 @@ void PlayerServer::GetPlaybackSpeed(IpcIo *req, IpcIo *reply)
     MEDIA_INFO_LOG("process in");
     float speed = 1.0;
     if (player_ != nullptr) {
-        IpcIoPushInt32(reply, player_->GetPlaybackSpeed(speed));
-        IpcIoPushFloat(reply, speed);
+        WriteInt32(reply, player_->GetPlaybackSpeed(speed));
+        WriteFloat(reply, speed);
         return;
     }
-    IpcIoPushInt32(reply, -1);
-    IpcIoPushFloat(reply, 1.0);
+    WriteInt32(reply, -1);
+    WriteFloat(reply, 1.0);
 }
 
 void PlayerServer::SetParameter(IpcIo *req, IpcIo *reply)
@@ -638,50 +638,56 @@ void PlayerServer::SetParameter(IpcIo *req, IpcIo *reply)
     MEDIA_INFO_LOG("process in");
     Format formats;
     if (player_ == nullptr) {
-        IpcIoPushInt32(reply, -1);
+        WriteInt32(reply, -1);
         return;
     }
 
-    int32_t count = IpcIoPopInt32(req);
+    int32_t count;
+    ReadInt32(req, &count);
     for (int32_t i = 0; i < count; i++) {
         uint32_t size;
-        char *key = (char *)IpcIoPopString(req, &size);
-
-        FormatDataType type = (FormatDataType)IpcIoPopInt32(req);
+        char *key = (char *)ReadString(req, &size);
+        FormatDataType type;
+        ReadInt32(req, (int32_t *)&type);
         if (type == FORMAT_TYPE_INT32) {
-            int32_t value = IpcIoPopInt32(req);
+            int32_t value;
+            ReadInt32(req, &value);
             formats.PutIntValue(key, value);
         } else if (type == FORMAT_TYPE_INT64) {
-            int64_t value = IpcIoPopInt64(req);
+            int64_t value;
+            ReadInt64(req, &value);
             formats.PutLongValue(key, value);
         } else if (type == FORMAT_TYPE_FLOAT) {
-            float value = IpcIoPopFloat(req);
+            float value;
+            ReadFloat(req, &value);
             formats.PutFloatValue(key, value);
         } else if (type == FORMAT_TYPE_DOUBLE) {
-            double value = IpcIoPopFloat(req);
+            double value;
+            ReadDouble(req, &value);
             formats.PutDoubleValue(key, value);
         } else if (type == FORMAT_TYPE_STRING) {
-            char *value = (char *)IpcIoPopString(req, &size);
+            char *value = (char *)ReadString(req, &size);
             formats.PutStringValue(key, value);
         } else {
             MEDIA_ERR_LOG("SetParameter failed, type:%d\n", type);
-            IpcIoPushInt32(reply, -1);
+            WriteInt32(reply, -1);
             return;
         }
     }
 
-    IpcIoPushInt32(reply, player_->SetParameter(formats));
+    WriteInt32(reply, player_->SetParameter(formats));
 }
 
 void PlayerServer::SetAudioStreamType(IpcIo *req, IpcIo *reply)
 {
     MEDIA_INFO_LOG("process in");
-    int32_t type = IpcIoPopInt32(req);
+    int32_t type;
+    ReadInt32(req, &type);
     if (player_ != nullptr) {
-        IpcIoPushInt32(reply, player_->SetAudioStreamType(type));
+        WriteInt32(reply, player_->SetAudioStreamType(type));
         return;
     }
-    IpcIoPushInt32(reply, -1);
+    WriteInt32(reply, -1);
 }
 
 void PlayerServer::GetAudioStreamType(IpcIo *req, IpcIo *reply)
@@ -690,12 +696,12 @@ void PlayerServer::GetAudioStreamType(IpcIo *req, IpcIo *reply)
     int32_t type = TYPE_MEDIA;
     if (player_ != nullptr) {
         player_->GetAudioStreamType(type);
-        IpcIoPushInt32(reply, 0);
-        IpcIoPushFloat(reply, type);
+        WriteInt32(reply, 0);
+        WriteFloat(reply, type);
         return;
     }
-    IpcIoPushInt32(reply, -1);
-    IpcIoPushFloat(reply, type);
+    WriteInt32(reply, -1);
+    WriteFloat(reply, type);
 }
 
 void PalyerCallbackImpl::OnPlaybackComplete()
@@ -703,8 +709,11 @@ void PalyerCallbackImpl::OnPlaybackComplete()
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
-    int32_t ret = Transact(nullptr, sid_, ON_PALYBACK_COMPLETE, &io, nullptr, LITEIPC_FLAG_ONEWAY, nullptr);
-    if (ret != LITEIPC_OK) {
+    MessageOption option;
+    MessageOptionInit(&option);
+    option.flags = TF_OP_ASYNC;
+    int32_t ret = SendRequest(sid_, ON_PALYBACK_COMPLETE, &io, nullptr, option, nullptr);
+    if (ret != ERR_NONE) {
         MEDIA_ERR_LOG("PalyerCallbackImpl::OnPlaybackComplete failed\n");
     }
 }
@@ -714,10 +723,13 @@ void PalyerCallbackImpl::OnError(int32_t errorType, int32_t errorCode)
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
-    IpcIoPushInt32(&io, errorType);
-    IpcIoPushInt32(&io, errorCode);
-    int32_t ret = Transact(nullptr, sid_, ON_ERROR, &io, nullptr, LITEIPC_FLAG_ONEWAY, nullptr);
-    if (ret != LITEIPC_OK) {
+    WriteInt32(&io, errorType);
+    WriteInt32(&io, errorCode);
+    MessageOption option;
+    MessageOptionInit(&option);
+    option.flags = TF_OP_ASYNC;
+    int32_t ret = SendRequest(sid_, ON_ERROR, &io, nullptr, option, nullptr);
+    if (ret != ERR_NONE) {
         MEDIA_ERR_LOG("PalyerCallbackImpl::OnError failed\n");
     }
 }
@@ -727,10 +739,13 @@ void PalyerCallbackImpl::OnInfo(int type, int extra)
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
-    IpcIoPushInt32(&io, (int32_t)type);
-    IpcIoPushInt32(&io, (int32_t)extra);
-    int32_t ret = Transact(nullptr, sid_, ON_INFO, &io, nullptr, LITEIPC_FLAG_ONEWAY, nullptr);
-    if (ret != LITEIPC_OK) {
+    WriteInt32(&io, (int32_t)type);
+    WriteInt32(&io, (int32_t)extra);
+    MessageOption option;
+    MessageOptionInit(&option);
+    option.flags = TF_OP_ASYNC;
+    int32_t ret = SendRequest(sid_, ON_INFO, &io, nullptr, option, nullptr);
+    if (ret != ERR_NONE) {
         MEDIA_ERR_LOG("PalyerCallbackImpl::OnInfo failed\n");
     }
 }
@@ -740,10 +755,13 @@ void PalyerCallbackImpl::OnVideoSizeChanged(int width, int height)
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
-    IpcIoPushInt32(&io, (int32_t)width);
-    IpcIoPushInt32(&io, (int32_t)height);
-    int32_t ret = Transact(nullptr, sid_, ON_INFO, &io, nullptr, LITEIPC_FLAG_ONEWAY, nullptr);
-    if (ret != LITEIPC_OK) {
+    WriteInt32(&io, (int32_t)width);
+    WriteInt32(&io, (int32_t)height);
+    MessageOption option;
+    MessageOptionInit(&option);
+    option.flags = TF_OP_ASYNC;
+    int32_t ret = SendRequest(sid_, ON_INFO, &io, nullptr, option, nullptr);
+    if (ret != ERR_NONE) {
         MEDIA_ERR_LOG("PalyerCallbackImpl::OnInfo failed\n");
     }
 }
@@ -753,8 +771,11 @@ void PalyerCallbackImpl::OnRewindToComplete()
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
     IpcIoInit(&io, tmpData, DEFAULT_IPC_SIZE, 0);
-    int32_t ret = Transact(nullptr, sid_, ON_REWIND_TO_COMPLETE, &io, nullptr, LITEIPC_FLAG_ONEWAY, nullptr);
-    if (ret != LITEIPC_OK) {
+    MessageOption option;
+    MessageOptionInit(&option);
+    option.flags = TF_OP_ASYNC;
+    int32_t ret = SendRequest(sid_, ON_REWIND_TO_COMPLETE, &io, nullptr, option, nullptr);
+    if (ret != ERR_NONE) {
         MEDIA_ERR_LOG("PalyerCallbackImpl::OnRewindToComplete failed\n");
     }
 }

@@ -65,7 +65,7 @@ static TaskConfig GetTaskConfig(Service *service)
 static int32 Invoke(IServerProxy *iProxy, int funcId, void *origin, IpcIo *req, IpcIo *reply)
 {
     MEDIA_DEBUG_LOG("Service Remote Invoke is called! <%p, %d, %p, %p, %p>", iProxy, funcId, origin, req, reply);
-    pid_t pid = GetCallingPid(origin);
+    pid_t pid = GetCallingPid();
     RecorderClientMng *mng = RecorderClientMng::GetInstance();
     mng->Dispatch(funcId, pid, req, reply);
     return EC_SUCCESS;

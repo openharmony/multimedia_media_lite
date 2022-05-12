@@ -59,7 +59,6 @@ public:
 private:
     IClientProxy *proxy_ = nullptr;
     SvcIdentity sid_;
-    IpcObjectStub objectStub_;
 };
 } /* namespace Media */
 } /* namespace OHOS */

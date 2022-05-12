@@ -40,6 +40,8 @@ extern "C" void __attribute__((weak)) OHOS_SystemInit(void)
 
 namespace OHOS {
 namespace Media {
+static IpcObjectStub objectStub_;
+
 struct CallBackPara {
     RecFunc funcId;
     int32_t ret;

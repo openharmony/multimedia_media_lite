@@ -1,0 +1,50 @@
+{
+    "name": "@ohos/media_service",
+    "description": "Multi media service for mini and small system.",
+    "version": "3.1",
+    "license": "Apache License 2.0",
+    "publishAs": "code-segment",
+    "segment": {
+        "destPath": "foundation/multimedia/media_lite/services"
+    },
+    "dirs": {},
+    "scripts": {},
+    "component": {
+        "name": "media_service",
+        "subsystem": "multimedia",
+        "syscap": [],
+        "features": [],
+        "adapted_system_type": [
+            "mini",
+            "small"
+        ],
+        "rom": "",
+        "ram": "",
+        "deps": {
+            "components": [
+                "hilog_lite",
+                "audio_manager_lite",
+                "camera_lite",
+                "permission",
+                "ipc_lite",
+                "ui",
+                "syspara_lite"
+            ],
+            "third_party": [
+                "bounds_checking_function",
+                "iniparser"
+            ]
+        },
+        "build": {
+            "sub_component": [
+                "//foundation/multimedia/media_lite/services:media_lite",
+                "//foundation/multimedia/camera_lite/test:lite_camera_test",
+                "//foundation/multimedia/media_lite/test/unittest:lite_medialite_test",
+                "//foundation/multimedia/audio_lite/test:lite_audio_test",
+                "//foundation/multimedia/media_lite/interfaces/kits/player_lite/js/builtin:audio_lite_api"
+            ],
+            "inner_kits": [],
+            "test": []
+        }
+    }
+}

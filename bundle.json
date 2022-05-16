@@ -5,7 +5,7 @@
     "license": "Apache License 2.0",
     "publishAs": "code-segment",
     "segment": {
-        "destPath": "applications/sample/camera/communication"
+        "destPath": "foundation/multimedia/media_lite"
     },
     "dirs": {},
     "scripts": {},

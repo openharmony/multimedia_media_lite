@@ -113,7 +113,7 @@ int32_t HiStateMachine::RegisterObserver(HiStateMachineObserver &observer)
 int32_t HiStateMachine::SetInitialState(HiState &state)
 {
     if (m_running) {
-        MEDIA_ERR_LOG("can't set initstae when running");
+        MEDIA_ERR_LOG("can't set initstate when running");
         return HI_FAILURE;
     }
 

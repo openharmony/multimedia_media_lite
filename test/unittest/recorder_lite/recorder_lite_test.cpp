@@ -95,7 +95,7 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_Start_test_002, Level1)
  * SubFunction: NA
  * FunctionPoints: NA
  * EnvConditions: NA
- * CaseDescription: Pasue recorder
+ * CaseDescription: Pause recorder
  */
 HWTEST_F(RecoderLiteTest, medialite_recorder_Pause_test_001, Level1)
 {

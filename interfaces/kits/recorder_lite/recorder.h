@@ -610,11 +610,11 @@ public:
     int32_t SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration);
 
     /**
-     * @brief Sets an extended parameter for recording, for example, {@link RCORDER_PRE_CACHE_DURATION}.
+     * @brief Sets an extended parameter for recording, for example, {@link RECORDER_PRE_CACHE_DURATION}.
      *
      * @param sourceId Indicates the data source ID. The value <b>-1</b> indicates all sources.
      * @param format Indicates the string key and value. For details, see {@link Format} and
-     * {@link RCORDER_PRE_CACHE_DURATION}.
+     * {@link RECORDER_PRE_CACHE_DURATION}.
      * @return Returns {@link SUCCESS} if the setting is successful; returns an error code defined
      * in {@link media_errors.h} otherwise.
      * @since 1.0

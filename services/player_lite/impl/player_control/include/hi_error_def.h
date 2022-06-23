@@ -37,13 +37,13 @@ typedef enum {
 
 /** common error code  0x01~0x11,module private error code define from 0x40 */
 typedef enum {
-    APP_ERR_ILLEGAL_PARAM = 0x01,   /* at lease one parameter is illagal
+    APP_ERR_ILLEGAL_PARAM = 0x01,   /* at lease one parameter is illegal
                                * eg, an illegal enumeration value */
     APP_ERR_NULL_PTR = 0x02,        /*  using a NULL point */
     APP_ERR_PARAM_OVERRANGE = 0x03, /* param out of range */
     APP_ERR_NOT_SUPPORT = 0x04,     /*  operation or type is not supported by NOW */
     APP_ERR_NOT_CONFIG = 0x05,      /*  try to enable or initialize system, device
-                              ** or channel, before configing attribute */
+                              ** or channel, before configuring attribute */
     APP_ERR_NOT_PERM = 0x06,        /*  operation is not permitted
                               ** eg, try to change static attribute */
     APP_ERR_NOMEM = 0x07,           /*  failure caused by malloc memory */
@@ -54,7 +54,7 @@ typedef enum {
                               ** eg. used for copy_from_user & copy_to_user */
     APP_ERR_BUSY = 0x10,            /*  resource is busy,
                               ** eg. destroy a venc chn without unregister it */
-    APP_ERR_BUTT = 0x11,            /*  maxium code, private error code of all modules
+    APP_ERR_BUTT = 0x11,            /*  maximum code, private error code of all modules
                               ** must be greater than it */
 } APP_ERR_CODE_E;
 

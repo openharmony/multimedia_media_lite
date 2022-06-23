@@ -20,7 +20,7 @@
 
 using OHOS::Media::RecorderCallback;
 namespace OHOS {
-class RecoderLiteTest : public testing::Test {
+class RecorderLiteTest : public testing::Test {
 public:
     // SetUpTestCase: before all testcasee
     static void SetUpTestCase(void);

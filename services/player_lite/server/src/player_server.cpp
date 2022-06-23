@@ -712,7 +712,7 @@ void PalyerCallbackImpl::OnPlaybackComplete()
     MessageOption option;
     MessageOptionInit(&option);
     option.flags = TF_OP_ASYNC;
-    int32_t ret = SendRequest(sid_, ON_PALYBACK_COMPLETE, &io, nullptr, option, nullptr);
+    int32_t ret = SendRequest(sid_, ON_PLAYBACK_COMPLETE, &io, nullptr, option, nullptr);
     if (ret != ERR_NONE) {
         MEDIA_ERR_LOG("PalyerCallbackImpl::OnPlaybackComplete failed\n");
     }

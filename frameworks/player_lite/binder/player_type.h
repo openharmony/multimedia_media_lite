@@ -43,7 +43,7 @@ typedef enum {
 } PlayerServerCall;
 
 typedef enum {
-    ON_PALYBACK_COMPLETE,
+    ON_PLAYBACK_COMPLETE,
     ON_ERROR,
     ON_INFO,
     ON_VIDEO_SIZE_CHANGED,

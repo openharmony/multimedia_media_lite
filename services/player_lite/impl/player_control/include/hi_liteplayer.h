@@ -34,7 +34,7 @@ enum PlayerControlError {
     PLAYERCONTROL_ERROR_AUD_PLAY_FAIL,       /* The audio fails to be played. */
     PLAYERCONTROL_ERROR_DEMUX_FAIL,          /* The file fails to be played. */
     PLAYERCONTROL_ERROR_TIMEOUT,             /* Operation timeout. For example, reading data timeout. */
-    PLAYERCONTROL_ERROR_NOT_SUPPORT,         /* The file format is not supportted. */
+    PLAYERCONTROL_ERROR_NOT_SUPPORT,         /* The file format is not supported. */
     PLAYERCONTROL_ERROR_UNKNOW,              /* Unknown error. */
     PLAYERCONTROL_ERROR_ILLEGAL_STATEACTION, /* illegal action at cur state. */
     PLAYERCONTROL_ERROR_BUTT,
@@ -70,11 +70,11 @@ struct PlayerControlParam {
                                            HI_TRUE:pause after first frame render. */
 };
 
-typedef void (*PlayerCtrlEeventFun)(void *player, PlayerControlEvent enEvent, const void *data);
+typedef void (*PlayerCtrlEventFun)(void *player, PlayerControlEvent enEvent, const void *data);
 
 struct PlayerCtrlCallbackParam {
     void *player;
-    PlayerCtrlEeventFun callbackFun;
+    PlayerCtrlEventFun callbackFun;
 };
 
 #ifdef __cplusplus

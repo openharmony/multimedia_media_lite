@@ -219,7 +219,7 @@ int32_t Player::PlayerClient::SetSource(const Source &source)
             break;
         }
         case SourceType::SOURCE_TYPE_FD:
-            MEDIA_ERR_LOG("unsupport now: SOURCE_TYPE_FD");
+            MEDIA_ERR_LOG("unsupported now: SOURCE_TYPE_FD");
             break;
         case SourceType::SOURCE_TYPE_STREAM: {
             break;
@@ -378,7 +378,7 @@ int32_t Player::PlayerClient::SetSurface(Surface *surface)
     para.ret = &ans;
     uint32_t ret = proxy_->Invoke(proxy_, PLAYER_SERVER_SET_VIDEO_SURFACE, &io, &para, Callback);
     if (ret != 0) {
-        MEDIA_ERR_LOG("SetVideoSurfacee failed, ret=%u\n", ret);
+        MEDIA_ERR_LOG("SetSurface failed, ret=%u\n", ret);
     }
     return ans;
 }
@@ -529,7 +529,7 @@ int32_t Player::PlayerClient::PlayerCommonCallback(uint32_t code, IpcIo *data, I
     }
     MEDIA_INFO_LOG("PlayerCommonCallback, funcId=%d", code);
     switch (code) {
-        case ON_PALYBACK_COMPLETE: {
+        case ON_PLAYBACK_COMPLETE: {
             playerCallback->OnPlaybackComplete();
             break;
         }
@@ -562,7 +562,7 @@ int32_t Player::PlayerClient::PlayerCommonCallback(uint32_t code, IpcIo *data, I
             break;
         }
         default: {
-            MEDIA_ERR_LOG("unsupport funId\n");
+            MEDIA_ERR_LOG("unsupported funId\n");
             break;
         }
     }

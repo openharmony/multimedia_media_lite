@@ -67,16 +67,16 @@ int BufferSource::Init(void)
     int i;
 
     for (i = 0; i < QUEUE_SIZE; i++) {
-        buffer_[i].virAddr = malloc(BUFER_SIZE);
+        buffer_[i].virAddr = malloc(BUFFER_SIZE);
         if (buffer_[i].virAddr == nullptr) {
             MEDIA_ERR_LOG("BufferSource::Init, malloc failed\n");
             goto failed;
         }
         buffer_[i].phyAddr = 0;
         buffer_[i].fd = -1;
-        buffer_[i].bufLen = BUFER_SIZE;
+        buffer_[i].bufLen = BUFFER_SIZE;
         buffer_[i].offset = 0;
-        buffer_[i].size = BUFER_SIZE;
+        buffer_[i].size = BUFFER_SIZE;
         buffer_[i].idx = i;
 
         QueBuffer buffer;

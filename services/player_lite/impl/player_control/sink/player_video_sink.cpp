@@ -26,8 +26,8 @@ const float VIDEO_FRAME_RATE_MAX = 120.0f;
 const int32_t FLOAT_INT_SCALE = 1000;
 const int32_t SS2US = 1000000;
 const int32_t US2MS = 1000;
-const int32_t DEFUALT_REGION_WIDTH = 480;
-const int32_t DEFUALT_REGION_HEIGHT = 480;
+const int32_t DEFAULT_REGION_WIDTH = 480;
+const int32_t DEFAULT_REGION_HEIGHT = 480;
 
 #define CHECK_FAILED_RETURN(value, target, ret, printfString) \
 do { \
@@ -63,7 +63,7 @@ static int64_t GetCurTimeMs()
 VideoSink::VideoSink(void)
     :speed_(1.0f), paused_(false), started_(false), syncHdl_(nullptr),
     renderFrameCnt_(0), renderMode_(RENDER_MODE_NORMAL), rendStartTime_(-1), lastRendPts_(AV_INVALID_PTS),
-    recievedEos_(false), EosPts_(AV_INVALID_PTS), pauseAfterPlay_(false), firstVidRend_(false),
+    receivedEos_(false), EosPts_(AV_INVALID_PTS), pauseAfterPlay_(false), firstVidRend_(false),
     lastRendCnt_(0), vidRendStartTime_(AV_INVALID_PTS), eosSended_(false), lastConfigRegionX_(-1),
     lastConfigRegionY_(-1), lastConfigRegionW_(-1), lastConfigRegionH_(-1)
 {
@@ -133,8 +133,8 @@ void VideoSink::SetDefaultDisplayRegionInfo(void)
 {
     lastConfigRegionX_ = 0;
     lastConfigRegionY_ = 0;
-    lastConfigRegionW_ = DEFUALT_REGION_WIDTH;
-    lastConfigRegionH_ = DEFUALT_REGION_HEIGHT;
+    lastConfigRegionW_ = DEFAULT_REGION_WIDTH;
+    lastConfigRegionH_ = DEFAULT_REGION_HEIGHT;
 }
 
 void VideoSink::UpdateDisplayRegionInfo(int32_t x, int32_t y, int32_t w, int32_t h)
@@ -274,7 +274,7 @@ int32_t VideoSink::Reset()
     ReleaseQueAllFrame();
     Flush();
     ResetRendStartTime();
-    recievedEos_ = false;
+    receivedEos_ = false;
     firstVidRend_ = false;
     return HI_SUCCESS;
 }
@@ -352,11 +352,11 @@ int32_t VideoSink::DequeReleaseFrame(OutputInfo &frame)
 void VideoSink::RenderRptEvent(EventCbType event)
 {
     if (callBack_.onEventCallback != nullptr) {
-        if (event == EVNET_VIDEO_PLAY_EOS && eosSended_ == true) {
+        if (event == EVENT_VIDEO_PLAY_EOS && eosSended_ == true) {
             return;
         }
         callBack_.onEventCallback(callBack_.priv, event, 0, 0);
-        if (event == EVNET_VIDEO_PLAY_EOS) {
+        if (event == EVENT_VIDEO_PLAY_EOS) {
             eosSended_ = true;
         }
     }
@@ -386,8 +386,8 @@ int32_t VideoSink::RenderFrame(OutputInfo &frame)
     }
 
     if (GetRenderFrame(renderFrame, frame) != SINK_SUCCESS) {
-        if (recievedEos_ == true) {
-            RenderRptEvent(EVNET_VIDEO_PLAY_EOS);
+        if (receivedEos_ == true) {
+            RenderRptEvent(EVENT_VIDEO_PLAY_EOS);
             return SINK_RENDER_EOS;
         }
         return SINK_QUE_EMPTY;
@@ -404,7 +404,7 @@ int32_t VideoSink::RenderFrame(OutputInfo &frame)
     if (syncRet == SYNC_RET_PLAY) {
         ret = WriteToVideoDevice(renderFrame);
         if (renderFrameCnt_ == 0) {
-            callBack_.onEventCallback(callBack_.priv, EVNET_FIRST_VIDEO_REND, 0, 0);
+            callBack_.onEventCallback(callBack_.priv, EVENT_FIRST_VIDEO_REND, 0, 0);
         }
         renderFrameCnt_++;
     } else if (syncRet == SYNC_RET_DROP) {
@@ -433,7 +433,7 @@ void VideoSink::SetSync(PlayerSync *sync)
 
 void VideoSink::RenderEos(void)
 {
-    recievedEos_ = true;
+    receivedEos_ = true;
     EosPts_ = lastRendPts_;
 }
 

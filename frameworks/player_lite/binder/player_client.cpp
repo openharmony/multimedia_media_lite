@@ -529,7 +529,7 @@ int32_t Player::PlayerClient::PlayerCommonCallback(uint32_t code, IpcIo *data, I
     }
     MEDIA_INFO_LOG("PlayerCommonCallback, funcId=%d", code);
     switch (code) {
-        case ON_PALYBACK_COMPLETE: {
+        case ON_PLAYBACK_COMPLETE: {
             playerCallback->OnPlaybackComplete();
             break;
         }

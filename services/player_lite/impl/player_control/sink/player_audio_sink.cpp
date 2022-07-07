@@ -234,11 +234,11 @@ int32_t AudioSink::DequeReleaseFrame(OutputInfo &frame)
 void AudioSink::RenderRptEvent(EventCbType event)
 {
     if (callBack_.onEventCallback != nullptr) {
-        if (event == EVENT_AUDIO_PLAY_EOS && eosSended_) {
+        if (event == EVNET_AUDIO_PLAY_EOS && eosSended_) {
             return;
         }
         callBack_.onEventCallback(callBack_.priv, event, 0, 0);
-        if (event == EVENT_AUDIO_PLAY_EOS) {
+        if (event == EVNET_AUDIO_PLAY_EOS) {
             eosSended_ = true;
         }
     }
@@ -275,7 +275,7 @@ int32_t AudioSink::RenderFrame(OutputInfo &frame)
     struct AudioTimeStamp timestamp;
 
     if (!reportedFirstFrame && renderMode_ == RENDER_MODE_PAUSE_AFTER_PLAY) {
-        callBack_.onEventCallback(callBack_.priv, EVENT_FIRST_AUDIO_REND, 0, 0);
+        callBack_.onEventCallback(callBack_.priv, EVNET_FIRST_AUDIO_REND, 0, 0);
         reportedFirstFrame = true;
         MEDIA_INFO_LOG("report first audio frame");
     }
@@ -292,7 +292,7 @@ int32_t AudioSink::RenderFrame(OutputInfo &frame)
 
     if (GetRenderFrame(renderFrame, frame) != SINK_SUCCESS) {
         if (receivedEos_) {
-            RenderRptEvent(EVENT_AUDIO_PLAY_EOS);
+            RenderRptEvent(EVNET_AUDIO_PLAY_EOS);
             return SINK_RENDER_EOS;
         }
         return SINK_QUE_EMPTY;

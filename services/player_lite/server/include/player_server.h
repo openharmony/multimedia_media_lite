@@ -21,10 +21,10 @@
 
 namespace OHOS {
 namespace Media {
-class PlayerCallbackImpl : public PlayerCallback {
+class PalyerCallbackImpl : public PlayerCallback {
 public:
-    PlayerCallbackImpl(SvcIdentity &sid) : sid_(sid) {}
-    ~PlayerCallbackImpl() {}
+    PalyerCallbackImpl(SvcIdentity &sid) : sid_(sid) {}
+    ~PalyerCallbackImpl() {}
     void OnPlaybackComplete();
     void OnError(int32_t errorType, int32_t errorCode);
     void OnInfo(int type, int extra);

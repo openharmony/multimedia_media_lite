@@ -136,7 +136,7 @@ public:
     uint8_t *GetBufferAddress(size_t idx);
     void QueueBuffer(size_t index, size_t offset, size_t size, int64_t timestampUs, uint32_t flags);
     int GetAvailableBuffer(IdleBuffer* buffer);
-    bool threadRunning;
+    bool threadRuning;
 
 private:
     std::weak_ptr<StreamCallback> m_callBack;
@@ -222,7 +222,7 @@ static void* streamProcess(void* arg)
     int sleepTime = 20000;
     while (true) {
         pthread_mutex_lock(&g_streamThreadControl.mutex);
-        if (!(stream->threadRunning)) {
+        if (!(stream->threadRuning)) {
             pthread_mutex_unlock(&g_streamThreadControl.mutex);
             break;
         }
@@ -238,7 +238,7 @@ static void* streamProcess(void* arg)
         }
         while (true) {
             pthread_mutex_lock(&g_streamThreadControl.mutex);
-            if (!(stream->threadRunning)) {
+            if (!(stream->threadRuning)) {
                 pthread_mutex_unlock(&g_streamThreadControl.mutex);
                 break;
             }
@@ -320,7 +320,7 @@ void PlayerServer::SetStreamSource(IpcIo *reply)
         pthread_attr_t attr;
         pthread_mutex_init(&g_streamThreadControl.mutex, nullptr);
         ServerStreamSource* serverStream = reinterpret_cast<ServerStreamSource*>(stream_.get());
-        serverStream->threadRunning = true;
+        serverStream->threadRuning = true;
         pthread_attr_init(&attr);
         pthread_create(&g_streamThreadControl.process, &attr, streamProcess, stream_.get());
     }
@@ -415,7 +415,7 @@ void PlayerServer::Stop(IpcIo *req, IpcIo *reply)
         if (stream_.get() != nullptr) {
             ServerStreamSource* serverStream = reinterpret_cast<ServerStreamSource*>(stream_.get());
             pthread_mutex_lock(&g_streamThreadControl.mutex);
-            serverStream->threadRunning = false;
+            serverStream->threadRuning = false;
             pthread_mutex_unlock(&g_streamThreadControl.mutex);
         }
         WriteInt32(reply, ret);
@@ -563,7 +563,7 @@ void PlayerServer::Release(IpcIo *req, IpcIo *reply)
         if (stream_ != nullptr) {
             ServerStreamSource* serverStream = reinterpret_cast<ServerStreamSource*>(stream_.get());
             pthread_mutex_lock(&g_streamThreadControl.mutex);
-            serverStream->threadRunning = false;
+            serverStream->threadRuning = false;
             pthread_mutex_unlock(&g_streamThreadControl.mutex);
             pthread_join(g_streamThreadControl.process, nullptr);
             pthread_mutex_destroy(&g_streamThreadControl.mutex);
@@ -587,7 +587,7 @@ void PlayerServer::SetPlayerCallback(IpcIo *req, IpcIo *reply)
     MEDIA_INFO_LOG("process in");
     SvcIdentity sid;
     if (ReadRemoteObject(req, &sid)) {
-        playerCallback_ = std::make_shared<PlayerCallbackImpl>(sid);
+        playerCallback_ = std::make_shared<PalyerCallbackImpl>(sid);
         if (player_ != nullptr) {
             player_->SetPlayerCallback(playerCallback_);
             return;
@@ -704,7 +704,7 @@ void PlayerServer::GetAudioStreamType(IpcIo *req, IpcIo *reply)
     WriteFloat(reply, type);
 }
 
-void PlayerCallbackImpl::OnPlaybackComplete()
+void PalyerCallbackImpl::OnPlaybackComplete()
 {
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
@@ -714,11 +714,11 @@ void PlayerCallbackImpl::OnPlaybackComplete()
     option.flags = TF_OP_ASYNC;
     int32_t ret = SendRequest(sid_, ON_PLAYBACK_COMPLETE, &io, nullptr, option, nullptr);
     if (ret != ERR_NONE) {
-        MEDIA_ERR_LOG("PlayerCallbackImpl::OnPlaybackComplete failed\n");
+        MEDIA_ERR_LOG("PalyerCallbackImpl::OnPlaybackComplete failed\n");
     }
 }
 
-void PlayerCallbackImpl::OnError(int32_t errorType, int32_t errorCode)
+void PalyerCallbackImpl::OnError(int32_t errorType, int32_t errorCode)
 {
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
@@ -730,11 +730,11 @@ void PlayerCallbackImpl::OnError(int32_t errorType, int32_t errorCode)
     option.flags = TF_OP_ASYNC;
     int32_t ret = SendRequest(sid_, ON_ERROR, &io, nullptr, option, nullptr);
     if (ret != ERR_NONE) {
-        MEDIA_ERR_LOG("PlayerCallbackImpl::OnError failed\n");
+        MEDIA_ERR_LOG("PalyerCallbackImpl::OnError failed\n");
     }
 }
 
-void PlayerCallbackImpl::OnInfo(int type, int extra)
+void PalyerCallbackImpl::OnInfo(int type, int extra)
 {
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
@@ -746,11 +746,11 @@ void PlayerCallbackImpl::OnInfo(int type, int extra)
     option.flags = TF_OP_ASYNC;
     int32_t ret = SendRequest(sid_, ON_INFO, &io, nullptr, option, nullptr);
     if (ret != ERR_NONE) {
-        MEDIA_ERR_LOG("PlayerCallbackImpl::OnInfo failed\n");
+        MEDIA_ERR_LOG("PalyerCallbackImpl::OnInfo failed\n");
     }
 }
 
-void PlayerCallbackImpl::OnVideoSizeChanged(int width, int height)
+void PalyerCallbackImpl::OnVideoSizeChanged(int width, int height)
 {
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
@@ -762,11 +762,11 @@ void PlayerCallbackImpl::OnVideoSizeChanged(int width, int height)
     option.flags = TF_OP_ASYNC;
     int32_t ret = SendRequest(sid_, ON_INFO, &io, nullptr, option, nullptr);
     if (ret != ERR_NONE) {
-        MEDIA_ERR_LOG("PlayerCallbackImpl::OnInfo failed\n");
+        MEDIA_ERR_LOG("PalyerCallbackImpl::OnInfo failed\n");
     }
 }
 
-void PlayerCallbackImpl::OnRewindToComplete()
+void PalyerCallbackImpl::OnRewindToComplete()
 {
     IpcIo io;
     uint8_t tmpData[DEFAULT_IPC_SIZE];
@@ -776,7 +776,7 @@ void PlayerCallbackImpl::OnRewindToComplete()
     option.flags = TF_OP_ASYNC;
     int32_t ret = SendRequest(sid_, ON_REWIND_TO_COMPLETE, &io, nullptr, option, nullptr);
     if (ret != ERR_NONE) {
-        MEDIA_ERR_LOG("PlayerCallbackImpl::OnRewindToComplete failed\n");
+        MEDIA_ERR_LOG("PalyerCallbackImpl::OnRewindToComplete failed\n");
     }
 }
 }

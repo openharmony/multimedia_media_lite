@@ -465,13 +465,13 @@ void PlayerControl::EventProcess(EventCbType event)
     MEDIA_DEBUG_LOG("handleEvent %d", event);
 
     switch (event) {
-        case EVENT_VIDEO_PLAY_EOS:
+        case EVNET_VIDEO_PLAY_EOS:
             OnVideoEndOfStream();
             break;
-        case EVENT_VIDEO_PLAY_SOS:
+        case EVNET_VIDEO_PLAY_SOS:
             MEDIA_INFO_LOG("video sos recv");
             break;
-        case EVENT_AUDIO_PLAY_EOS:
+        case EVNET_AUDIO_PLAY_EOS:
             CHECK_NULL_RETURN_VOID(stateMachine_, "stateMachine_ nullptr");
             if (stateMachine_->GetCurState() != PLAY_STATUS_TPLAY) {
                 isAudPlayEos_ = true;
@@ -481,26 +481,26 @@ void PlayerControl::EventProcess(EventCbType event)
                 }
             }
             break;
-        case EVENT_VIDEO_RUNNING_ERR:
-        case EVENT_AUDIO_RUNNING_ERR:
+        case EVNET_VIDEO_RUNNING_ERR:
+        case EVNET_AUDIO_RUNNING_ERR:
             playerError = PLAYERCONTROL_ERROR_VID_PLAY_FAIL;
             isPlayErr_ = true;
             EventCallback(PLAYERCONTROL_EVENT_ERROR, &playerError);
             break;
-        case EVENT_FRAME_CONTINUE_LOST:
+        case EVNET_FRAME_CONTINUE_LOST:
             isVidContinueLost_ = true;
             MEDIA_INFO_LOG("receive frame continue lost");
             break;
-        case EVENT_ON_JPEG_FRAME_RENDED:
+        case EVNET_ON_JPEG_FRAME_RENDED:
             break;
-        case EVENT_FIRST_VIDEO_REND:
+        case EVNET_FIRST_VIDEO_REND:
             if (pauseMode_) {
                 MEDIA_INFO_LOG("first video rended");
                 isNeedPause_ = true;
                 EventCallback(PLAYERCONTROL_FIRST_VIDEO_FRAME, NULL);
             }
             break;
-        case EVENT_FIRST_AUDIO_REND:
+        case EVNET_FIRST_AUDIO_REND:
             if (pauseMode_ && fmtFileInfo_.s32UsedVideoStreamIndex == -1) {
                 MEDIA_INFO_LOG("first audio rended");
                 isNeedPause_ = true;

@@ -78,7 +78,7 @@ private:
     int64_t rendStartTime_;
     int64_t lastRendPts_;
     int64_t lastRendSysTimeMs_;
-    int32_t receivedEos_;
+    int32_t recievedEos_;
     int64_t EosPts_;
     bool pauseAfterPlay_;
     bool firstVidRend_;

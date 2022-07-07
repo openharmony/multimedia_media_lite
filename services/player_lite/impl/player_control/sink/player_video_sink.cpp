@@ -63,7 +63,7 @@ static int64_t GetCurTimeMs()
 VideoSink::VideoSink(void)
     :speed_(1.0f), paused_(false), started_(false), syncHdl_(nullptr),
     renderFrameCnt_(0), renderMode_(RENDER_MODE_NORMAL), rendStartTime_(-1), lastRendPts_(AV_INVALID_PTS),
-    receivedEos_(false), EosPts_(AV_INVALID_PTS), pauseAfterPlay_(false), firstVidRend_(false),
+    recievedEos_(false), EosPts_(AV_INVALID_PTS), pauseAfterPlay_(false), firstVidRend_(false),
     lastRendCnt_(0), vidRendStartTime_(AV_INVALID_PTS), eosSended_(false), lastConfigRegionX_(-1),
     lastConfigRegionY_(-1), lastConfigRegionW_(-1), lastConfigRegionH_(-1)
 {
@@ -274,7 +274,7 @@ int32_t VideoSink::Reset()
     ReleaseQueAllFrame();
     Flush();
     ResetRendStartTime();
-    receivedEos_ = false;
+    recievedEos_ = false;
     firstVidRend_ = false;
     return HI_SUCCESS;
 }
@@ -352,11 +352,11 @@ int32_t VideoSink::DequeReleaseFrame(OutputInfo &frame)
 void VideoSink::RenderRptEvent(EventCbType event)
 {
     if (callBack_.onEventCallback != nullptr) {
-        if (event == EVENT_VIDEO_PLAY_EOS && eosSended_ == true) {
+        if (event == EVNET_VIDEO_PLAY_EOS && eosSended_ == true) {
             return;
         }
         callBack_.onEventCallback(callBack_.priv, event, 0, 0);
-        if (event == EVENT_VIDEO_PLAY_EOS) {
+        if (event == EVNET_VIDEO_PLAY_EOS) {
             eosSended_ = true;
         }
     }
@@ -386,8 +386,8 @@ int32_t VideoSink::RenderFrame(OutputInfo &frame)
     }
 
     if (GetRenderFrame(renderFrame, frame) != SINK_SUCCESS) {
-        if (receivedEos_ == true) {
-            RenderRptEvent(EVENT_VIDEO_PLAY_EOS);
+        if (recievedEos_ == true) {
+            RenderRptEvent(EVNET_VIDEO_PLAY_EOS);
             return SINK_RENDER_EOS;
         }
         return SINK_QUE_EMPTY;
@@ -404,7 +404,7 @@ int32_t VideoSink::RenderFrame(OutputInfo &frame)
     if (syncRet == SYNC_RET_PLAY) {
         ret = WriteToVideoDevice(renderFrame);
         if (renderFrameCnt_ == 0) {
-            callBack_.onEventCallback(callBack_.priv, EVENT_FIRST_VIDEO_REND, 0, 0);
+            callBack_.onEventCallback(callBack_.priv, EVNET_FIRST_VIDEO_REND, 0, 0);
         }
         renderFrameCnt_++;
     } else if (syncRet == SYNC_RET_DROP) {
@@ -433,7 +433,7 @@ void VideoSink::SetSync(PlayerSync *sync)
 
 void VideoSink::RenderEos(void)
 {
-    receivedEos_ = true;
+    recievedEos_ = true;
     EosPts_ = lastRendPts_;
 }
 

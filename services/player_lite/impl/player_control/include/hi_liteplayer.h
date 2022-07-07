@@ -70,11 +70,11 @@ struct PlayerControlParam {
                                            HI_TRUE:pause after first frame render. */
 };
 
-typedef void (*PlayerCtrlEventFun)(void *player, PlayerControlEvent enEvent, const void *data);
+typedef void (*PlayerCtrlEeventFun)(void *player, PlayerControlEvent enEvent, const void *data);
 
 struct PlayerCtrlCallbackParam {
     void *player;
-    PlayerCtrlEventFun callbackFun;
+    PlayerCtrlEeventFun callbackFun;
 };
 
 #ifdef __cplusplus

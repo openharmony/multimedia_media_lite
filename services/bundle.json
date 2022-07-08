@@ -26,7 +26,6 @@
                 "audio_manager_lite",
                 "camera_lite",
                 "permission",
-                "ipc_lite",
                 "ui",
                 "syspara_lite"
             ],

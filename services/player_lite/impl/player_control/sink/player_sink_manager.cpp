@@ -453,7 +453,7 @@ void SinkManager::GetRenderPosition(int64_t &position)
         return;
     }
 
-    /* use the max position of audio and video sink, if have recieved auduo eos */
+    /* use the max position of audio and video sink, if have received audio eos */
     int64_t audioPos;
     int64_t videoPos;
     audioSinkInfo_[0].sink->GetRenderPosition(audioPos);

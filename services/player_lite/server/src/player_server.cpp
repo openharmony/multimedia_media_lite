@@ -140,7 +140,7 @@ public:
 
 private:
     std::weak_ptr<StreamCallback> m_callBack;
-    std::vector<IdleBuffer> aviableBuffer;
+    std::vector<IdleBuffer> availableBuffer;
     pthread_mutex_t m_mutex;
 };
 
@@ -152,13 +152,13 @@ StreamThreadControl g_streamThreadControl;
 
 ServerStreamSource::ServerStreamSource(void)
 {
-    aviableBuffer.clear();
+    availableBuffer.clear();
     pthread_mutex_init(&m_mutex, nullptr);
 }
 
 ServerStreamSource::~ServerStreamSource(void)
 {
-    aviableBuffer.clear();
+    availableBuffer.clear();
     pthread_mutex_destroy(&m_mutex);
 }
 
@@ -192,19 +192,19 @@ void ServerStreamSource::OnBufferAvailable(size_t index, size_t offset, size_t s
     buffer.idx = index;
     buffer.offset = offset;
     buffer.size = size;
-    aviableBuffer.push_back(buffer);
+    availableBuffer.push_back(buffer);
     pthread_mutex_unlock(&m_mutex);
 }
 
 int ServerStreamSource::GetAvailableBuffer(IdleBuffer* buffer)
 {
     pthread_mutex_lock(&m_mutex);
-    if (aviableBuffer.empty()) {
+    if (availableBuffer.empty()) {
         pthread_mutex_unlock(&m_mutex);
         return -1;
     }
-    *buffer = aviableBuffer[0];
-    aviableBuffer.erase(aviableBuffer.begin());
+    *buffer = availableBuffer[0];
+    availableBuffer.erase(availableBuffer.begin());
     pthread_mutex_unlock(&m_mutex);
     return 0;
 }
@@ -354,7 +354,7 @@ void PlayerServer::SetSource(IpcIo *req, IpcIo *reply)
             break;
         }
         case SourceType::SOURCE_TYPE_FD:
-            MEDIA_ERR_LOG("unsupport now: SOURCE_TYPE_FD");
+            MEDIA_ERR_LOG("unsupported now: SOURCE_TYPE_FD");
             WriteInt32(reply, -1);
             break;
         case SourceType::SOURCE_TYPE_STREAM: {

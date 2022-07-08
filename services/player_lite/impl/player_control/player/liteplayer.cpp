@@ -1747,7 +1747,7 @@ int32_t PlayerControl::TPlayGetSeekOffset(float playSpeed, TplayDirect direction
             seekOffset = (int32_t)TPLAY_SEEK_OFFSET_128X;
             break;
         default:
-            MEDIA_ERR_LOG("unsupported play speed: %f", playSpeed);
+            MEDIA_ERR_LOG("unsupporteded play speed: %f", playSpeed);
             break;
     }
     seekOffset = (direction == TPLAY_DIRECT_BACKWARD) ? (-seekOffset) : seekOffset;
@@ -2027,7 +2027,7 @@ int32_t PlayerControl::EnablePauseAfterPlay(bool pauseAfterPlay)
 {
     PlayerStatus playerState = stateMachine_->GetCurState();
     if (playerState != PLAY_STATUS_IDLE && playerState != PLAY_STATUS_INIT) {
-        MEDIA_ERR_LOG("unsupport set play mode, state:%d\n", playerState);
+        MEDIA_ERR_LOG("unsupported set play mode, state:%d\n", playerState);
         return -1;
     }
     pauseMode_ = pauseAfterPlay;
@@ -2046,7 +2046,7 @@ int32_t PlayerControl::DoInvoke(InvokeParameter& invokeParam)
             ret = EnablePauseAfterPlay((*((uint32_t *)invokeParam.param)) > 0 ? true : false);
             break;
         default:
-            MEDIA_ERR_LOG("unsupport invoke:0x%x\n", invokeParam.id);
+            MEDIA_ERR_LOG("unsupported invoke:0x%x\n", invokeParam.id);
             break;
     }
     return ret;

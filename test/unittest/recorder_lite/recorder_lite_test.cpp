@@ -30,22 +30,22 @@ const int32_t RET_OK = 0;
 const int32_t RET_NOK = -1;
 static int32_t g_recorderSourceMaxCount = 4; // max recorder source setting
 
-void RecoderLiteTest::SetUpTestCase(void) {}
+void RecorderLiteTest::SetUpTestCase(void) {}
 
-void RecoderLiteTest::TearDownTestCase(void) {}
+void RecorderLiteTest::TearDownTestCase(void) {}
 
-void RecoderLiteTest::SetUp() {}
+void RecorderLiteTest::SetUp() {}
 
-void RecoderLiteTest::TearDown() {}
+void RecorderLiteTest::TearDown() {}
 
-void RecoderLiteTest::OnError(const int32_t errorType, const int32_t errorCode)
+void RecorderLiteTest::OnError(const int32_t errorType, const int32_t errorCode)
 {
-    cout << "RecoderLiteTest::OnError ..." << endl;
+    cout << "RecorderLiteTest::OnError ..." << endl;
 }
 
-void RecoderLiteTest::OnInfo(const int32_t type, const int32_t extra)
+void RecorderLiteTest::OnInfo(const int32_t type, const int32_t extra)
 {
-    cout << "RecoderLiteTest::OnInfo ..." << endl;
+    cout << "RecorderLiteTest::OnInfo ..." << endl;
 }
 
 namespace Media {
@@ -68,7 +68,7 @@ void TestVideoRecorderCallback::OnInfo(int32_t type, int32_t extra)
  * EnvConditions: NA
  * CaseDescription: Start recorder without recorder sink prepare
  */
-HWTEST_F(RecoderLiteTest, medialite_recorder_Start_test_002, Level1)
+HWTEST_F(RecorderLiteTest, medialite_recorder_Start_test_002, Level1)
 {
     int32_t retStatus = 0;
     int32_t sourceId = 0;
@@ -97,7 +97,7 @@ HWTEST_F(RecoderLiteTest, medialite_recorder_Start_test_002, Level1)
  * EnvConditions: NA
  * CaseDescription: Pause recorder
  */
-HWTEST_F(RecoderLiteTest, medialite_recorder_Pause_test_001, Level1)
+HWTEST_F(RecorderLiteTest, medialite_recorder_Pause_test_001, Level1)
 {
     int32_t retStatus = 0;
     int32_t sourceId = 0;

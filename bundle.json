@@ -1,6 +1,6 @@
 {
     "name": "@ohos/media_lite",
-    "description": "Recoder service and player service.",
+    "description": "Recorder service and player service.",
     "version": "3.1",
     "license": "Apache License 2.0",
     "publishAs": "code-segment",

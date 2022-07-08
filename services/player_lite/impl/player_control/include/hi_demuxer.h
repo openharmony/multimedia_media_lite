@@ -32,7 +32,7 @@ extern "C" {
 #define HI_DEMUXER_RESOLUTION_CNT     5
 #define HI_DEMUXER_NO_MEDIA_STREAM    (-1)
 
-#define HI_DEMUXER_EMTRY_NAME "g_stFormatEntry"
+#define HI_DEMUXER_ENTRY_NAME "g_stFormatEntry"
 
 #define HI_DEMUXER_SEEK_FORWARD   1
 #define HI_DEMUXER_SEEK_BACKWARD  2

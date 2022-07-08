@@ -61,8 +61,6 @@ if (ohos_build_type == "debug") {
       "//foundation/multimedia/media_lite/test/unittest/recorder_lite",
       "//foundation/multimedia/media_lite/interfaces/kits/recorder_lite",
       "//foundation/multimedia/media_lite/frameworks/recorder_lite",
-      "//foundation/multimedia/media_lite/frameworks/recorder_lite/recoder_sink/include",
-      "//foundation/multimedia/media_lite/frameworks/recorder_lite/recoder_source/include",
     ]
 
     deps = [

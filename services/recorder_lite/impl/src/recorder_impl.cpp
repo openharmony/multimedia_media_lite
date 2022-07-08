@@ -874,7 +874,7 @@ int32_t RecorderImpl::GetVideoTrackSource(const RecorderVideoSourceConfig &video
             trackSource.trackSourceInfo.videoInfo.codecType = CODEC_H265;
             break;
         default:
-            MEDIA_ERR_LOG("unsupport videoFormat:%d", videoSourceConfig.videoFormat);
+            MEDIA_ERR_LOG("unsupported videoFormat:%d", videoSourceConfig.videoFormat);
             return ERR_INVALID_PARAM;
     }
     if (videoSourceConfig.width <= 0 || videoSourceConfig.height <= 0 || videoSourceConfig.bitRate <= 0 ||
@@ -907,7 +907,7 @@ int32_t RecorderImpl::GetAudioTrackSource(const RecorderAudioSourceConfig &audio
             trackSource.trackSourceInfo.audioInfo.codecType = CODEC_AAC;
             break;
         default:
-            MEDIA_ERR_LOG("unsupport audiFormat: %d", audioSourceConfig.audioFormat);
+            MEDIA_ERR_LOG("unsupported audiFormat: %d", audioSourceConfig.audioFormat);
             return ERR_INVALID_PARAM;
     }
     if (audioSourceConfig.bitRate == 0 ||
@@ -1619,7 +1619,7 @@ int32_t RecorderImpl::SetFileSplitDuration(FileSplitType type, int64_t timestamp
             manualSplitType = MANUAL_SPLIT_NORMAL;
             break;
         default:
-            MEDIA_ERR_LOG("unsupport FileSplitType type: %d", type);
+            MEDIA_ERR_LOG("unsupported FileSplitType type: %d", type);
             return ERR_INVALID_PARAM;
     }
     if (recorderSink_ == nullptr) {

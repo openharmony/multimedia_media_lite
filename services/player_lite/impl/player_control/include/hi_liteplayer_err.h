@@ -24,11 +24,11 @@ extern "C" {
 #endif
 #endif /* __cplusplus */
 
-/* ´Ó0x40~0xFF */
+/* 0x40~0xFF */
 typedef enum {
     APP_PLAYERCONTROL_ERR_INVALID_HANDLE = 0x41,       /**< handle is invalid */
     APP_PLAYERCONTROL_ERR_ILLEGAL_HANDLE = 0x42,       /**< handle is inllegal */
-    APP_PLAYERCONTROL_ERR_MEM_MALLOC = 0x43,           /**< memery alloc failed */
+    APP_PLAYERCONTROL_ERR_MEM_MALLOC = 0x43,           /**< memory alloc failed */
     APP_PLAYERCONTROL_ERR_THREAD_CREATE_FAIL = 0x44,   /**< thread create failed */
     APP_PLAYERCONTROL_ERR_MUTEX_INIT_FAIL = 0x45,      /**< thread mutex init failed */
     APP_PLAYERCONTROL_ERR_ADEC_IN_USE = 0x46,          /**< thread mutex init failed */
@@ -39,7 +39,7 @@ typedef enum {
     APP_PLAYERCONTROL_ERR_NOT_SUPPORT = 0x51,          /**< not support this action */
     APP_PLAYERCONTROL_ERR_REINITED = 0x52,             /**< playercontrol reinit */
     APP_PLAYERCONTROL_ERR_NOT_INIT = 0x53,             /**< playercontrol no init */
-    APP_PLAYERCONTROL_ERR_PLAYERSCH = 0x54,             /**< player schudle exec failed */
+    APP_PLAYERCONTROL_ERR_PLAYERSCH = 0x54,             /**< player schedule exec failed */
     APP_PLAYERCONTROL_ERR_DLOPEN = 0x55,               /**< dlopen failed */
     APP_PLAYERCONTROL_ERR_DLSYM = 0x56,                /**< dlsym failed */
     APP_PLAYERCONTROL_ERR_NOT_REG_DEMUXER = 0x57,      /**< not reg demuxer */
@@ -48,10 +48,10 @@ typedef enum {
     APP_PLAYERCONTROL_ERR_NDK = 0x60,                  /**< ndk error */
     APP_PLAYERCONTROL_ERR_DEMUX_IN_USE = 0x61,         /**< the demux lib is used now */
     APP_PLAYERCONTROL_ERR_ADEC_NOTREG = 0x62,          /**< the adec lib not register */
-    APP_PLAYERCONTROL_ERR_ADEC_HAS_REG = 0x63,         /**< the adec lib alread register */
+    APP_PLAYERCONTROL_ERR_ADEC_HAS_REG = 0x63,         /**< the adec lib already register */
     APP_PLAYERCONTROL_ERR_ADEC_ERR = 0x64,             /**< create adec fail */
     APP_PLAYERCONTROL_ERR_MAX_ERR = 0x65,              /**< create player max fail */
-    APP_PLAYERCONTROL_ERR_MEM_SET = 0x66,              /**< memery SET failed */
+    APP_PLAYERCONTROL_ERR_MEM_SET = 0x66,              /**< memory SET failed */
     APP_PLAYERCONTROL_BUTT = 0xFF
 } AppPlayerControlErrCode;
 

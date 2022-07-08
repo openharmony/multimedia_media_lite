@@ -26,8 +26,8 @@ const float VIDEO_FRAME_RATE_MAX = 120.0f;
 const int32_t FLOAT_INT_SCALE = 1000;
 const int32_t SS2US = 1000000;
 const int32_t US2MS = 1000;
-const int32_t DEFUALT_REGION_WIDTH = 480;
-const int32_t DEFUALT_REGION_HEIGHT = 480;
+const int32_t DEFAULT_REGION_WIDTH = 480;
+const int32_t DEFAULT_REGION_HEIGHT = 480;
 
 #define CHECK_FAILED_RETURN(value, target, ret, printfString) \
 do { \
@@ -133,8 +133,8 @@ void VideoSink::SetDefaultDisplayRegionInfo(void)
 {
     lastConfigRegionX_ = 0;
     lastConfigRegionY_ = 0;
-    lastConfigRegionW_ = DEFUALT_REGION_WIDTH;
-    lastConfigRegionH_ = DEFUALT_REGION_HEIGHT;
+    lastConfigRegionW_ = DEFAULT_REGION_WIDTH;
+    lastConfigRegionH_ = DEFAULT_REGION_HEIGHT;
 }
 
 void VideoSink::UpdateDisplayRegionInfo(int32_t x, int32_t y, int32_t w, int32_t h)

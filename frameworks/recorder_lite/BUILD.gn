@@ -22,15 +22,15 @@ shared_library("recorder_lite") {
       "//foundation/multimedia/media_lite/frameworks/recorder_lite/binder",
       "//foundation/multimedia/media_lite/services/recorder_lite/impl/include",
       "//foundation/multimedia/utils/lite/hals",
-      "//foundation/distributedschedule/samgr_lite/interfaces/kits/registry",
-      "//foundation/distributedschedule/samgr_lite/interfaces/kits/samgr",
+      "//foundation/systemabilitymgr/samgr_lite/interfaces/kits/registry",
+      "//foundation/systemabilitymgr/samgr_lite/interfaces/kits/samgr",
       "//foundation/multimedia/media_lite/services/recorder_lite/server/include",
     ]
 
     deps = [
       "//base/security/permission/services/permission_lite/pms_client:pms_client",
       "//foundation/communication/ipc/interfaces/innerkits/c/ipc:ipc_single",
-      "//foundation/distributedschedule/samgr_lite/samgr:samgr",
+      "//foundation/systemabilitymgr/samgr_lite/samgr:samgr",
     ]
   } else {
     sources += [ "passthrough/recorder_client.cpp" ]

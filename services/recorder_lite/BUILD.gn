@@ -28,9 +28,9 @@ static_library("recorder_server") {
     "//drivers/peripheral/codec/interfaces/include",
     "//drivers/peripheral/format/interfaces/include",
     "//base/security/permission/interfaces/kits/permission_lite",
-    "//foundation/distributedschedule/samgr_lite/interfaces/kits/registry",
-    "//foundation/distributedschedule/samgr_lite/interfaces/kits/samgr",
-    "//foundation/distributedschedule/samgr_lite/interfaces/kits/communication/broadcast",
+    "//foundation/systemabilitymgr/samgr_lite/interfaces/kits/registry",
+    "//foundation/systemabilitymgr/samgr_lite/interfaces/kits/samgr",
+    "//foundation/systemabilitymgr/samgr_lite/interfaces/kits/communication/broadcast",
     "//foundation/multimedia/media_lite/services/recorder_lite/impl/include",
     "//foundation/multimedia/media_lite/services/recorder_lite/server/include",
     "//foundation/multimedia/media_lite/interfaces/kits/recorder_lite",
@@ -45,11 +45,11 @@ static_library("recorder_server") {
   public_deps = [
     "//base/security/permission/services/permission_lite/pms_client:pms_client",
     "//foundation/communication/ipc/interfaces/innerkits/c/ipc:ipc_single",
-    "//foundation/distributedschedule/samgr_lite/samgr:samgr",
     "//foundation/graphic/surface:lite_surface",
     "//foundation/multimedia/audio_lite/services:audio_capturer_impl",
     "//foundation/multimedia/media_lite/services/recorder_lite:recorder_impl",
     "//foundation/multimedia/utils/lite:media_common",
+    "//foundation/systemabilitymgr/samgr_lite/samgr:samgr",
     "//third_party/bounds_checking_function:libsec_shared",
   ]
 }

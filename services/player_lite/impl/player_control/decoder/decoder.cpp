@@ -34,9 +34,9 @@ Decoder::~Decoder()
 {
 }
 
-int32_t Decoder::GetCapbilityByMime(AvCodecMime mime, CodecType type, uint32_t flags, CodecCapbility &cap)
+int32_t Decoder::GetCapbilityByMime(AvCodecMime mime, CodecType type, uint32_t flags, CodecCapability &cap)
 {
-    int32_t ret = CodecGetCapbility(mime, type, flags, &cap);
+    int32_t ret = CodecGetCapability(mime, type, flags, &cap);
     if (ret != CODEC_SUCCESS) {
         return CODEC_FAILURE;
     }
@@ -60,7 +60,7 @@ static bool ConvertAdecAttributToParams(AvAttribute &attr, Param *param,
     param[index].size = sizeof(attr.type);
     index++;
     if (attr.adecAttr.mime == MEDIA_MIMETYPE_AUDIO_PCM) {
-        param[index].key = KEY_CHANNEL_COUNT;
+        param[index].key = KEY_AUDIO_CHANNEL_COUNT;
         param[index].val = (void *)&attr.adecAttr.channelCnt;
         param[index].size = sizeof(uint32_t);
         index++;
@@ -81,11 +81,11 @@ static bool ConvertVdecAttributToParams(AvAttribute &attr, Param *param,
     param[index].val = (void*)&(attr.vdecAttr.mime);
     param[index].size = sizeof(attr.vdecAttr.mime);
     index++;
-    param[index].key = KEY_WIDTH;
+    param[index].key = KEY_VIDEO_WIDTH;
     param[index].val = (void*)&(attr.vdecAttr.maxWidth);
     param[index].size = sizeof(attr.vdecAttr.maxWidth);
     index++;
-    param[index].key = KEY_HEIGHT;
+    param[index].key = KEY_VIDEO_HEIGHT;
     param[index].val = (void*)&(attr.vdecAttr.maxHeight);
     param[index].size = sizeof(attr.vdecAttr.maxHeight);
     index++;
@@ -140,11 +140,27 @@ int32_t Decoder::CreateHandle(const std::string &name, AvAttribute &attr)
         MEDIA_ERR_LOG("convert fail");
     }
 
-    int32_t ret = CodecCreate(name.c_str(), param, actualLen, &codecHandle_);
+    AvCodecMime mime = MEDIA_MIMETYPE_INVALID;
+    if (attr.type == AUDIO_DECODER) {
+        mime = attr.adecAttr.mime;
+    } else if (attr.type == VIDEO_DECODER) {
+        mime = attr.vdecAttr.mime;
+    } else {
+        MEDIA_ERR_LOG("not find CodecType");
+    }
+
+    int32_t ret = CodecCreateByType(attr.type, mime, &codecHandle_);
     if (ret != CODEC_SUCCESS) {
+        MEDIA_ERR_LOG("CodecCreateByType failed ret=%d", ret);
         return CODEC_FAILURE;
     }
-    return CODEC_SUCCESS;
+
+    ret = CodecSetParameter(codecHandle_, param, actualLen);
+    if (ret != CODEC_SUCCESS) {
+        MEDIA_ERR_LOG("CodecSetParameter failed ret=%d", ret);
+        CodecDestroy(codecHandle_);
+    }
+    return ret;
 }
 
 int32_t Decoder::DestroyHandle()
@@ -157,9 +173,9 @@ int32_t Decoder::DestroyHandle()
     return CODEC_SUCCESS;
 }
 
-int32_t Decoder::SetPortBufferMode(DirectionType type, BufferMode mode)
+int32_t Decoder::SetPortBufferMode(DirectionType direct, AllocateBufferMode mode, BufferType type)
 {
-    int32_t ret = CodecSetPortMode(codecHandle_, type, mode);
+    int32_t ret = CodecSetPortMode(codecHandle_, direct, mode, type);
     if (ret != CODEC_SUCCESS) {
         return CODEC_FAILURE;
     }
@@ -211,33 +227,33 @@ int32_t Decoder::FlushDec()
     return CODEC_SUCCESS;  
 }
 
-int32_t Decoder::QueueInputBuffer(InputInfo &inputData, uint32_t timeoutMs)
+int32_t Decoder::QueueInputBuffer(CodecBuffer* inputData, uint32_t timeoutMs)
 {
-    int32_t ret = CodecQueueInput(codecHandle_, &inputData, timeoutMs);
+    int32_t ret = CodecQueueInput(codecHandle_, inputData, timeoutMs, 0);
     return ret;
 }
 
-int32_t Decoder::DequeInputBuffer(InputInfo &inputData, uint32_t timeoutMs)
+int32_t Decoder::DequeInputBuffer(CodecBuffer* inputData, uint32_t timeoutMs)
 {
-    int32_t ret = CodecDequeInput(codecHandle_, timeoutMs, &inputData);
+    int32_t ret = CodecDequeueInput(codecHandle_, timeoutMs, nullptr, inputData);
     if (ret != CODEC_SUCCESS) {
         return CODEC_FAILURE;
     }
     return CODEC_SUCCESS;
 }
 
-int32_t Decoder::QueueOutputBuffer(OutputInfo &outInfo, uint32_t timeoutMs)
+int32_t Decoder::QueueOutputBuffer(CodecBuffer* outInfo, uint32_t timeoutMs)
 {
-    int32_t ret = CodecQueueOutput(codecHandle_, &outInfo, timeoutMs, -1);
+    int32_t ret = CodecQueueOutput(codecHandle_, outInfo, timeoutMs, -1);
     if (ret != CODEC_SUCCESS) {
         return CODEC_FAILURE;
     }
     return CODEC_SUCCESS;
 }
 
-int32_t Decoder::DequeueOutputBuffer(OutputInfo &outInfo, uint32_t timeoutMs)
+int32_t Decoder::DequeueOutputBuffer(CodecBuffer* outInfo, uint32_t timeoutMs)
 {
-    int32_t ret = CodecDequeueOutput(codecHandle_, timeoutMs, nullptr, &outInfo);
+    int32_t ret = CodecDequeueOutput(codecHandle_, timeoutMs, nullptr, outInfo);
     return ret;
 }
 

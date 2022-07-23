@@ -154,11 +154,11 @@ void AudioSink::GetStatus(AudioSinkStatus &status)
     status.audFrameCount = rendFrameCnt_;
 }
 
-void AudioSink::UpdateAudioPts(int64_t lastPts, int64_t &timestamp, OutputInfo &renderFrame)
+void AudioSink::UpdateAudioPts(int64_t lastPts, int64_t &timestamp, CodecBuffer &renderFrame)
 {
-    if (renderFrame.timeStamp == -1 && attr_.audAttr.channel != 0) {
-        int32_t sampleCnt = (renderFrame.buffers[0].length / attr_.audAttr.channel) / AUDIO_SAMPLE_WIDTH_BYTE;
-        int64_t duration = (static_cast<int64_t>(sampleCnt) * MS_SCALE) / attr_.audAttr.sampleRate;
+    if (renderFrame.timeStamp == -1) {
+        float sampleCnt = (renderFrame.buffer[0].length / attr_.audAttr.channel) / AUDIO_SAMPLE_WIDTH_BYTE;
+        float duration = (static_cast<int64_t>(sampleCnt) * MS_SCALE) / attr_.audAttr.sampleRate;
         renderFrame.timeStamp = lastPts + duration;
     }
     timestamp = renderFrame.timeStamp;
@@ -168,10 +168,10 @@ void AudioSink::UpdateAudioPts(int64_t lastPts, int64_t &timestamp, OutputInfo &
     }
 }
 
-void AudioSink::QueueRenderFrame(const OutputInfo &frame, const bool cacheQueue)
+void AudioSink::QueueRenderFrame(const PlayerBufferInfo &frame, const bool cacheQueue)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (frame.type != AUDIO_DECODER || frame.bufferCnt == 0) {
+    if (frame.info.bufferCnt == 0) {
         return;
     }
     if (cacheQueue) {
@@ -181,11 +181,11 @@ void AudioSink::QueueRenderFrame(const OutputInfo &frame, const bool cacheQueue)
     }
 }
 
-int32_t AudioSink::GetRenderFrame(OutputInfo &renderFrame, const OutputInfo &frame)
+int32_t AudioSink::GetRenderFrame(PlayerBufferInfo &renderFrame, const PlayerBufferInfo &frame)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     int32_t ret = SINK_QUE_EMPTY;
-    if (frame.type == AUDIO_DECODER &&  frame.bufferCnt != 0) {
+    if (frame.info.bufferCnt != 0) {
         frameCacheQue_.push_back(frame);
     }
     if (frameCacheQue_.size() != 0) {
@@ -199,7 +199,7 @@ void AudioSink::ReleaseQueHeadFrame(void)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (frameCacheQue_.size() != 0) {
-        OutputInfo frame = frameCacheQue_[0];
+        PlayerBufferInfo frame = frameCacheQue_[0];
         frameCacheQue_.erase(frameCacheQue_.begin());
         frameReleaseQue_.push_back(frame);
     }
@@ -220,7 +220,7 @@ void AudioSink::ReleaseQueAllFrame(void)
     frameCacheQue_.clear();
 }
 
-int32_t AudioSink::DequeReleaseFrame(OutputInfo &frame)
+int32_t AudioSink::DequeReleaseFrame(PlayerBufferInfo &frame)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (frameReleaseQue_.size() == 0) {
@@ -244,18 +244,18 @@ void AudioSink::RenderRptEvent(EventCbType event)
     }
 }
 
-int32_t AudioSink::WriteToAudioDevice(OutputInfo &renderFrame)
+int32_t AudioSink::WriteToAudioDevice(CodecBuffer &renderFrame)
 {
     int32_t ret;
     uint64_t writeLen = 0;
-    if ((audioRender_ == nullptr) || (renderFrame.buffers == nullptr)) {
+    if ((audioRender_ == nullptr) || (&renderFrame.buffer[0] == nullptr)) {
         ReleaseQueHeadFrame();
         return SINK_RENDER_ERROR;
     }
 
-    ret = audioRender_->RenderFrame(audioRender_, renderFrame.buffers[0].addr + renderFrame.buffers[0].offset,
-        static_cast<uint64_t>(renderFrame.buffers[0].length), &writeLen);
-    if ((unsigned long)renderFrame.buffers[0].length != writeLen) {
+    ret = audioRender_->RenderFrame(audioRender_, (void*)(renderFrame.buffer[0].buf + renderFrame.buffer[0].offset),
+        static_cast<uint64_t>(renderFrame.buffer[0].length), &writeLen);
+    if ((unsigned long)renderFrame.buffer[0].length != writeLen) {
         return SINK_RENDER_FULL;
     } else if (ret != HI_SUCCESS) {
         ReleaseQueHeadFrame();
@@ -266,12 +266,12 @@ int32_t AudioSink::WriteToAudioDevice(OutputInfo &renderFrame)
     return HI_SUCCESS;
 }
 
-int32_t AudioSink::RenderFrame(OutputInfo &frame)
+int32_t AudioSink::RenderFrame(PlayerBufferInfo &frame)
 {
     SyncRet syncRet = SYNC_RET_PLAY;
     int64_t crtPlayPts = 0;
     uint64_t frameCnt;
-    OutputInfo renderFrame;
+    PlayerBufferInfo renderFrame;
     struct AudioTimeStamp timestamp;
 
     if (!reportedFirstFrame && renderMode_ == RENDER_MODE_PAUSE_AFTER_PLAY) {
@@ -307,15 +307,15 @@ int32_t AudioSink::RenderFrame(OutputInfo &frame)
         return SINK_RENDER_ERROR;
     }
 
-    UpdateAudioPts(lastRendPts_, crtPlayPts, renderFrame);
+    UpdateAudioPts(lastRendPts_, crtPlayPts, renderFrame.info);
     ret = (syncHdl_ != nullptr) ? syncHdl_->ProcAudFrame(crtPlayPts, syncRet) : HI_SUCCESS;
     if (ret != HI_SUCCESS) {
-        MEDIA_ERR_LOG("ProcAudFrame pts: %lld failed", renderFrame.timeStamp);
+        MEDIA_ERR_LOG("ProcAudFrame pts: %lld failed", renderFrame.info.timeStamp);
         ReleaseQueHeadFrame();
         return SINK_RENDER_ERROR;
     }
     if (syncRet == SYNC_RET_PLAY) {
-        ret = WriteToAudioDevice(renderFrame);
+        ret = WriteToAudioDevice(renderFrame.info);
     } else if (syncRet == SYNC_RET_DROP) {
         ReleaseQueHeadFrame();
         ret = SINK_SUCCESS;
@@ -328,7 +328,7 @@ int32_t AudioSink::RenderFrame(OutputInfo &frame)
     }
 
     if (ret == SINK_SUCCESS || ret == SINK_RENDER_ERROR) {
-        lastRendPts_ = renderFrame.timeStamp;
+        lastRendPts_ = renderFrame.info.timeStamp;
         rendFrameCnt_++;
     }
     return ret;

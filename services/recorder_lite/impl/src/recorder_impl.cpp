@@ -921,17 +921,17 @@ int32_t RecorderImpl::GetAudioTrackSource(const RecorderAudioSourceConfig &audio
     trackSource.trackSourceInfo.audioInfo.channelCount = audioSourceConfig.channelCount;
     switch (audioSourceConfig.bitWidth) {
         case BIT_WIDTH_8:
-            trackSource.trackSourceInfo.audioInfo.sampleBitWidth = AUDIO_SAMPLE_FMT_S8;
+            trackSource.trackSourceInfo.audioInfo.sampleBitWidth = FORMAT_AUDIO_SAMPLE_FMT_S8;
             break;
         case BIT_WIDTH_16:
-            trackSource.trackSourceInfo.audioInfo.sampleBitWidth = AUDIO_SAMPLE_FMT_S16;
+            trackSource.trackSourceInfo.audioInfo.sampleBitWidth = FORMAT_AUDIO_SAMPLE_FMT_S16;
             break;
         case BIT_WIDTH_24:
-            trackSource.trackSourceInfo.audioInfo.sampleBitWidth = AUDIO_SAMPLE_FMT_S24;
+            trackSource.trackSourceInfo.audioInfo.sampleBitWidth = FORMAT_AUDIO_SAMPLE_FMT_S24;
             break;
         default:
             MEDIA_WARNING_LOG("default sampleBitWidth: %d", audioSourceConfig.bitWidth);
-            trackSource.trackSourceInfo.audioInfo.sampleBitWidth = AUDIO_SAMPLE_FMT_S16;
+            trackSource.trackSourceInfo.audioInfo.sampleBitWidth = FORMAT_AUDIO_SAMPLE_FMT_S16;
             break;
     }
     int frame = 1024;

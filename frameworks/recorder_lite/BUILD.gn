@@ -28,7 +28,7 @@ shared_library("recorder_lite") {
     ]
 
     deps = [
-      "//base/security/permission/services/permission_lite/pms_client:pms_client",
+      "//base/security/permission_lite/services/pms_client:pms_client",
       "//foundation/communication/ipc/interfaces/innerkits/c/ipc:ipc_single",
       "//foundation/systemabilitymgr/samgr_lite/samgr:samgr",
     ]
@@ -60,7 +60,7 @@ shared_library("recorder_lite") {
 config("recorder_external_library_config") {
   include_dirs = [
     "//third_party/bounds_checking_function/include",
-    "//base/security/permission/interfaces/kits/permission_lite",
+    "//base/security/permission_lite/interfaces/kits",
     "//drivers/peripheral/audio/interfaces/include",
     "//drivers/peripheral/codec/interfaces/include",
     "//drivers/peripheral/format/interfaces/include",

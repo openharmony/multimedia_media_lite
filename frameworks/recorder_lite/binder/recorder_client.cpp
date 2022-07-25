@@ -528,7 +528,7 @@ int32_t Recorder::RecorderClient::Prepare()
     if (ret != 0) {
         MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
-    return para.ret;
+    return pret;
 }
 
 int32_t Recorder::RecorderClient::Start()
@@ -541,7 +541,7 @@ int32_t Recorder::RecorderClient::Start()
     if (ret != 0) {
         MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
-    return para.ret;
+    return ret;
 }
 
 int32_t Recorder::RecorderClient::Pause()
@@ -554,7 +554,7 @@ int32_t Recorder::RecorderClient::Pause()
     if (ret != 0) {
         MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
-    return para.ret;
+    return ret;
 }
 
 int32_t Recorder::RecorderClient::Resume()
@@ -567,7 +567,7 @@ int32_t Recorder::RecorderClient::Resume()
     if (ret != 0) {
         MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
-    return para.ret;
+    return ret;
 }
 
 int32_t Recorder::RecorderClient::Stop(bool block)
@@ -581,7 +581,7 @@ int32_t Recorder::RecorderClient::Stop(bool block)
     if (ret != 0) {
         MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
-    return para.ret;
+    return ret;
 }
 
 int32_t Recorder::RecorderClient::Reset()
@@ -623,7 +623,7 @@ int32_t Recorder::RecorderClient::SetFileSplitDuration(FileSplitType type, int64
     if (ret != 0) {
         MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
-    return para.ret;
+    return ret;
 }
 
 int32_t Recorder::RecorderClient::SetParameter(int32_t sourceId, const Format &format)

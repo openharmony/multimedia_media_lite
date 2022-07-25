@@ -34,8 +34,7 @@ if (ohos_kernel_type != "liteos_m") {
 
     outdir = rebase_path("$root_out_dir")
     ldflags = [ "-L$outdir" ]
-    include_dirs =
-        [ "//base/security/permission/interfaces/kits/permission_lite" ]
+    include_dirs = [ "//base/security/permission_lite/interfaces/kits" ]
 
     if (enable_media_passthrough_mode == false) {
       include_dirs +=
@@ -74,7 +73,7 @@ if (ohos_kernel_type != "liteos_m") {
 
     public_configs = [ ":player_external_library_config" ]
     public_deps = [
-      "//base/security/permission/services/permission_lite/pms_client:pms_client",
+      "//base/security/permission_lite/services/pms_client:pms_client",
       "//foundation/graphic/surface:lite_surface",
       "//foundation/multimedia/utils/lite:media_common",
       "//third_party/bounds_checking_function:libsec_shared",

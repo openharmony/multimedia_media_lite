@@ -528,7 +528,7 @@ int32_t Recorder::RecorderClient::Prepare()
     if (ret != 0) {
         MEDIA_ERR_LOG("SetSource failed, ret=%u", ret);
     }
-    return pret;
+    return ret;
 }
 
 int32_t Recorder::RecorderClient::Start()

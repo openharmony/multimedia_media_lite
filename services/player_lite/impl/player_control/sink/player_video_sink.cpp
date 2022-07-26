@@ -421,7 +421,7 @@ int32_t VideoSink::RenderFrame(PlayerBufferInfo &frame)
 
     /* render pts update after the frame that have been processed */
     if (ret == SINK_SUCCESS || ret == SINK_RENDER_ERROR) {
-        lastRendPts_ = renderFrame.info.timeStamp;
+        lastRendPts_ = (renderFrame.info.timeStamp > lastRendPts_) ? renderFrame.info.timeStamp : lastRendPts_;
     }
     return ret;
 }

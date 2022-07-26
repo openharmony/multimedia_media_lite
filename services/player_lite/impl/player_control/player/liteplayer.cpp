@@ -1242,13 +1242,13 @@ void PlayerControl::PushPacketToADecoder(void)
     inputData.info.timeStamp = formatPacket_.timestampUs;
     inputData.info.flag = 0;
 
-    int32_t ret = audioDecoder_->QueueInputBuffer((CodecBuffer* )&inputData, GET_BUFFER_TIMEOUT_MS);
+    int32_t ret = audioDecoder_->QueueInputBuffer((CodecBuffer *)&inputData, GET_BUFFER_TIMEOUT_MS);
     if (ret == CODEC_ERR_UNKOWN) { // CODEC_ERR_STREAM_BUF_FULL
         renderSleepTime_ = QUEUE_BUFFER_FULL_SLEEP_TIME_US;
         return;
     }
     PlayerBufferInfo outData;
-    ret = audioDecoder_->DequeInputBuffer((CodecBuffer* )&outData, GET_BUFFER_TIMEOUT_MS);
+    ret = audioDecoder_->DequeInputBuffer((CodecBuffer *)&outData, GET_BUFFER_TIMEOUT_MS);
     if (ret != 0) {
         MEDIA_DEBUG_LOG("audio DequeInputBuffer failed");
         return;
@@ -1280,13 +1280,13 @@ void PlayerControl::PushPacketToVDecoder(void)
     inputData.info.buffer[0] = inBufInfo;
     inputData.info.timeStamp = formatPacket_.timestampUs;
     inputData.info.flag = 0;
-    int32_t ret = videoDecoder_->QueueInputBuffer((CodecBuffer* )&inputData, GET_BUFFER_TIMEOUT_MS);
+    int32_t ret = videoDecoder_->QueueInputBuffer((CodecBuffer *)&inputData, GET_BUFFER_TIMEOUT_MS);
     if (ret == CODEC_ERR_UNKOWN) { // CODEC_ERR_STREAM_BUF_FULL
         renderSleepTime_ = QUEUE_BUFFER_FULL_SLEEP_TIME_US;
         return;
     }
     PlayerBufferInfo outData;
-    ret = videoDecoder_->DequeInputBuffer((CodecBuffer* )&outData, GET_BUFFER_TIMEOUT_MS);
+    ret = videoDecoder_->DequeInputBuffer((CodecBuffer *)&outData, GET_BUFFER_TIMEOUT_MS);
     if (ret != 0) {
         MEDIA_DEBUG_LOG("video DequeInputBuffer failed");
         return;

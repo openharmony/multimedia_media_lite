@@ -796,20 +796,20 @@ void PlayerControl::DestroyDecoder()
 
 void PlayerControl::StopSinkAndDecoder()
 {
-    OutputInfo outInfo;
+    PlayerBufferInfo outInfo;
 
     if (sinkManager_ != nullptr) {
         sinkManager_->Stop();
     }
     if (audioDecoder_ != nullptr && sinkManager_ != nullptr) {
         while (sinkManager_->DequeReleaseFrame(true, outInfo) == 0) {
-            audioDecoder_->QueueOutputBuffer(outInfo, GET_BUFFER_TIMEOUT_MS);
+            audioDecoder_->QueueOutputBuffer((CodecBuffer *)&outInfo, GET_BUFFER_TIMEOUT_MS);
         }
         audioDecoder_->StopDec();
     }
     if (videoDecoder_ != nullptr && sinkManager_ != nullptr) {
         while (sinkManager_->DequeReleaseFrame(false, outInfo) == 0) {
-            videoDecoder_->QueueOutputBuffer(outInfo, GET_BUFFER_TIMEOUT_MS);
+            videoDecoder_->QueueOutputBuffer((CodecBuffer *)&outInfo, GET_BUFFER_TIMEOUT_MS);
         }
         videoDecoder_->StopDec();
     }
@@ -979,23 +979,19 @@ void PlayerControl::ReleaseADecoderOutputFrame(void)
         return;
     }
     while (true) {
-        OutputInfo outInfo;
+        PlayerBufferInfo outInfo;
         if (sinkManager_->DequeReleaseFrame(true, outInfo) != 0) {
             break;
         }
-        audioDecoder_->QueueOutputBuffer(outInfo, GET_BUFFER_TIMEOUT_MS);
+        audioDecoder_->QueueOutputBuffer((CodecBuffer *)&outInfo, GET_BUFFER_TIMEOUT_MS);
     }
 }
 
-static void InitOutputBuffer(OutputInfo &outInfo, CodecType type)
+static void InitOutputBuffer(CodecBuffer &outInfo, CodecType type)
 {
     outInfo.bufferCnt = 0;
-    outInfo.buffers = nullptr;
     outInfo.timeStamp = -1;
-    outInfo.sequence = 0;
     outInfo.flag = 0;
-    outInfo.type = type;
-    outInfo.vendorPrivate = nullptr;
 }
 
 void PlayerControl::RenderAudioFrame(void)
@@ -1004,16 +1000,15 @@ void PlayerControl::RenderAudioFrame(void)
         return;
     }
 
-    OutputInfo outInfo;
-    int ret = audioDecoder_->DequeueOutputBuffer(outInfo, GET_BUFFER_TIMEOUT_MS);
+    PlayerBufferInfo outInfo;
+    int ret = audioDecoder_->DequeueOutputBuffer((CodecBuffer *)&outInfo, GET_BUFFER_TIMEOUT_MS);
     if (ret != 0) {
-        InitOutputBuffer(outInfo, AUDIO_DECODER);
+        InitOutputBuffer(outInfo.info, AUDIO_DECODER);
         if (ret == CODEC_RECEIVE_EOS && strmReadEnd_) {
             sinkManager_->RenderEos(true);  /* all frame have been send to audio sink */
         }
     }
-    outInfo.type = AUDIO_DECODER;
-    ret = sinkManager_->RenderFrame(outInfo);
+    ret = sinkManager_->RenderFrame(outInfo, AUDIO_DECODER);
     if (ret == SINK_RENDER_FULL || ret == SINK_RENDER_DELAY) {
         renderSleepTime_ = RENDER_FULL_SLEEP_TIME_US;
     } else if (ret == SINK_QUE_EMPTY) {
@@ -1036,11 +1031,11 @@ void PlayerControl::ReleaseVDecoderOutputFrame(void)
         return;
     }
     while (true) {
-        OutputInfo outInfo;
+        PlayerBufferInfo outInfo;
         if (sinkManager_->DequeReleaseFrame(false, outInfo) != 0) {
             break;
         }
-        videoDecoder_->QueueOutputBuffer(outInfo, GET_BUFFER_TIMEOUT_MS);
+        videoDecoder_->QueueOutputBuffer((CodecBuffer *)&outInfo, GET_BUFFER_TIMEOUT_MS);
     }
 }
 
@@ -1050,17 +1045,17 @@ void PlayerControl::RenderVideoFrame(void)
         return;
     }
 
-    OutputInfo outInfo;
-    int ret = videoDecoder_->DequeueOutputBuffer(outInfo, GET_BUFFER_TIMEOUT_MS);
+    PlayerBufferInfo outInfo;
+    outInfo.info.bufferCnt = 1;
+    int ret = videoDecoder_->DequeueOutputBuffer((CodecBuffer *)&outInfo, GET_BUFFER_TIMEOUT_MS);
     if (ret != 0) {
-        InitOutputBuffer(outInfo, VIDEO_DECODER);
+        InitOutputBuffer(outInfo.info, VIDEO_DECODER);
         if (ret == CODEC_RECEIVE_EOS) {
             sinkManager_->RenderEos(false); /* all frame have been send to video sink */
         }
     }
 
-    outInfo.type = VIDEO_DECODER;
-    ret = sinkManager_->RenderFrame(outInfo);
+    ret = sinkManager_->RenderFrame(outInfo, VIDEO_DECODER);
     if (ret == SINK_RENDER_FULL || ret == SINK_RENDER_DELAY) {
         renderSleepTime_ = RENDER_FULL_SLEEP_TIME_US;
     } else if (ret == SINK_QUE_EMPTY) {
@@ -1230,36 +1225,37 @@ inline static bool IsValidPacket(FormatFrame &packet)
 
 void PlayerControl::PushPacketToADecoder(void)
 {
-    InputInfo inputData;
-    CodecBufferInfo inBufInfo;
     if (audioDecoder_ == nullptr) {
         return;
     }
-    inputData.bufferCnt = 0;
-    inputData.buffers = nullptr;
-    inputData.pts = 0;
-    inputData.flag = 0;
+    PlayerBufferInfo inputData = {};
+    CodecBufferInfo inBufInfo;
     if (memset_s(&inBufInfo, sizeof(inBufInfo), 0, sizeof(CodecBufferInfo)) != EOK) {
         return;
     }
-    int32_t ret = audioDecoder_->DequeInputBuffer(inputData, GET_BUFFER_TIMEOUT_MS);
-    if (ret != 0) {
+
+    inBufInfo.type = BUFFER_TYPE_VIRTUAL;
+    inBufInfo.buf = (intptr_t)formatPacket_.data;
+    inBufInfo.length = formatPacket_.len;
+    inputData.info.bufferCnt = 1;
+    inputData.info.buffer[0] = inBufInfo;
+    inputData.info.timeStamp = formatPacket_.timestampUs;
+    inputData.info.flag = 0;
+
+    int32_t ret = audioDecoder_->QueueInputBuffer((CodecBuffer *)&inputData, GET_BUFFER_TIMEOUT_MS);
+    if (ret == CODEC_ERR_UNKOWN) { // CODEC_ERR_STREAM_BUF_FULL
+        renderSleepTime_ = QUEUE_BUFFER_FULL_SLEEP_TIME_US;
         return;
     }
-    inBufInfo.addr = formatPacket_.data;
-    inBufInfo.length = formatPacket_.len;
-    inputData.bufferCnt = 1;
-    inputData.buffers = &inBufInfo;
-    inputData.pts = formatPacket_.timestampUs;
-    inputData.flag = 0;
-    ret = audioDecoder_->QueueInputBuffer(inputData, GET_BUFFER_TIMEOUT_MS);
-    if (ret == CODEC_ERR_STREAM_BUF_FULL) {
-        renderSleepTime_ = QUEUE_BUFFER_FULL_SLEEP_TIME_US;
+    PlayerBufferInfo outData;
+    ret = audioDecoder_->DequeInputBuffer((CodecBuffer *)&outData, GET_BUFFER_TIMEOUT_MS);
+    if (ret != 0) {
+        MEDIA_DEBUG_LOG("audio DequeInputBuffer failed");
         return;
     }
     if (firstAudioFrameAfterSeek_ && IsValidPacket(formatPacket_)) {
         firstAudioFrameAfterSeek_ = false;
-        MEDIA_INFO_LOG("push firstAudioFrameAfterSeek_ success, pts:%lld", inputData.pts);
+        MEDIA_INFO_LOG("push firstAudioFrameAfterSeek_ success, pts:%lld", inputData.info.timeStamp);
     }
     if (formatPacket_.data != nullptr || formatPacket_.len != 0) {
         lastSendAdecPts_ = formatPacket_.timestampUs;
@@ -1269,36 +1265,35 @@ void PlayerControl::PushPacketToADecoder(void)
 
 void PlayerControl::PushPacketToVDecoder(void)
 {
-    InputInfo inputData;
-    CodecBufferInfo inBufInfo;
     if (videoDecoder_ == nullptr) {
         return;
     }
-    inputData.bufferCnt = 0;
-    inputData.buffers = nullptr;
-    inputData.pts = 0;
-    inputData.flag = 0;
+    PlayerBufferInfo inputData = {};
+    CodecBufferInfo inBufInfo;
     if (memset_s(&inBufInfo, sizeof(inBufInfo), 0, sizeof(CodecBufferInfo)) != EOK) {
         return;
     }
-    int32_t ret = videoDecoder_->DequeInputBuffer(inputData, GET_BUFFER_TIMEOUT_MS);
-    if (ret != 0) {
+    inBufInfo.type = BUFFER_TYPE_VIRTUAL;
+    inBufInfo.buf = (intptr_t)formatPacket_.data;
+    inBufInfo.length = formatPacket_.len;
+    inputData.info.bufferCnt = 1;
+    inputData.info.buffer[0] = inBufInfo;
+    inputData.info.timeStamp = formatPacket_.timestampUs;
+    inputData.info.flag = 0;
+    int32_t ret = videoDecoder_->QueueInputBuffer((CodecBuffer *)&inputData, GET_BUFFER_TIMEOUT_MS);
+    if (ret == CODEC_ERR_UNKOWN) { // CODEC_ERR_STREAM_BUF_FULL
+        renderSleepTime_ = QUEUE_BUFFER_FULL_SLEEP_TIME_US;
         return;
     }
-    inBufInfo.addr = formatPacket_.data;
-    inBufInfo.length = formatPacket_.len;
-    inputData.bufferCnt = 1;
-    inputData.buffers = &inBufInfo;
-    inputData.pts = formatPacket_.timestampUs;
-    inputData.flag = 0;
-    ret = videoDecoder_->QueueInputBuffer(inputData, GET_BUFFER_TIMEOUT_MS);
-    if (ret == CODEC_ERR_STREAM_BUF_FULL) {
-        renderSleepTime_ = QUEUE_BUFFER_FULL_SLEEP_TIME_US;
+    PlayerBufferInfo outData;
+    ret = videoDecoder_->DequeInputBuffer((CodecBuffer *)&outData, GET_BUFFER_TIMEOUT_MS);
+    if (ret != 0) {
+        MEDIA_DEBUG_LOG("video DequeInputBuffer failed");
         return;
     }
     if (firstVideoFrameAfterSeek_ && IsValidPacket(formatPacket_)) {
         firstVideoFrameAfterSeek_ = false;
-        MEDIA_INFO_LOG("push firstVideoFrameAfterSeek_ success, pts:%lld", inputData.pts);
+        MEDIA_INFO_LOG("push firstVideoFrameAfterSeek_ success, pts:%lld", inputData.info.timeStamp);
     }
     if (formatPacket_.data != nullptr && formatPacket_.len != 0) {
         lastSendVdecPts_ = formatPacket_.timestampUs;

@@ -286,10 +286,10 @@ int32_t VideoSink::RegisterCallBack(PlayEventCallback &callback)
     return 0;
 }
 
-void VideoSink::QueueRenderFrame(OutputInfo &frame, bool cacheQueue)
+void VideoSink::QueueRenderFrame(PlayerBufferInfo &frame, bool cacheQueue)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (frame.type != AUDIO_DECODER || frame.bufferCnt == 0) {
+    if (frame.info.bufferCnt == 0) {
         return;
     }
     if (cacheQueue) {
@@ -299,11 +299,11 @@ void VideoSink::QueueRenderFrame(OutputInfo &frame, bool cacheQueue)
     }
 }
 
-int32_t VideoSink::GetRenderFrame(OutputInfo &renderFrame, OutputInfo &frame)
+int32_t VideoSink::GetRenderFrame(PlayerBufferInfo &renderFrame, PlayerBufferInfo &frame)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     int32_t ret = SINK_QUE_EMPTY;
-    if (frame.type == VIDEO_DECODER && frame.bufferCnt != 0) {
+    if (frame.info.bufferCnt != 0) {
         frameCacheQue_.push_back(frame);
     }
     if (frameCacheQue_.size() != 0) {
@@ -317,7 +317,7 @@ void VideoSink::ReleaseQueHeadFrame(void)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (frameCacheQue_.size() != 0) {
-        OutputInfo frame = frameCacheQue_[0];
+        PlayerBufferInfo frame = frameCacheQue_[0];
         frameCacheQue_.erase(frameCacheQue_.begin());
         frameReleaseQue_.push_back(frame);
     }
@@ -338,7 +338,7 @@ void VideoSink::ReleaseQueAllFrame(void)
     frameCacheQue_.clear();
 }
 
-int32_t VideoSink::DequeReleaseFrame(OutputInfo &frame)
+int32_t VideoSink::DequeReleaseFrame(PlayerBufferInfo &frame)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (frameReleaseQue_.size() == 0) {
@@ -362,22 +362,22 @@ void VideoSink::RenderRptEvent(EventCbType event)
     }
 }
 
-int32_t VideoSink::WriteToVideoDevice(OutputInfo &renderFrame)
+int32_t VideoSink::WriteToVideoDevice(CodecBuffer &renderFrame)
 {
     if (layerFuncs_ != nullptr) {
         LayerBuffer layerBuf;
-        layerBuf.data.virAddr = renderFrame.vendorPrivate;
+        layerBuf.data.virAddr = (void *)renderFrame.buffer[0].buf;
         layerFuncs_->Flush(0, 0, &layerBuf);
     }
     ReleaseQueHeadFrame();
     return SINK_SUCCESS;
 }
 
-int32_t VideoSink::RenderFrame(OutputInfo &frame)
+int32_t VideoSink::RenderFrame(PlayerBufferInfo &frame)
 {
     SyncRet syncRet = SYNC_RET_PLAY;
     int64_t crtPlayPts = 0;
-    OutputInfo renderFrame;
+    PlayerBufferInfo renderFrame;
 
     /* the frame should be save to queue at state paused and none-started */
     if (!started_ || paused_ || (renderMode_ == RENDER_MODE_PAUSE_AFTER_PLAY && renderFrameCnt_ == 1)) {
@@ -393,22 +393,22 @@ int32_t VideoSink::RenderFrame(OutputInfo &frame)
         return SINK_QUE_EMPTY;
     }
 
-    crtPlayPts = renderFrame.timeStamp;
+    crtPlayPts = renderFrame.info.timeStamp;
     int32_t ret = (syncHdl_ != nullptr) ? syncHdl_->ProcVidFrame(crtPlayPts, syncRet) : HI_SUCCESS;
     if (ret != HI_SUCCESS) {
         ReleaseQueHeadFrame();
-        MEDIA_ERR_LOG("ProcVidFrame pts: %llu failed", renderFrame.timeStamp);
+        MEDIA_ERR_LOG("ProcVidFrame pts: %llu failed", renderFrame.info.timeStamp);
         return SINK_RENDER_ERROR;
     }
 
     if (syncRet == SYNC_RET_PLAY) {
-        ret = WriteToVideoDevice(renderFrame);
+        ret = WriteToVideoDevice(renderFrame.info);
         if (renderFrameCnt_ == 0) {
             callBack_.onEventCallback(callBack_.priv, EVNET_FIRST_VIDEO_REND, 0, 0);
         }
         renderFrameCnt_++;
     } else if (syncRet == SYNC_RET_DROP) {
-        MEDIA_INFO_LOG("too late, drop, pts: %lld", renderFrame.timeStamp);
+        MEDIA_INFO_LOG("too late, drop, pts: %lld", renderFrame.info.timeStamp);
         ReleaseQueHeadFrame();
         ret = SINK_SUCCESS;
     } else if (syncRet == SYNC_RET_REPEAT) {
@@ -421,7 +421,7 @@ int32_t VideoSink::RenderFrame(OutputInfo &frame)
 
     /* render pts update after the frame that have been processed */
     if (ret == SINK_SUCCESS || ret == SINK_RENDER_ERROR) {
-        lastRendPts_ = (renderFrame.timeStamp > lastRendPts_) ? renderFrame.timeStamp : lastRendPts_;
+        lastRendPts_ = (renderFrame.info.timeStamp > lastRendPts_) ? renderFrame.info.timeStamp : lastRendPts_;
     }
     return ret;
 }

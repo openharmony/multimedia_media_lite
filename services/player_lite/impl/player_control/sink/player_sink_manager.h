@@ -68,7 +68,7 @@ public:
     int32_t Resume(void);
     int32_t SetSpeed(float speed, TplayDirect  tplayDirect);
     int32_t GetSpeed(float &speed, TplayDirect  &tplayDirect);
-    int32_t RenderFrame(OutputInfo &frame);
+    int32_t RenderFrame(PlayerBufferInfo &frame, CodecType type);
     int32_t SetVolume(float left, float right);
     int32_t GetVolume(float &left, float &right);
     int32_t SetParam(const char *key, dataType type, void* value);
@@ -77,7 +77,7 @@ public:
     int32_t RegisterCallBack(PlayEventCallback &callback);
     int32_t GetStatus(PlayerStreamInfo &info);
     void RenderEos(bool isAudio);
-    int DequeReleaseFrame(bool audioSink, OutputInfo &frame);
+    int DequeReleaseFrame(bool audioSink, PlayerBufferInfo &frame);
     void GetRenderPosition(int64_t &position);
     void SetAudioStreamType(int32_t &type);
 

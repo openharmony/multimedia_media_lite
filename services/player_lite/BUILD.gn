@@ -103,7 +103,7 @@ shared_library("player_server") {
     "//foundation/distributedschedule/samgr_lite/interfaces/kits/registry",
     "//foundation/distributedschedule/samgr_lite/interfaces/kits/samgr",
     "//foundation/distributedschedule/samgr_lite/interfaces/kits/communication/broadcast",
-    "//base/startup/syspara_lite/interfaces/kits/",
+    "//base/startup/init/interfaces/innerkits/include/syspara",
   ]
   outdir = rebase_path("$root_out_dir")
   public_configs = [ ":player_server_external_library_config" ]
@@ -125,7 +125,7 @@ shared_library("player_server") {
     "//foundation/multimedia/histreamer:histreamer",
   ]
   public_deps = [
-    "//base/startup/syspara_lite/frameworks/parameter/src:sysparam",
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//foundation/multimedia/media_lite/services/player_lite:player_impl",
     "//foundation/multimedia/utils/lite:media_common",
   ]

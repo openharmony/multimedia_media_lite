@@ -27,7 +27,7 @@
                 "camera_lite",
                 "permission",
                 "ui",
-                "syspara_lite"
+                "init"
             ],
             "third_party": [
                 "bounds_checking_function",

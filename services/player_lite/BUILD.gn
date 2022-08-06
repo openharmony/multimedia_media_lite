@@ -100,9 +100,9 @@ shared_library("player_server") {
     "//foundation/multimedia/utils/lite/interfaces/kits",
     "//foundation/multimedia/media_lite/interfaces/innerkits",
     "//foundation/multimedia/media_lite/frameworks/player_lite/binder",
-    "//foundation/distributedschedule/samgr_lite/interfaces/kits/registry",
-    "//foundation/distributedschedule/samgr_lite/interfaces/kits/samgr",
-    "//foundation/distributedschedule/samgr_lite/interfaces/kits/communication/broadcast",
+    "//foundation/systemabilitymgr/samgr_lite/interfaces/kits/registry",
+    "//foundation/systemabilitymgr/samgr_lite/interfaces/kits/samgr",
+    "//foundation/systemabilitymgr/samgr_lite/interfaces/kits/communication/broadcast",
     "//base/startup/syspara_lite/interfaces/kits/",
   ]
   outdir = rebase_path("$root_out_dir")
@@ -120,9 +120,9 @@ shared_library("player_server") {
     "-lcodec",
   ]
   deps = [
-    "//foundation/distributedschedule/samgr_lite/samgr:samgr",
     "//foundation/graphic/surface:lite_surface",
     "//foundation/multimedia/histreamer:histreamer",
+    "//foundation/systemabilitymgr/samgr_lite/samgr:samgr",
   ]
   public_deps = [
     "//base/startup/syspara_lite/frameworks/parameter/src:sysparam",

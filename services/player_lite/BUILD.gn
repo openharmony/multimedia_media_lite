@@ -121,7 +121,7 @@ shared_library("player_server") {
   ]
   deps = [
     "//foundation/graphic/surface:lite_surface",
-    "//foundation/multimedia/histreamer:histreamer",
+    "//foundation/multimedia/histreamer:media_engine_histreamer",
     "//foundation/systemabilitymgr/samgr_lite/samgr:samgr",
   ]
   public_deps = [

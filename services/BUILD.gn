@@ -50,8 +50,8 @@ executable("media_server") {
     "-Wl,-rpath-link=$ohos_root_path/$root_out_dir",
   ]
   deps = [
-    "//foundation/distributedschedule/samgr_lite/samgr:samgr",
     "//foundation/multimedia/camera_lite/services:camera_server",
+    "//foundation/systemabilitymgr/samgr_lite/samgr:samgr",
   ]
   if (enable_media_passthrough_mode == false) {
     deps += [

@@ -24,8 +24,8 @@ namespace OHOS {
 namespace Media {
 constexpr uint32_t RECORDER_PARAMS_CNT = 2;
 
-static int32_t SinkOnError(CALLBACK_HANDLE privateDataHandle, int32_t errorType, int32_t errorCode);
-static int32_t SinkOnInfo(CALLBACK_HANDLE privateDataHandle, int32_t type, int32_t extra);
+static int32_t SinkOnError(CallbackHandle privateDataHandle, int32_t errorType, int32_t errorCode);
+static int32_t SinkOnInfo(CallbackHandle privateDataHandle, int32_t type, int32_t extra);
 
 RecorderSink::RecorderSink()
     :formatMuxerHandle_(nullptr),
@@ -269,7 +269,7 @@ int32_t RecorderSink::SendCallbackError(int32_t errorType, int32_t errorCode)
     }
 }
 
-static int32_t SinkOnError(CALLBACK_HANDLE privateDataHandle, int32_t errorType, int32_t errorCode)
+static int32_t SinkOnError(CallbackHandle privateDataHandle, int32_t errorType, int32_t errorCode)
 {
     RecorderSink *sink = reinterpret_cast<RecorderSink *>(privateDataHandle);
     if (sink == nullptr) {
@@ -285,7 +285,7 @@ static int32_t SinkOnError(CALLBACK_HANDLE privateDataHandle, int32_t errorType,
     return 0;
 }
 
-static int32_t SinkOnInfo(CALLBACK_HANDLE privateDataHandle, int32_t type, int32_t extra)
+static int32_t SinkOnInfo(CallbackHandle privateDataHandle, int32_t type, int32_t extra)
 {
     MEDIA_INFO_LOG("type:%d", type);
     RecorderSink *sink = reinterpret_cast<RecorderSink *>(privateDataHandle);

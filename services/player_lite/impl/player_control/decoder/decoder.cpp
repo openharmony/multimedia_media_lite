@@ -135,7 +135,7 @@ int32_t Decoder::CreateHandle(const std::string &name, AvAttribute &attr)
 {
     int actualLen = 0;
     Param param[PARAM_MAX_NUM];
-    memset_s(param, PARAM_MAX_NUM * sizeof(Param), 0x00, PARAM_MAX_NUM * sizeof(Param));
+    (void)memset_s(param, PARAM_MAX_NUM * sizeof(Param), 0x00, PARAM_MAX_NUM * sizeof(Param));
     if (ConvertAttributeToParams(attr, param, PARAM_MAX_NUM, actualLen) == false) {
         MEDIA_ERR_LOG("convert fail");
     }

@@ -46,9 +46,9 @@ C++11版本或以上
 
 [camera\_sample\_lite](https://gitee.com/openharmony/applications_sample_camera/blob/master/README_zh.md)
 
-[media\_utils\_lite](https://gitee.com/openharmony/multimedia_utils_lite/blob/master/README_zh.md)
+[media\_utils\_lite](https://gitee.com/openharmony/multimedia_utils_lite)
 
-[audio\_lite](https://gitee.com/openharmony/multimedia_audio_lite/blob/master/README_zh.md)
+[audio\_lite](https://gitee.com/openharmony/multimedia_audio_lite)
 
-[media\_lite](https://gitee.com/openharmony/multimedia_media_lite/blob/master/README_zh.md)
+[media\_lite](https://gitee.com/openharmony/multimedia_media_lite)
 

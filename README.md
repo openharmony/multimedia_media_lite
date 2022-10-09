@@ -42,13 +42,13 @@ C++ 11 or later
 
 [Multimedia subsystem](https://gitee.com/openharmony/docs/blob/master/en/readme/multimedia.md)
 
-[camera\_lite](https://gitee.com/openharmony/multimedia_camera_lite/blob/master/README.md)
+[camera\_lite](https://gitee.com/openharmony/multimedia_camera_lite)
 
-[camera\_sample\_lite](https://gitee.com/openharmony/applications_sample_camera/blob/master/README.md)
+[camera\_sample\_lite](https://gitee.com/openharmony/applications_sample_camera)
 
-[media\_utils\_lite](https://gitee.com/openharmony/multimedia_utils_lite/blob/master/README.md)
+[media\_utils\_lite](https://gitee.com/openharmony/multimedia_utils_lite)
 
-[audio\_lite](https://gitee.com/openharmony/multimedia_audio_lite/blob/master/README.md)
+[audio\_lite](https://gitee.com/openharmony/multimedia_audio_lite)
 
-**media\_lite**
+[media\_lite](https://gitee.com/openharmony/multimedia_media_lite)
 

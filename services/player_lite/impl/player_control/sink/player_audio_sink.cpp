@@ -123,7 +123,7 @@ int32_t AudioSink::Init(SinkAttr &atrr)
 
     struct AudioSampleAttributes param;
     param.sampleRate = attr_.audAttr.sampleRate;
-    param.format = AUDIO_FORMAT_PCM_16_BIT;
+    param.format = AUDIO_FORMAT_TYPE_PCM_16_BIT;
     param.channelCount = attr_.audAttr.channel;
     param.interleaved = false;
     param.type = (audioStreamType_ == 1) ? AUDIO_IN_COMMUNICATION : AUDIO_IN_MEDIA;

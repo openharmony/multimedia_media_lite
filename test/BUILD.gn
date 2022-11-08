@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import("//build/lite/config/component/lite_component.gni")
-import("//foundation/multimedia/utils/lite/config.gni")
+import("//foundation/multimedia/media_utils_lite/config.gni")
 
 executable("test_play_file_h265") {
   sources = [ "test_play_file_h265.cpp" ]
@@ -21,7 +21,7 @@ executable("test_play_file_h265") {
   include_dirs = [
     "//third_party/bounds_checking_function/include",
     "//drivers/peripheral/codec/interfaces/include",
-    "//foundation/multimedia/utils/lite/hals",
+    "//foundation/multimedia/media_utils_lite/hals",
   ]
 
   if (enable_media_passthrough_mode == true) {

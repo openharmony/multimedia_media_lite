@@ -901,7 +901,7 @@ void PlayerImpl::SetPlayerCallback(const std::shared_ptr<PlayerCallback> &cb)
 
 void PlayerImpl::NotifyPlaybackComplete(PlayerImpl *curPlayer)
 {
-    if(curPlayer == nullptr){
+    if (curPlayer == nullptr) {
         MEDIA_ERR_LOG("curPlayer is nullptr");
         return;
     }

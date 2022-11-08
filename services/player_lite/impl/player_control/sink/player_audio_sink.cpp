@@ -106,7 +106,7 @@ int32_t AudioSink::Init(SinkAttr &atrr)
         struct AudioAdapterDescriptor *desc = &descs[index];
         for (int port = 0; (desc != nullptr && port < static_cast<int>(desc->portNum)); port++) {
             if (desc->ports[port].dir == PORT_OUT &&
-                (audioManager_->LoadAdapter(audioManager_, desc, &audioAdapter_)) == 0) {
+                (audioManager_->LoadAdapter(audioManager_, desc, &audioAdapter_)) == 0 && audioAdapter_ != nullptr) {
                 (void)audioAdapter_->InitAllPorts(audioAdapter_);
                 if (memcpy_s(&renderPort_, sizeof(struct AudioPort),
                     &desc->ports[port], sizeof(struct AudioPort)) != 0) {

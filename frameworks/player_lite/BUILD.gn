@@ -12,7 +12,7 @@
 # limitations under the License.
 import("//build/lite/config/component/lite_component.gni")
 import("//build/lite/ndk/ndk.gni")
-import("//foundation/multimedia/utils/lite/config.gni")
+import("//foundation/multimedia/media_utils_lite/config.gni")
 
 if (ohos_kernel_type != "liteos_m") {
   shared_library("player_lite") {
@@ -75,7 +75,7 @@ if (ohos_kernel_type != "liteos_m") {
     public_deps = [
       "//base/security/permission_lite/services/pms_client:pms_client",
       "//foundation/graphic/surface:lite_surface",
-      "//foundation/multimedia/utils/lite:media_common",
+      "//foundation/multimedia/media_utils_lite:media_common",
       "//third_party/bounds_checking_function:libsec_shared",
     ]
   }
@@ -85,7 +85,8 @@ if (ohos_kernel_type != "liteos_m") {
         [ "//foundation/multimedia/media_lite/interfaces/kits/player_lite" ]
     include_dirs +=
         [ "//foundation/multimedia/media_lite/interfaces/innerkits" ]
-    include_dirs += [ "//foundation/multimedia/utils/lite/interfaces/kits" ]
+    include_dirs +=
+        [ "//foundation/multimedia/media_utils_lite/interfaces/kits" ]
   }
 
   lite_component("media_lite") {
@@ -110,7 +111,7 @@ if (ohos_kernel_type != "liteos_m") {
     include_dirs = [
       "//foundation/multimedia/media_lite/interfaces/innerkits",
       "//foundation/multimedia/frameworks/player_lite",
-      "//foundation/multimedia/utils/lite/interfaces/kits",
+      "//foundation/multimedia/media_utils_lite/interfaces/kits",
       "//foundation/multimedia/media_lite/interfaces/kits/player_lite",
       "//drivers/peripheral/format/interfaces/include",
     ]

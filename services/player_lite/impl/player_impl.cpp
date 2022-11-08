@@ -901,13 +901,17 @@ void PlayerImpl::SetPlayerCallback(const std::shared_ptr<PlayerCallback> &cb)
 
 void PlayerImpl::NotifyPlaybackComplete(PlayerImpl *curPlayer)
 {
+    if(curPlayer == nullptr){
+        MEDIA_ERR_LOG("curPlayer is nullptr");
+        return;
+    }
     if (!isSingleLoop_) {
         if (curPlayer->formatFileInfo_.s64Duration == -1) {
             curPlayer->formatFileInfo_.s64Duration = curPlayer->currentPosition_;
         }
         curPlayer->currentState_ = PLAYER_PLAYBACK_COMPLETE;
         MEDIA_INFO_LOG("OnPlayBackComplete, iscallbackNull:%d", (curPlayer->callback_ == nullptr));
-        if (curPlayer != nullptr && curPlayer->callback_ != nullptr) {
+        if (curPlayer->callback_ != nullptr) {
             curPlayer->callback_->OnPlaybackComplete();
         }
         return;

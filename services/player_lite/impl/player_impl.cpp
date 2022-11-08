@@ -911,7 +911,7 @@ void PlayerImpl::NotifyPlaybackComplete(PlayerImpl *curPlayer)
         }
         curPlayer->currentState_ = PLAYER_PLAYBACK_COMPLETE;
         MEDIA_INFO_LOG("OnPlayBackComplete, iscallbackNull:%d", (curPlayer->callback_ == nullptr));
-        if (curPlayer != nullptr && curPlayer->callback_ != nullptr) {
+        if (curPlayer->callback_ != nullptr) {
             curPlayer->callback_->OnPlaybackComplete();
         }
         return;

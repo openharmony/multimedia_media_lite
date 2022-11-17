@@ -12,7 +12,7 @@
 # limitations under the License.
 import("//build/lite/config/component/lite_component.gni")
 import("//build/lite/ndk/ndk.gni")
-import("//foundation/multimedia/utils/lite/config.gni")
+import("//foundation/multimedia/media_utils_lite/config.gni")
 
 executable("media_server") {
   ldflags = [ "-Wl,-Map=media_server.map" ]
@@ -29,8 +29,8 @@ executable("media_server") {
     "//foundation/multimedia/media_lite/interfaces/innerkits",
     "//foundation/multimedia/camera_lite/services/server/include",
     "//foundation/multimedia/camera_lite/services/impl/include",
-    "//foundation/multimedia/utils/lite/interfaces/kits",
-    "//foundation/multimedia/utils/lite/hals",
+    "//foundation/multimedia/media_utils_lite/interfaces/kits",
+    "//foundation/multimedia/media_utils_lite/hals",
     "//foundation/multimedia/audio_lite/interfaces/kits",
     "//foundation/multimedia/media_lite/services/recorder_lite",
     "//foundation/multimedia/media_lite/services/player_lite",
@@ -83,7 +83,7 @@ executable("media_server") {
 lite_component("media_lite") {
   features = [
     ":media_server",
-    "//foundation/multimedia/utils/lite:media_common",
+    "//foundation/multimedia/media_utils_lite:media_common",
     "//foundation/multimedia/camera_lite/frameworks:camera_lite",
     "//foundation/multimedia/media_lite/frameworks/player_lite:player_lite",
     "//foundation/multimedia/media_lite/frameworks/recorder_lite:recorder_lite",
@@ -99,10 +99,10 @@ ndk_lib("media_ndk") {
     "//foundation/multimedia/camera_lite/frameworks:camera_lite",
     "//foundation/multimedia/media_lite/frameworks/player_lite:player_lite",
     "//foundation/multimedia/media_lite/frameworks/recorder_lite:recorder_lite",
-    "//foundation/multimedia/utils/lite:media_common",
+    "//foundation/multimedia/media_utils_lite:media_common",
   ]
   head_files = [
-    "//foundation/multimedia/utils/lite/interfaces/kits",
+    "//foundation/multimedia/media_utils_lite/interfaces/kits",
     "//foundation/multimedia/camera_lite/interfaces/kits",
     "//foundation/multimedia/audio_lite/interfaces/kits",
     "//foundation/multimedia/media_lite/interfaces/kits/player_lite",

@@ -12,7 +12,7 @@
 # limitations under the License.
 import("//build/lite/config/component/lite_component.gni")
 import("//build/lite/ndk/ndk.gni")
-import("//foundation/multimedia/utils/lite/config.gni")
+import("//foundation/multimedia/media_utils_lite/config.gni")
 
 shared_library("recorder_lite") {
   sources = [ "recorder.cpp" ]
@@ -21,7 +21,7 @@ shared_library("recorder_lite") {
     include_dirs = [
       "//foundation/multimedia/media_lite/frameworks/recorder_lite/binder",
       "//foundation/multimedia/media_lite/services/recorder_lite/impl/include",
-      "//foundation/multimedia/utils/lite/hals",
+      "//foundation/multimedia/media_utils_lite/hals",
       "//foundation/systemabilitymgr/samgr_lite/interfaces/kits/registry",
       "//foundation/systemabilitymgr/samgr_lite/interfaces/kits/samgr",
       "//foundation/multimedia/media_lite/services/recorder_lite/server/include",
@@ -53,7 +53,7 @@ shared_library("recorder_lite") {
   public_configs = [ ":recorder_external_library_config" ]
   public_deps = [
     "//foundation/graphic/surface:lite_surface",
-    "//foundation/multimedia/utils/lite:media_common",
+    "//foundation/multimedia/media_utils_lite:media_common",
     "//third_party/bounds_checking_function:libsec_shared",
   ]
 }
@@ -66,6 +66,6 @@ config("recorder_external_library_config") {
     "//drivers/peripheral/format/interfaces/include",
     "//foundation/multimedia/audio_lite/interfaces/kits",
     "//foundation/multimedia/media_lite/interfaces/kits/recorder_lite",
-    "//foundation/multimedia/utils/lite/interfaces/kits",
+    "//foundation/multimedia/media_utils_lite/interfaces/kits",
   ]
 }

@@ -52,7 +52,7 @@ shared_library("recorder_lite") {
 
   public_configs = [ ":recorder_external_library_config" ]
   public_deps = [
-    "//foundation/graphic/surface:lite_surface",
+    "//foundation/graphic/surface:surface_lite",
     "//foundation/multimedia/media_utils_lite:media_common",
     "//third_party/bounds_checking_function:libsec_shared",
   ]

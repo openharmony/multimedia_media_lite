@@ -754,7 +754,7 @@ int32_t RecorderImpl::SetRecorderCallback(const std::shared_ptr<RecorderCallback
         MEDIA_ERR_LOG("SetRecorderCallback callback is nullptr");
         return ERR_INVALID_PARAM;
     }
-    MEDIA_INFO_LOG("RecorderCallback :%p Set", callback.get());
+    MEDIA_INFO_LOG("RecorderCallback : Set");
     if (recorderSink_ == nullptr) {
         MEDIA_ERR_LOG("recorderSink_ is null");
         return ERR_UNKNOWN;
@@ -1083,7 +1083,7 @@ int32_t RecorderImpl::StopDataSource()
 
 void AudioSourceProcess(const SourceManager *audioSourceManager, const RecorderSink *recorderSink)
 {
-    MEDIA_INFO_LOG("audioSourceManager:%p", audioSourceManager);
+    MEDIA_INFO_LOG("audioSourceManager");
     if (audioSourceManager == nullptr || recorderSink == nullptr) {
         MEDIA_ERR_LOG("audioSourceManager or recorderSink null");
         return;
@@ -1121,7 +1121,7 @@ void AudioSourceProcess(const SourceManager *audioSourceManager, const RecorderS
         }
         audioSourceManager->audioSource->ReleaseBuffer(buffer);
     }
-    MEDIA_INFO_LOG("audioSourceManager:%p  over", audioSourceManager);
+    MEDIA_INFO_LOG("audioSourceManager:  over");
 }
 
 int32_t RecorderImpl::StartAudioSource()
@@ -1166,7 +1166,7 @@ int32_t RecorderImpl::StopAudioSource()
 
 void VideoSourceProcess(const SourceManager *videoSourceManager, const RecorderSink *recorderSink)
 {
-    MEDIA_INFO_LOG("videoSourceManager:%p", videoSourceManager);
+    MEDIA_INFO_LOG("videoSourceManager");
     if (videoSourceManager == nullptr) {
         MEDIA_ERR_LOG("videoSourceManager null");
         return;
@@ -1204,7 +1204,7 @@ void VideoSourceProcess(const SourceManager *videoSourceManager, const RecorderS
         }
         videoSourceManager->videoSource->ReleaseBuffer(buffer);
     }
-    MEDIA_INFO_LOG("videoSourceManager:%p over", videoSourceManager);
+    MEDIA_INFO_LOG("videoSourceManager: over");
 }
 
 int32_t RecorderImpl::StartVideoSource()

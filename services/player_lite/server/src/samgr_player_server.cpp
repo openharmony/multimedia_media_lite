@@ -48,8 +48,7 @@ static BOOL Initialize(Service* service, Identity identity)
 {
     PlayerService* example = (PlayerService*)service;
     example->identity = identity;
-    MEDIA_INFO_LOG("Initialize(%s)! Identity<%d, %d, %p>\n", SERVICE_NAME,
-        identity.serviceId, identity.featureId, identity.queueId);
+    MEDIA_INFO_LOG("Initialize(%s)! Identity<%d, %d>\n", SERVICE_NAME, identity.serviceId, identity.featureId);
     return TRUE;
 }
 

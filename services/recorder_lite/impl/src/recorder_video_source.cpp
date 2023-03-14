@@ -50,7 +50,7 @@ std::shared_ptr<OHOS::Surface> RecorderVideoSource::GetSurface()
         surface->RegisterConsumerListener(*this);
         surface_.reset(surface);
     }
-    MEDIA_INFO_LOG("Get Recorder Surface SUCCESS :%p", surface_.get());
+    MEDIA_INFO_LOG("Get Recorder Surface SUCCESS");
     return surface_;
 }
 

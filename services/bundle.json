@@ -26,7 +26,7 @@
                 "audio_manager_lite",
                 "camera_lite",
                 "permission",
-                "ui",
+                "ui_lite",
                 "init"
             ],
             "third_party": [

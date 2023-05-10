@@ -41,7 +41,7 @@ if (ohos_kernel_type != "liteos_m") {
           [ "//foundation/multimedia/media_lite/frameworks/player_lite/binder" ]
       deps = [
         "//foundation/communication/ipc/interfaces/innerkits/c/ipc:ipc_single",
-        "//foundation/graphic/surface:surface_lite",
+        "//foundation/graphic/surface_lite:surface_lite",
         "//foundation/systemabilitymgr/samgr_lite/samgr:samgr",
       ]
     } else {
@@ -74,7 +74,7 @@ if (ohos_kernel_type != "liteos_m") {
     public_configs = [ ":player_external_library_config" ]
     public_deps = [
       "//base/security/permission_lite/services/pms_client:pms_client",
-      "//foundation/graphic/surface:surface_lite",
+      "//foundation/graphic/surface_lite:surface_lite",
       "//foundation/multimedia/media_utils_lite:media_common",
       "//third_party/bounds_checking_function:libsec_shared",
     ]

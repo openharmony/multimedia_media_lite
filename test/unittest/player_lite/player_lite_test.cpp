@@ -722,7 +722,7 @@ HWTEST_F(PlayerliteTest, medialite_player_SetVolume_test_001, Level1)
     ret = g_tagTestSample.adaptr->Play();
     EXPECT_EQ(HI_SUCCESS, ret);
     ret = g_tagTestSample.adaptr->SetVolume(40, 40);
-    sleep(10);
+    sleep(2);
     EXPECT_EQ(HI_SUCCESS, ret);
     g_tagTestSample.adaptr->Release();
 }
@@ -749,7 +749,7 @@ HWTEST_F(PlayerliteTest, medialite_player_SetVolume_test_002, Level1)
     ret = g_tagTestSample.adaptr->Play();
     EXPECT_EQ(HI_SUCCESS, ret);
     ret = g_tagTestSample.adaptr->SetVolume(0, 0);
-    sleep(10);
+    sleep(2);
     EXPECT_EQ(HI_SUCCESS, ret);
     g_tagTestSample.adaptr->Release();
 }
@@ -776,7 +776,7 @@ HWTEST_F(PlayerliteTest, medialite_player_SetVolume_test_003, Level1)
     ret = g_tagTestSample.adaptr->Play();
     EXPECT_EQ(HI_SUCCESS, ret);
     ret = g_tagTestSample.adaptr->SetVolume(-1, -1);
-    sleep(10);
+    sleep(2);
     EXPECT_EQ(HI_FAILURE, ret);
     g_tagTestSample.adaptr->Release();
 }
@@ -803,7 +803,7 @@ HWTEST_F(PlayerliteTest, medialite_player_SetVolume_test_004, Level1)
     ret = g_tagTestSample.adaptr->Play();
     EXPECT_EQ(HI_SUCCESS, ret);
     ret = g_tagTestSample.adaptr->SetVolume(300, 300);
-    sleep(10);
+    sleep(2);
     EXPECT_EQ(HI_SUCCESS, ret);
     g_tagTestSample.adaptr->Release();
 }
@@ -830,7 +830,7 @@ HWTEST_F(PlayerliteTest, medialite_player_SetVolume_test_005, Level1)
     ret = g_tagTestSample.adaptr->Play();
     EXPECT_EQ(HI_SUCCESS, ret);
     ret = g_tagTestSample.adaptr->SetVolume(300, 301);
-    sleep(10);
+    sleep(2);
     EXPECT_EQ(HI_FAILURE, ret);
     g_tagTestSample.adaptr->Release();
 }

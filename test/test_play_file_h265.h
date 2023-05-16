@@ -23,8 +23,8 @@
 #include "codec_type.h"
 #include "hal_display.h"
 
-#define __FILENAME__ (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
-#define DEMO_LOG(format, ...) printf("%s[%s:%d]" format "\n", __func__, (__FILENAME__), __LINE__, ##__VA_ARGS__)
+#define FILENAME (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
+#define DEMO_LOG(format, ...) printf("%s[%s:%d]" format "\n", __func__, (FILENAME), __LINE__, ##__VA_ARGS__)
 
 constexpr uint32_t PARAM_MAX_NUM = 10;
 constexpr int32_t DEMO_OK = 0;

@@ -23,7 +23,7 @@
         "deps": {
             "components": [
                 "hilog_lite",
-                "audio_manager_lite",
+                "audio_lite",
                 "camera_lite",
                 "permission",
                 "ui_lite",

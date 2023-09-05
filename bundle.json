@@ -25,7 +25,7 @@
                 "hilog_lite",
                 "audio_lite",
                 "camera_lite",
-                "permission",
+                "permission_lite",
                 "ui_lite"
             ],
             "third_party": [

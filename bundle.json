@@ -26,7 +26,6 @@
                 "audio_lite",
                 "camera_lite",
                 "permission_lite",
-                "ui_lite",
                 "init"
             ],
             "third_party": [

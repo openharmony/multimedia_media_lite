@@ -12,14 +12,21 @@
 # limitations under the License.
 import("//build/lite/config/component/lite_component.gni")
 import("//build/lite/ndk/ndk.gni")
+import("//foundation/multimedia/media_lite/config.gni")
 import("//foundation/multimedia/media_utils_lite/config.gni")
 
 executable("media_server") {
   ldflags = [ "-Wl,-Map=media_server.map" ]
   sources = [ "media_main.cpp" ]
   cflags = [ "-Wall" ]
+
+  defines = []
   if (enable_media_passthrough_mode == true) {
-    defines = [ "ENABLE_PASSTHROUGH_MODE" ]
+    defines += [ "ENABLE_PASSTHROUGH_MODE" ]
+  }
+
+  if (enable_multimedia_camera_lite == true) {
+    defines += [ "SUPPORT_CAMERA_LITE" ]
   }
 
   cflags_cc = cflags

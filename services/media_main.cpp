@@ -38,9 +38,10 @@ using namespace std;
 int main()
 {
     OHOS_SystemInit();
-
+#ifdef SUPPORT_CAMERA_LITE
     cout << "Camera server start." << endl;
     CameraServer::GetInstance()->InitCameraServer();
+#endif
 #ifndef ENABLE_PASSTHROUGH_MODE
     cout << "Player server start" << endl;
     PlayerServer::GetInstance()->PlayerServerInit();

@@ -97,12 +97,12 @@ if (ohos_kernel_type != "liteos_m") {
   }
 } else {
   static_library("player_lite") {
-    sources = [ "passthrough/histreamer/player.cpp" ]
+    sources = [ "passthrough/media_foundation/player.cpp" ]
     include_dirs =
         [ "//base/hiviewdfx/hilog_lite/interfaces/native/innerkits/hilog" ]
     public_deps = [
       "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_static",
-      "//foundation/multimedia/histreamer:histreamer",
+      "//foundation/multimedia/media_foundation:histreamer",
     ]
     public_configs = [ ":player_direct_external_library_config" ]
   }

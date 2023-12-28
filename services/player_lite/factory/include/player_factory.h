@@ -23,7 +23,7 @@
 namespace OHOS {
 namespace Media {
 enum class PlayerId {
-    MEDIA_FOUNDATION,
+    HISTREAMER,
     PLAYER_LITE
 };
 

@@ -26,7 +26,7 @@ std::shared_ptr<PlayerInterface> PlayerFactory::CreatePlayer(PlayerId playerId)
 {
     std::shared_ptr<PlayerInterface> player = nullptr;
     switch (playerId) {
-        case PlayerId::HISTREAMER:
+        case PlayerId::MEDIA_FOUNDATION:
             player = CreateHiPlayer();
             break;
         case PlayerId::PLAYER_LITE:

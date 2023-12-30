@@ -102,7 +102,7 @@ if (ohos_kernel_type != "liteos_m") {
         [ "//base/hiviewdfx/hilog_lite/interfaces/native/innerkits/hilog" ]
     public_deps = [
       "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_static",
-      "//foundation/multimedia/histreamer:histreamer",
+      "//foundation/multimedia/media_foundation:histreamer",
     ]
     public_configs = [ ":player_direct_external_library_config" ]
   }

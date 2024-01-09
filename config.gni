@@ -12,5 +12,10 @@
 # limitations under the License.
 
 declare_args() {
-  enable_multimedia_camera_lite = true
+  if (!defined(global_parts_info) ||
+      defined(global_parts_info.multimedia_camera_lite)) {
+    enable_multimedia_camera_lite = true
+  } else {
+    enable_multimedia_camera_lite = false
+  }
 }

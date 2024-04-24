@@ -25,8 +25,8 @@
 
 using OHOS::Media::PlayerControl;
 
-const long long AV_NS2MS_SCALE = 1000000ll;
-const long long AV_SEC2MS_SCALE = 1000ll;
+const long long AV_NS2MS_SCALE = 1000000LL;
+const long long AV_SEC2MS_SCALE = 1000LL;
 
 int32_t PlayerControlOnEvent(void* priv, EventCbType event, int32_t ext1, int32_t ext2)
 {

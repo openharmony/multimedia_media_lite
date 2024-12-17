@@ -36,7 +36,7 @@ static int64_t GetCurTimeUs()
 {
     struct timeval ts = {0, 0};
     gettimeofday(&ts, NULL);
-    return (((int64_t)ts.tv_sec) * SS2US) + ((int64_t)ts.tv_usec);
+    return ((static_cast<int64_t>(ts.tv_sec)) * SS2US) + (static_cast<int64_t>(ts.tv_usec));
 }
 
 SyncRet PlayerSync::CheckAVDiff(int64_t latenessMs, uint32_t &continueLost)
@@ -71,7 +71,7 @@ int32_t PlayerSync::TPlayProcess(int64_t timestampUs, SyncRet &result)
     int64_t nowTsUs;
     int64_t latenessUs = 0;
     int64_t realTimeElapseUs = GetCurTimeUs() - frstVidFrameTime_;
-    int64_t trickTimeElapseUs = (int64_t)(realTimeElapseUs * speed_);
+    int64_t trickTimeElapseUs = static_cast<int64_t>(realTimeElapseUs * speed_);
 
     if (tplayDirect_ == TPLAY_DIRECT_FORWARD) {
         nowTsUs = firstVidFrameTs_ + trickTimeElapseUs;
@@ -83,7 +83,7 @@ int32_t PlayerSync::TPlayProcess(int64_t timestampUs, SyncRet &result)
         }
         latenessUs = (timestampUs - nowTsUs);
     }
-    int64_t latenessMs = (speed_ != 0) ? (latenessUs / ((int)(speed_ * MS_SCALE))) : 0;
+    int64_t latenessMs = (speed_ != 0) ? (latenessUs / (static_cast<int>(speed_ * MS_SCALE))) : 0;
     result = CheckAVDiff(latenessMs, continousVidLost_);
     return HI_SUCCESS;
 }

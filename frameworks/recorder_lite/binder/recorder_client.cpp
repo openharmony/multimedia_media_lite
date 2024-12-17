@@ -75,17 +75,17 @@ static int32_t RecorderCallbackSvc(uint32_t code, IpcIo *data, IpcIo *reply, Mes
         case REC_ANONYMOUS_FUNC_ON_ERROR: {
             int32_t type;
             ReadInt32(data, &type);
-            int32_t code;
-            ReadInt32(data, &code);
-            callback->OnError(type, code);
+            int32_t tempCode;
+            ReadInt32(data, &tempCode);
+            callback->OnError(type, tempCode);
             break;
         }
         case REC_ANONYMOUS_FUNC_ON_INFO: {
             int32_t type;
             ReadInt32(data, &type);
-            int32_t code;
-            ReadInt32(data, &code);
-            callback->OnInfo(type, code);
+            int32_t tempCode;
+            ReadInt32(data, &tempCode);
+            callback->OnInfo(type, tempCode);
             break;
         }
         default: {

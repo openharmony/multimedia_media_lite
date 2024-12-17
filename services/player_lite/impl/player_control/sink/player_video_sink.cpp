@@ -51,13 +51,13 @@ static int64_t GetCurTimeUs()
     ts.tv_sec = 0;
     ts.tv_usec = 0;
     gettimeofday(&ts, nullptr);
-    return (((int64_t)ts.tv_sec) * SS2US) + ((int64_t)ts.tv_usec);
+    return ((static_cast<int64_t>(ts.tv_sec)) * SS2US) + (static_cast<int64_t>(ts.tv_usec));
 }
 
 static int64_t GetCurTimeMs()
 {
     int64_t curTimeUs = GetCurTimeUs();
-    return (int64_t)(curTimeUs / US2MS);
+    return static_cast<int64_t>(curTimeUs / US2MS);
 }
 
 VideoSink::VideoSink(void)

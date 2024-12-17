@@ -41,7 +41,8 @@ uint64_t PlayerControlGetCurRelativeTime()
 {
     struct timespec ts = { 0, 0 };
     (void)clock_gettime(CLOCK_MONOTONIC, &ts);
-    uint64_t curTime = ((uint64_t)ts.tv_sec) * AV_SEC2MS_SCALE + ((uint64_t)ts.tv_nsec) / AV_NS2MS_SCALE;
+    uint64_t curTime = (static_cast<uint64_t>(ts.tv_sec)) * AV_SEC2MS_SCALE +
+        (static_cast<uint64_t>(ts.tv_nsec)) / AV_NS2MS_SCALE;
     return curTime;
 }
 

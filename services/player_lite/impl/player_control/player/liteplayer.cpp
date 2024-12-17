@@ -1157,7 +1157,7 @@ int32_t PlayerControl::DoPlay()
         pthread_mutex_lock(&schMutex_);
         paused_ = true;
         pthread_mutex_unlock(&schMutex_);
-        int32_t ret = pthread_create(&schProcess_, nullptr, DataSchProcess, this);
+        ret = pthread_create(&schProcess_, nullptr, DataSchProcess, this);
         if (ret != 0) {
             MEDIA_ERR_LOG("pthread_create failed %d", ret);
             pthread_mutex_lock(&schMutex_);
@@ -1721,25 +1721,25 @@ int32_t PlayerControl::TPlayGetSeekOffset(float playSpeed, TplayDirect direction
     int32_t seekOffset = 0;
     switch ((int)playSpeed) {
         case PLAY_SPEED_2X_FAST:
-            seekOffset = (int32_t)TPLAY_SEEK_OFFSET_2X;
+            seekOffset = static_cast<int32_t>(TPLAY_SEEK_OFFSET_2X);
             break;
         case PLAY_SPEED_4X_FAST:
-            seekOffset = (int32_t)TPLAY_SEEK_OFFSET_4X;
+            seekOffset = static_cast<int32_t>(TPLAY_SEEK_OFFSET_4X);
             break;
         case PLAY_SPEED_8X_FAST:
-            seekOffset = (int32_t)TPLAY_SEEK_OFFSET_8X;
+            seekOffset = static_cast<int32_t>(TPLAY_SEEK_OFFSET_8X);
             break;
         case PLAY_SPEED_16X_FAST:
-            seekOffset = (int32_t)TPLAY_SEEK_OFFSET_16X;
+            seekOffset = static_cast<int32_t>(TPLAY_SEEK_OFFSET_16X);
             break;
         case PLAY_SPEED_32X_FAST:
-            seekOffset = (int32_t)TPLAY_SEEK_OFFSET_32X;
+            seekOffset = static_cast<int32_t>(TPLAY_SEEK_OFFSET_32X);
             break;
         case PLAY_SPEED_64X_FAST:
-            seekOffset = (int32_t)TPLAY_SEEK_OFFSET_64X;
+            seekOffset = static_cast<int32_t>(TPLAY_SEEK_OFFSET_64X);
             break;
         case PLAY_SPEED_128X_FAST:
-            seekOffset = (int32_t)TPLAY_SEEK_OFFSET_128X;
+            seekOffset = static_cast<int32_t>(TPLAY_SEEK_OFFSET_128X);
             break;
         default:
             MEDIA_ERR_LOG("unsupporteded play speed: %f", playSpeed);

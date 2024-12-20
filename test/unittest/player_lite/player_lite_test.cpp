@@ -22,8 +22,8 @@
 #include "securec.h"
 
 namespace OHOS {
-const string g_avFileName = "1080P_25fps.mp4";
-const string g_audioFileName = "Audiochannel_002.m4a";
+const string AV_FILE_NAME = "1080P_25fps.mp4";
+const string AUDIO_FILE_NAME = "Audiochannel_002.m4a";
 
 const int32_t HI_SUCCESS = 0;
 const int32_t HI_FAILURE = -1;
@@ -138,7 +138,7 @@ static int32_t CreateAndSetSource()
  */
 HWTEST_F(PlayerliteTest, medialite_player_Prepare_test_001, Level1)
 {
-    int32_t ret = FileCheck(g_avFileName);
+    int32_t ret = FileCheck(AV_FILE_NAME);
     EXPECT_EQ(HI_SUCCESS, ret);
     std::string uri(g_tagTestSample.filePath);
     Source source(uri);
@@ -166,7 +166,7 @@ HWTEST_F(PlayerliteTest, medialite_player_Prepare_test_001, Level1)
  */
 HWTEST_F(PlayerliteTest, medialite_player_Prepare_test_002, Level1)
 {
-    int32_t ret = FileCheck(g_avFileName);
+    int32_t ret = FileCheck(AV_FILE_NAME);
     EXPECT_EQ(HI_SUCCESS, ret);
     ret = CreateAndSetSource();
     EXPECT_EQ(HI_SUCCESS, ret);
@@ -187,7 +187,7 @@ HWTEST_F(PlayerliteTest, medialite_player_Prepare_test_002, Level1)
  */
 HWTEST_F(PlayerliteTest, medialite_player_Play_test_001, Level1)
 {
-    int32_t ret = FileCheck(g_avFileName);
+    int32_t ret = FileCheck(AV_FILE_NAME);
     EXPECT_EQ(HI_SUCCESS, ret);
     ret = CreateAndSetSource();
     EXPECT_EQ(HI_SUCCESS, ret);
@@ -213,7 +213,7 @@ HWTEST_F(PlayerliteTest, medialite_player_Play_test_001, Level1)
  */
 HWTEST_F(PlayerliteTest, medialite_player_Stop_test_001, Level1)
 {
-    int32_t ret = FileCheck(g_avFileName);
+    int32_t ret = FileCheck(AV_FILE_NAME);
     EXPECT_EQ(HI_SUCCESS, ret);
     ret = CreateAndSetSource();
     EXPECT_EQ(HI_SUCCESS, ret);
@@ -243,7 +243,7 @@ HWTEST_F(PlayerliteTest, medialite_player_Stop_test_001, Level1)
  */
 HWTEST_F(PlayerliteTest, medialite_player_Stop_test_002, Level1)
 {
-    int32_t ret = FileCheck(g_avFileName);
+    int32_t ret = FileCheck(AV_FILE_NAME);
     EXPECT_EQ(HI_SUCCESS, ret);
     ret = CreateAndSetSource();
     EXPECT_EQ(HI_SUCCESS, ret);
@@ -266,7 +266,7 @@ HWTEST_F(PlayerliteTest, medialite_player_Stop_test_002, Level1)
  */
 HWTEST_F(PlayerliteTest, medialite_player_Pause_test_001, Level1)
 {
-    int32_t ret = FileCheck(g_avFileName);
+    int32_t ret = FileCheck(AV_FILE_NAME);
     EXPECT_EQ(HI_SUCCESS, ret);
     ret = CreateAndSetSource();
     EXPECT_EQ(HI_SUCCESS, ret);
@@ -294,7 +294,7 @@ HWTEST_F(PlayerliteTest, medialite_player_Pause_test_001, Level1)
  */
 HWTEST_F(PlayerliteTest, medialite_player_Pause_test_002, Level1)
 {
-    int32_t ret = FileCheck(g_avFileName);
+    int32_t ret = FileCheck(AV_FILE_NAME);
     EXPECT_EQ(HI_SUCCESS, ret);
     ret = CreateAndSetSource();
     EXPECT_EQ(HI_SUCCESS, ret);
@@ -315,7 +315,7 @@ HWTEST_F(PlayerliteTest, medialite_player_Pause_test_002, Level1)
  */
 HWTEST_F(PlayerliteTest, medialite_player_GetCurrentTime_test_001, Level1)
 {
-    int32_t ret = FileCheck(g_avFileName);
+    int32_t ret = FileCheck(AV_FILE_NAME);
     EXPECT_EQ(HI_SUCCESS, ret);
     ret = CreateAndSetSource();
     EXPECT_EQ(HI_SUCCESS, ret);
@@ -342,7 +342,7 @@ HWTEST_F(PlayerliteTest, medialite_player_GetCurrentTime_test_001, Level1)
  */
 HWTEST_F(PlayerliteTest, medialite_player_GetCurrentTime_test_002, Level1)
 {
-    int32_t ret = FileCheck(g_avFileName);
+    int32_t ret = FileCheck(AV_FILE_NAME);
     EXPECT_EQ(HI_SUCCESS, ret);
     ret = CreateAndSetSource();
     EXPECT_EQ(HI_SUCCESS, ret);
@@ -371,7 +371,7 @@ HWTEST_F(PlayerliteTest, medialite_player_GetCurrentTime_test_002, Level1)
  */
 HWTEST_F(PlayerliteTest, medialite_player_GetDuration_test_001, Level1)
 {
-    int32_t ret = FileCheck(g_avFileName);
+    int32_t ret = FileCheck(AV_FILE_NAME);
     EXPECT_EQ(HI_SUCCESS, ret);
     ret = CreateAndSetSource();
     EXPECT_EQ(HI_SUCCESS, ret);
@@ -400,7 +400,7 @@ HWTEST_F(PlayerliteTest, medialite_player_GetDuration_test_001, Level1)
  */
 HWTEST_F(PlayerliteTest, medialite_player_GetDuration_test_002, Level1)
 {
-    int32_t ret = FileCheck(g_avFileName);
+    int32_t ret = FileCheck(AV_FILE_NAME);
     EXPECT_EQ(HI_SUCCESS, ret);
     ret = CreateAndSetSource();
     EXPECT_EQ(HI_SUCCESS, ret);
@@ -422,7 +422,7 @@ HWTEST_F(PlayerliteTest, medialite_player_GetDuration_test_002, Level1)
  */
 HWTEST_F(PlayerliteTest, medialite_player_GetVideoSurfaceSize_test_001, Level1)
 {
-    int32_t ret = FileCheck(g_avFileName);
+    int32_t ret = FileCheck(AV_FILE_NAME);
     EXPECT_EQ(HI_SUCCESS, ret);
     ret = CreateAndSetSource();
     EXPECT_EQ(HI_SUCCESS, ret);
@@ -451,7 +451,7 @@ HWTEST_F(PlayerliteTest, medialite_player_GetVideoSurfaceSize_test_001, Level1)
  */
 HWTEST_F(PlayerliteTest, medialite_player_Reset_test_001, Level1)
 {
-    int32_t ret = FileCheck(g_avFileName);
+    int32_t ret = FileCheck(AV_FILE_NAME);
     EXPECT_EQ(HI_SUCCESS, ret);
     ret = CreateAndSetSource();
     EXPECT_EQ(HI_SUCCESS, ret);
@@ -477,7 +477,7 @@ HWTEST_F(PlayerliteTest, medialite_player_Reset_test_001, Level1)
  */
 HWTEST_F(PlayerliteTest, medialite_player_Release_test_001, Level1)
 {
-    int32_t ret = FileCheck(g_avFileName);
+    int32_t ret = FileCheck(AV_FILE_NAME);
     EXPECT_EQ(HI_SUCCESS, ret);
     ret = CreateAndSetSource();
     EXPECT_EQ(HI_SUCCESS, ret);
@@ -502,7 +502,7 @@ HWTEST_F(PlayerliteTest, medialite_player_Release_test_001, Level1)
  */
 HWTEST_F(PlayerliteTest, medialite_player_AudioSetSource_test_001, Level1)
 {
-    int32_t ret = FileCheck(g_audioFileName);
+    int32_t ret = FileCheck(AUDIO_FILE_NAME);
     EXPECT_EQ(HI_SUCCESS, ret);
     ret = CreateAndSetSource();
     EXPECT_EQ(HI_SUCCESS, ret);
@@ -524,7 +524,7 @@ HWTEST_F(PlayerliteTest, medialite_player_AudioSetSource_test_001, Level1)
  */
 HWTEST_F(PlayerliteTest, medialite_player_AudioPlay_test_001, Level1)
 {
-    int32_t ret = FileCheck(g_audioFileName);
+    int32_t ret = FileCheck(AUDIO_FILE_NAME);
     EXPECT_EQ(HI_SUCCESS, ret);
     std::shared_ptr<PlayerliteCallback> callBack;
     callBack = std::make_shared<PlayerliteCallback>();
@@ -554,7 +554,7 @@ HWTEST_F(PlayerliteTest, medialite_player_AudioPlay_test_001, Level1)
  */
 HWTEST_F(PlayerliteTest, medialite_player_Play_test_002, Level1)
 {
-    int32_t ret = FileCheck(g_audioFileName);
+    int32_t ret = FileCheck(AUDIO_FILE_NAME);
     EXPECT_EQ(HI_SUCCESS, ret);
     std::shared_ptr<PlayerliteCallback> callBack;
     callBack = std::make_shared<PlayerliteCallback>();
@@ -582,7 +582,7 @@ HWTEST_F(PlayerliteTest, medialite_player_Play_test_002, Level1)
  */
 HWTEST_F(PlayerliteTest, medialite_player_audioPrepare_test_001, Level1)
 {
-    int32_t ret = FileCheck(g_audioFileName);
+    int32_t ret = FileCheck(AUDIO_FILE_NAME);
     EXPECT_EQ(HI_SUCCESS, ret);
     std::shared_ptr<PlayerliteCallback> callBack;
     callBack = std::make_shared<PlayerliteCallback>();
@@ -604,7 +604,7 @@ HWTEST_F(PlayerliteTest, medialite_player_audioPrepare_test_001, Level1)
  */
 HWTEST_F(PlayerliteTest, medialite_player_audioPrepare_test_002, Level1)
 {
-    int32_t ret = FileCheck(g_audioFileName);
+    int32_t ret = FileCheck(AUDIO_FILE_NAME);
     EXPECT_EQ(HI_SUCCESS, ret);
     std::shared_ptr<PlayerliteCallback> callBack;
     callBack = std::make_shared<PlayerliteCallback>();
@@ -628,7 +628,7 @@ HWTEST_F(PlayerliteTest, medialite_player_audioPrepare_test_002, Level1)
  */
 HWTEST_F(PlayerliteTest, medialite_player_audioStop_test_001, Level1)
 {
-    int32_t ret = FileCheck(g_audioFileName);
+    int32_t ret = FileCheck(AUDIO_FILE_NAME);
     EXPECT_EQ(HI_SUCCESS, ret);
     std::shared_ptr<PlayerliteCallback> callBack;
     callBack = std::make_shared<PlayerliteCallback>();
@@ -654,7 +654,7 @@ HWTEST_F(PlayerliteTest, medialite_player_audioStop_test_001, Level1)
  */
 HWTEST_F(PlayerliteTest, medialite_player_audioStop_test_002, Level1)
 {
-    int32_t ret = FileCheck(g_audioFileName);
+    int32_t ret = FileCheck(AUDIO_FILE_NAME);
     EXPECT_EQ(HI_SUCCESS, ret);
     std::shared_ptr<PlayerliteCallback> callBack;
     callBack = std::make_shared<PlayerliteCallback>();
@@ -682,7 +682,7 @@ HWTEST_F(PlayerliteTest, medialite_player_audioStop_test_002, Level1)
  */
 HWTEST_F(PlayerliteTest, medialite_player_audioPause_test_002, Level1)
 {
-    int32_t ret = FileCheck(g_audioFileName);
+    int32_t ret = FileCheck(AUDIO_FILE_NAME);
     EXPECT_EQ(HI_SUCCESS, ret);
     std::shared_ptr<PlayerliteCallback> callBack;
     callBack = std::make_shared<PlayerliteCallback>();
@@ -710,7 +710,7 @@ HWTEST_F(PlayerliteTest, medialite_player_audioPause_test_002, Level1)
  */
 HWTEST_F(PlayerliteTest, medialite_player_SetVolume_test_001, Level1)
 {
-    int32_t ret = FileCheck(g_audioFileName);
+    int32_t ret = FileCheck(AUDIO_FILE_NAME);
     EXPECT_EQ(HI_SUCCESS, ret);
     std::shared_ptr<PlayerliteCallback> callBack;
     callBack = std::make_shared<PlayerliteCallback>();
@@ -737,7 +737,7 @@ HWTEST_F(PlayerliteTest, medialite_player_SetVolume_test_001, Level1)
  */
 HWTEST_F(PlayerliteTest, medialite_player_SetVolume_test_002, Level1)
 {
-    int32_t ret = FileCheck(g_audioFileName);
+    int32_t ret = FileCheck(AUDIO_FILE_NAME);
     EXPECT_EQ(HI_SUCCESS, ret);
     std::shared_ptr<PlayerliteCallback> callBack;
     callBack = std::make_shared<PlayerliteCallback>();
@@ -764,7 +764,7 @@ HWTEST_F(PlayerliteTest, medialite_player_SetVolume_test_002, Level1)
  */
 HWTEST_F(PlayerliteTest, medialite_player_SetVolume_test_003, Level1)
 {
-    int32_t ret = FileCheck(g_audioFileName);
+    int32_t ret = FileCheck(AUDIO_FILE_NAME);
     EXPECT_EQ(HI_SUCCESS, ret);
     std::shared_ptr<PlayerliteCallback> callBack;
     callBack = std::make_shared<PlayerliteCallback>();
@@ -791,7 +791,7 @@ HWTEST_F(PlayerliteTest, medialite_player_SetVolume_test_003, Level1)
  */
 HWTEST_F(PlayerliteTest, medialite_player_SetVolume_test_004, Level1)
 {
-    int32_t ret = FileCheck(g_audioFileName);
+    int32_t ret = FileCheck(AUDIO_FILE_NAME);
     EXPECT_EQ(HI_SUCCESS, ret);
     std::shared_ptr<PlayerliteCallback> callBack;
     callBack = std::make_shared<PlayerliteCallback>();
@@ -818,7 +818,7 @@ HWTEST_F(PlayerliteTest, medialite_player_SetVolume_test_004, Level1)
  */
 HWTEST_F(PlayerliteTest, medialite_player_SetVolume_test_005, Level1)
 {
-    int32_t ret = FileCheck(g_audioFileName);
+    int32_t ret = FileCheck(AUDIO_FILE_NAME);
     EXPECT_EQ(HI_SUCCESS, ret);
     std::shared_ptr<PlayerliteCallback> callBack;
     callBack = std::make_shared<PlayerliteCallback>();
@@ -845,7 +845,7 @@ HWTEST_F(PlayerliteTest, medialite_player_SetVolume_test_005, Level1)
  */
 HWTEST_F(PlayerliteTest, medialite_player_audioGetCurrentTime_test_001, Level1)
 {
-    int32_t ret = FileCheck(g_audioFileName);
+    int32_t ret = FileCheck(AUDIO_FILE_NAME);
     EXPECT_EQ(HI_SUCCESS, ret);
     std::shared_ptr<PlayerliteCallback> callBack;
     callBack = std::make_shared<PlayerliteCallback>();
@@ -873,7 +873,7 @@ HWTEST_F(PlayerliteTest, medialite_player_audioGetCurrentTime_test_001, Level1)
  */
 HWTEST_F(PlayerliteTest, medialite_player_audioGetCurrentTime_test_002, Level1)
 {
-    int32_t ret = FileCheck(g_audioFileName);
+    int32_t ret = FileCheck(AUDIO_FILE_NAME);
     EXPECT_EQ(HI_SUCCESS, ret);
     std::shared_ptr<PlayerliteCallback> callBack;
     callBack = std::make_shared<PlayerliteCallback>();
@@ -903,7 +903,7 @@ HWTEST_F(PlayerliteTest, medialite_player_audioGetCurrentTime_test_002, Level1)
  */
 HWTEST_F(PlayerliteTest, medialite_player_audioGetDuration_test_001, Level1)
 {
-    int32_t ret = FileCheck(g_audioFileName);
+    int32_t ret = FileCheck(AUDIO_FILE_NAME);
     EXPECT_EQ(HI_SUCCESS, ret);
     std::shared_ptr<PlayerliteCallback> callBack;
     callBack = std::make_shared<PlayerliteCallback>();

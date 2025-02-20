@@ -70,8 +70,8 @@
             <filefilter name="readmeOpenSourcefileNamePolicyFilter" desc="Filters for README.OpenSource file policies">
             </filefilter>
             <filefilter name="binaryFileTypePolicyFilter" desc="Filters for binary file policies">
-                <filteritem type="filepath" name="figures/媒体子系统架构（蓝色虚线框是media_lite）.png" desc="self developed image"/>
-                <filteritem type="filepath" name="figures/position-of-this-repository-(in-the-dotted-blue-box)-in-the-multimedia-subsystem.png" desc="self developed image"/>
+                <filteritem type="filename" name="figures/媒体子系统架构（蓝色虚线框是media_lite）.png" desc="self developed image"/>
+                <filteritem type="filename" name="figures/position-of-this-repository-(in-the-dotted-blue-box)-in-the-multimedia-subsystem.png" desc="self developed image"/>
             </filefilter>
         </filefilterlist>
     </oatconfig>

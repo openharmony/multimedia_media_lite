@@ -33,7 +33,7 @@ typedef struct {
     uint32_t maxWidth;
     uint32_t maxHeight;
     uint32_t bufSize;
-    uint32_t frameBufCnt; // todo buffer 个数应当不是由上面来定的
+    uint32_t frameBufCnt;
     void *priv;
 } VdecAttr;
 

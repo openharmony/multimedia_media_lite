@@ -292,15 +292,15 @@ int32_t SinkManager::GetSpeed(float &speed, TplayDirect  &tplayDirect)
     return 0;
 }
 
-int32_t SinkManager::RenderFrame(PlayerBufferInfo &frame, CodecType type)
+int32_t SinkManager::RenderFrame(OutputInfo &frame)
 {
     int ret;
-    if (type == AUDIO_DECODER) {
+    if (frame.type == AUDIO_DECODER) {
         ret = audioSinkInfo_[0].sink->RenderFrame(frame);
-    } else if (type == VIDEO_DECODER) {
+    } else if (frame.type == VIDEO_DECODER) {
         ret = videoSinkInfo_[0].sink->RenderFrame(frame);
     } else {
-        MEDIA_ERR_LOG("RenderFrame not support frame type: %d", type);
+        MEDIA_ERR_LOG("RenderFrame not support frame type: %d", frame.type);
         ret = -1;
     }
     return ret;
@@ -405,6 +405,9 @@ int32_t SinkManager::GetStatus(PlayerStreamInfo &streamInfo)
 
 int32_t SinkManager::SetParam(const char *key, dataType type, void* value)
 {
+    if (videoSinkInfo_[0].sink != nullptr) {
+        videoSinkInfo_[0].sink->SetParam(key, type, value);
+    }
     return 0;
 }
 
@@ -425,7 +428,7 @@ void SinkManager::RenderEos(bool isAudio)
     }
 }
 
-int32_t SinkManager::DequeReleaseFrame(bool audioSink, PlayerBufferInfo &frame)
+int32_t SinkManager::DequeReleaseFrame(bool audioSink, OutputInfo &frame)
 {
     if (audioSinkInfo_[0].sink != nullptr && audioSink == true) {
         return audioSinkInfo_[0].sink->DequeReleaseFrame(frame);

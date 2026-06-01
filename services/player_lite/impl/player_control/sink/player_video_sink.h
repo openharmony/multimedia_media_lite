@@ -45,7 +45,7 @@ public:
     int32_t SetSpeed(float speed);
     int32_t GetSpeed(float &speed);
     int32_t GetState(int32_t &state);
-    int32_t RenderFrame(PlayerBufferInfo &frame);
+    int32_t RenderFrame(OutputInfo &frame);
     void SetRenderMode(RenderMode mode);
     void SetSync(PlayerSync *sync);
     int32_t SetParam(const char *key, dataType type, void* value);
@@ -53,17 +53,17 @@ public:
     int32_t RegisterCallBack(PlayEventCallback &callback);
     void GetStatus(VideoSinkStatus &status);
     void RenderEos(void);
-    int DequeReleaseFrame(PlayerBufferInfo &frame);
+    int DequeReleaseFrame(OutputInfo &frame);
     void GetRenderPosition(int64_t &position);
 
 private:
     void ResetRendStartTime();
-    int GetRenderFrame(PlayerBufferInfo &renderFrame, PlayerBufferInfo &frame);
+    int GetRenderFrame(OutputInfo &renderFrame, OutputInfo &frame);
     void ReleaseQueHeadFrame(void);
     void ReleaseQueAllFrame(void);
     void RenderRptEvent(EventCbType event);
-    int32_t WriteToVideoDevice(CodecBuffer &renderFrame);
-    void QueueRenderFrame(PlayerBufferInfo &frame, bool cacheQueue);
+    int32_t WriteToVideoDevice(OutputInfo &renderFrame);
+    void QueueRenderFrame(OutputInfo &frame, bool cacheQueue);
     void CheckConfigVideoOutput(void);
     void SetDefaultDisplayRegionInfo(void);
     void UpdateDisplayRegionInfo(int32_t x, int32_t y, int32_t w, int32_t h);
@@ -89,12 +89,13 @@ private:
     bool eosSended_;
     std::mutex mutex_;
     LayerFuncs *layerFuncs_;
-    std::vector<PlayerBufferInfo> frameCacheQue_;
-    std::vector<PlayerBufferInfo> frameReleaseQue_;
+    std::vector<OutputInfo> frameCacheQue_;
+    std::vector<OutputInfo> frameReleaseQue_;
     int32_t lastConfigRegionX_;
     int32_t lastConfigRegionY_;
     int32_t lastConfigRegionW_;
     int32_t lastConfigRegionH_;
+    uint32_t layerId_;
 };
 }  // namespace Media
 }  // namespace OHOS

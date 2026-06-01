@@ -856,7 +856,8 @@ HWTEST_F(PlayerliteTest, medialite_player_audioGetCurrentTime_test_001, Level1)
     EXPECT_EQ(HI_SUCCESS, ret);
     ret = g_tagTestSample.adaptr->Play();
     EXPECT_EQ(HI_SUCCESS, ret);
-    sleep(3);
+    int sleepTime = 3;
+    sleep(sleepTime);
     int64_t currentPosition;
     ret = g_tagTestSample.adaptr->GetCurrentTime(currentPosition);
     EXPECT_EQ(HI_SUCCESS, ret);

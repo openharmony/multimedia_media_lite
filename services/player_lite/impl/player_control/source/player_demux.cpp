@@ -156,77 +156,8 @@ int32_t PlayerDemuxer::Prepare(void)
 
 int32_t PlayerDemuxer::GetFileInfo(FormatFileInfo &fileInfo)
 {
-    uint32_t i;
-    FileInfo info;
-    int programId = -1;
-    int trackId[0x2] = {-1, -1};
-    int trackNum = 0x2;
-    ProgramInfo *programInfo = nullptr;
-    CHECK_FAILED_RETURN(prepared_, true, -1, "not prepared");
-    CHECK_FAILED_RETURN(FormatDemuxerGetFileInfo(demuxer_, &info), 0, -1, "");
-    CHECK_FAILED_RETURN(FormatDemuxerGetSelectedTrack(demuxer_, &programId, trackId, &trackNum), 0, -1, "");
+    CHECK_FAILED_RETURN(FormatDemuxerGetFileInfo(demuxer_, &fileInfo), 0, -1, "");
 
-    if (programId == -1 || trackNum == 0 || trackId[0] == -1) {
-        MEDIA_ERR_LOG("FormatDemuxerGetSelectedTrack failed");
-        return -1;
-    }
-
-    fileInfo.s64FileSize = -1;
-    fileInfo.s64StartTime = 0;
-    fileInfo.u32Bitrate = info.bitrate;
-    if (info.programNum == 1) {
-        programInfo = &info.programInfo[0];
-    } else {
-        for (i = 0; i < info.programNum; i++) {
-            if (info.programInfo[i].programId == programId) {
-                programInfo = &info.programInfo[i];
-                break;
-            }
-        }
-    }
-    if (programInfo == nullptr) {
-        MEDIA_ERR_LOG("can not find the program");
-        return -1;
-    }
-    fileInfo.s64Duration = programInfo->durationMs;
-    fileInfo.s32UsedVideoStreamIndex = -1;
-    fileInfo.s32UsedAudioStreamIndex = -1;
-    for (i = 0; i < programInfo->trackNum; i++) {
-        if (programInfo->track[i].trackId == trackId[0] || programInfo->track[i].trackId == trackId[1]) {
-            if (programInfo->track[i].trackType == TRACK_TYPE_VIDEO) {
-                fileInfo.s32UsedVideoStreamIndex = programInfo->track[i].trackId;
-                fileInfo.u32Width = programInfo->track[i].vidTrack.width;
-                fileInfo.u32Height = programInfo->track[i].vidTrack.height;
-                fileInfo.enVideoType = programInfo->track[i].vidTrack.format;
-            } else if (programInfo->track[i].trackType == TRACK_TYPE_AUDIO) {
-                fileInfo.s32UsedAudioStreamIndex = programInfo->track[i].trackId;
-                fileInfo.u32AudioChannelCnt = programInfo->track[i].audTrack.channels;
-                fileInfo.u32SampleRate = programInfo->track[i].audTrack.sampleRate;
-                fileInfo.enAudioType = programInfo->track[i].audTrack.format;
-            }
-        }
-    }
-    int index = 0;
-    uint32_t j;
-    for (i = 0; i < info.programNum; i++) {
-        programInfo = &info.programInfo[i];
-        for (j = 0; j < programInfo->trackNum; j++) {
-            if (programInfo->track[j].trackType == TRACK_TYPE_VIDEO && index < HI_DEMUXER_RESOLUTION_CNT) {
-                fileInfo.stSteamResolution[index].s32VideoStreamIndex = programInfo->track[j].trackId;
-                fileInfo.stSteamResolution[index].u32Width = programInfo->track[j].vidTrack.width;
-                fileInfo.stSteamResolution[index].u32Height = programInfo->track[j].vidTrack.height;
-                fileInfo.stSteamResolution[index].enVideoType = programInfo->track[j].vidTrack.format;
-                index++;
-            }
-        }
-    }
-    for (; index < HI_DEMUXER_RESOLUTION_CNT; index++) {
-        fileInfo.stSteamResolution[index].s32VideoStreamIndex = -1;
-        fileInfo.stSteamResolution[index].u32Width = 0;
-        fileInfo.stSteamResolution[index].u32Height = 0;
-    }
-
-    fileInfo.formatName = info.formatName;
     return 0;
 }
 

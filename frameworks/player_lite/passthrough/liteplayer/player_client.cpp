@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include <cstdio>
+#include "player_client.h"
 #include "player_impl.h"
 
 namespace OHOS {

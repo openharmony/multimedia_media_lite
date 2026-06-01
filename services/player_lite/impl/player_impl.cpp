@@ -171,7 +171,7 @@ int32_t PlayerImpl::SetSource(const Source &source)
 static void ShowFileInfo(const FormatFileInfo *fileInfo)
 {
     for (int i = 0; i < HI_DEMUXER_RESOLUTION_CNT; i++) {
-        const StreamResolution *resolution = &fileInfo->stSteamResolution[i];
+        const StreamResolution *resolution = &fileInfo->stStreamResolution[i];
         if (resolution->u32Width == 0 || resolution->u32Height == 0) {
             break;
         }
@@ -258,10 +258,10 @@ void PlayerImpl::PlayerControlEventCb(void* pPlayer, PlayerControlEvent enEvent,
 void PlayerImpl::ReportVideoSizeChange(void)
 {
     for (int i = 0; i < HI_DEMUXER_RESOLUTION_CNT; i++) {
-        if (formatFileInfo_.stSteamResolution[i].s32VideoStreamIndex == formatFileInfo_.s32UsedVideoStreamIndex) {
+        if (formatFileInfo_.stStreamResolution[i].s32VideoStreamIndex == formatFileInfo_.s32UsedVideoStreamIndex) {
             if (callback_ != nullptr) {
-                callback_->OnVideoSizeChanged(formatFileInfo_.stSteamResolution[i].u32Width,
-                    formatFileInfo_.stSteamResolution[i].u32Height);
+                callback_->OnVideoSizeChanged(formatFileInfo_.stStreamResolution[i].u32Width,
+                    formatFileInfo_.stStreamResolution[i].u32Height);
             }
             break;
         }
@@ -333,7 +333,7 @@ int32_t PlayerImpl::SetMediaStream(void)
     }
 
     for (int i = 0; i < HI_DEMUXER_RESOLUTION_CNT; i++) {
-        StreamResolution *resolution = &formatFileInfo_.stSteamResolution[i];
+        StreamResolution *resolution = &formatFileInfo_.stStreamResolution[i];
         if (resolution->s32VideoStreamIndex == mediaAttr_.s32VidStreamId) {
             MEDIA_INFO_LOG("used video w=%u,h=%u,index=%d",
                 resolution->u32Width, resolution->u32Height, mediaAttr_.s32VidStreamId);
@@ -350,6 +350,9 @@ int32_t PlayerImpl::Play()
     MEDIA_INFO_LOG("process in");
     CHECK_FAILED_RETURN(released_, false, -1, "have released or not create");
     CHK_NULL_RETURN(player_);
+    if (player_->IsPaused()) {
+        currentState_ = PLAYER_PAUSED;
+    }
     if (currentState_ == PLAYER_STARTED) {
         MEDIA_INFO_LOG("no need to repeat operation");
         return 0;
@@ -628,8 +631,8 @@ int32_t PlayerImpl::GetVideoWidth(int32_t &videoWidth)
         return -1;
     }
     for (int i = 0; i < HI_DEMUXER_RESOLUTION_CNT; i++) {
-        if (formatFileInfo_.stSteamResolution[i].s32VideoStreamIndex == formatFileInfo_.s32UsedVideoStreamIndex) {
-            videoWidth = formatFileInfo_.stSteamResolution[i].u32Width;
+        if (formatFileInfo_.stStreamResolution[i].s32VideoStreamIndex == formatFileInfo_.s32UsedVideoStreamIndex) {
+            videoWidth = formatFileInfo_.stStreamResolution[i].u32Width;
             break;
         }
     }
@@ -653,8 +656,8 @@ int32_t PlayerImpl::GetVideoHeight(int32_t &videoHeight)
     }
 
     for (int i = 0; i < HI_DEMUXER_RESOLUTION_CNT; i++) {
-        if (formatFileInfo_.stSteamResolution[i].s32VideoStreamIndex == formatFileInfo_.s32UsedVideoStreamIndex) {
-            videoHeight = formatFileInfo_.stSteamResolution[i].u32Height;
+        if (formatFileInfo_.stStreamResolution[i].s32VideoStreamIndex == formatFileInfo_.s32UsedVideoStreamIndex) {
+            videoHeight = formatFileInfo_.stStreamResolution[i].u32Height;
             break;
         }
     }
@@ -1249,6 +1252,10 @@ int32_t PlayerImpl::SetParameter(const Format &params)
 {
     int32_t value;
     std::lock_guard<std::mutex> valueLock(lock_);
+    int32_t layerPriority = 0;
+    if (params.GetIntValue(LAYER_PRIORITY, layerPriority)) {
+        return player_->SetLayerPriority(layerPriority);
+    }
 
     if (params.GetIntValue(PAUSE_AFTER_PLAY, value) != true) {
         MEDIA_ERR_LOG("get pause after play failed");

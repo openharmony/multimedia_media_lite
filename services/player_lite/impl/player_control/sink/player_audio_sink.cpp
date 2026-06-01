@@ -48,7 +48,8 @@ AudioSink::AudioSink()
       pauseAfterPlay_(false), syncHdl_(nullptr), renderMode_(RENDER_MODE_NORMAL),
       rendStartTime_(-1), lastRendPts_(AV_INVALID_PTS), lastRendSysTimeMs_(-1), renderDelay_(0),
       leftVolume_(0.0f), rightVolume_(0.0f), eosPts_(AV_INVALID_PTS), receivedEos_(false), audioManager_(nullptr),
-      audioAdapter_(nullptr), audioRender_(nullptr), reportedFirstFrame(false), audioStreamType_(0)
+      audioAdapter_(nullptr), audioRender_(nullptr), reportedFirstFrame(false), audioStreamType_(0),
+      hdmiConnected_(false), hdmiQueryCnt_(0)
 {
     ResetRendStartTime();
     frameCacheQue_.clear();
@@ -88,14 +89,29 @@ void AudioSink::DeInit()
     frameReleaseQue_.clear();
 }
 
-int32_t AudioSink::Init(SinkAttr &atrr)
+bool AudioSink::CheckAudioAdapter(struct AudioAdapterDescriptor *desc)
 {
-    attr_ = atrr;
-    audioManager_ = GetAudioManagerFuncs();
-    if (audioManager_ == nullptr) {
-        return SINK_GET_DEVICE_FAILED;
+    if (desc == nullptr) {
+        MEDIA_ERR_LOG("invalid audio adapter descriptor");
+        return false;
     }
-    int32_t ret = 0;
+    for (int port = 0; port < static_cast<int>(desc->portNum); port++) {
+        if (desc->ports[port].dir == PORT_OUT &&
+            (audioManager_->LoadAdapter(audioManager_, desc, &audioAdapter_)) == 0 \
+            && audioAdapter_ != nullptr) {
+            (void)audioAdapter_->InitAllPorts(audioAdapter_);
+            if (memcpy_s(&renderPort_, sizeof(struct AudioPort),
+                &desc->ports[port], sizeof(struct AudioPort)) != 0) {
+                MEDIA_ERR_LOG("memcpy_s failed");
+            }
+            return true;
+        }
+    }
+    return false;
+}
+
+int32_t AudioSink::LoadAudioAdapter()
+{
     int32_t size = -1;
     struct AudioAdapterDescriptor *descs = nullptr;
     audioManager_->GetAllAdapters(audioManager_, &descs, &size);
@@ -104,39 +120,79 @@ int32_t AudioSink::Init(SinkAttr &atrr)
     }
     for (int index = 0; index < size; index++) {
         struct AudioAdapterDescriptor *desc = &descs[index];
-        for (int port = 0; (desc != nullptr && port < static_cast<int>(desc->portNum)); port++) {
-            if (desc->ports[port].dir == PORT_OUT &&
-                (audioManager_->LoadAdapter(audioManager_, desc, &audioAdapter_)) == 0 && audioAdapter_ != nullptr) {
-                (void)audioAdapter_->InitAllPorts(audioAdapter_);
-                if (memcpy_s(&renderPort_, sizeof(struct AudioPort),
-                    &desc->ports[port], sizeof(struct AudioPort)) != 0) {
-                    MEDIA_ERR_LOG("memcpy_s failed");
-                }
+        MEDIA_INFO_LOG("index = %d, desc->adapterName = %s", index, desc->adapterName);
+        if (strcmp(desc->adapterName, "Primary") == 0) { // built-in:Primary usb:USB
+            if (CheckAudioAdapter(desc)) {
                 break;
             }
         }
     }
-    if (ret != 0 || audioAdapter_ == nullptr) {
+    if (audioAdapter_ == nullptr) {
         MEDIA_ERR_LOG("load audiodevice failed");
         return SINK_LAOD_DEVICE_FAILED;
     }
+    return SINK_SUCCESS;
+}
 
-    struct AudioSampleAttributes param;
-    param.sampleRate = attr_.audAttr.sampleRate;
+void AudioSink::InitAudioSampleAttributes(struct AudioSampleAttributes &param)
+{
+    param.sampleRate = attr_.audAttr.sampleRate; // USB 48000
     param.format = AUDIO_FORMAT_TYPE_PCM_16_BIT;
     param.channelCount = attr_.audAttr.channel;
     param.interleaved = false;
     param.type = (audioStreamType_ == 1) ? AUDIO_IN_COMMUNICATION : AUDIO_IN_MEDIA;
     MEDIA_INFO_LOG("sampleRate:%u, channelCount:%u", param.sampleRate, param.channelCount);
+}
 
+int32_t AudioSink::CreateAudioRender(struct AudioSampleAttributes &param)
+{
+    int32_t ret;
     struct AudioDeviceDescriptor deviceDesc;
     deviceDesc.portId = 0;
-    deviceDesc.pins = PIN_OUT_SPEAKER;
+#ifdef ENABLE_PLAYER_HDMI_HOT_SWAP
+    deviceDesc.pins = PIN_OUT_HDMI; // built-in:PIN_OUT_SPEAKER usb:PIN_OUT_USB hdmi:PIN_OUT_HDMI
     deviceDesc.desc = nullptr;
     ret = audioAdapter_->CreateRender(audioAdapter_, &deviceDesc, &param, &audioRender_);
-    if (ret != 0 || audioRender_ == nullptr) {
+    if (ret == HI_SUCCESS && audioRender_ != nullptr) {
+        hdmiConnected_ = true;
+        MEDIA_INFO_LOG("==============HDMI state 1 (connected) playback=============");
+    } else {
+        deviceDesc.pins = PIN_OUT_SPEAKER;
+        ret = audioAdapter_->CreateRender(audioAdapter_, &deviceDesc, &param, &audioRender_);
+        if (ret != HI_SUCCESS || audioRender_ == nullptr) {
+            MEDIA_ERR_LOG("AudioDeviceCreateRender failed for both HDMI and speaker");
+            return SINK_OPEN_STREAM_FAILED;
+        }
+        hdmiConnected_ = false;
+        MEDIA_INFO_LOG("==============HDMI state 0 (disconnected) playback=============");
+    }
+#else
+    deviceDesc.pins = PIN_OUT_SPEAKER; // built-in:PIN_OUT_SPEAKER usb:PIN_OUT_USB hdmi:PIN_OUT_HDMI
+    ret = audioAdapter_->CreateRender(audioAdapter_, &deviceDesc, &param, &audioRender_);
+    if (ret != HI_SUCCESS || audioRender_ == nullptr) {
         MEDIA_ERR_LOG("AudioDeviceCreateRender failed");
         return SINK_OPEN_STREAM_FAILED;
+    }
+#endif
+    return SINK_SUCCESS;
+}
+
+int32_t AudioSink::Init(SinkAttr &atrr)
+{
+    attr_ = atrr;
+    audioManager_ = GetAudioManagerFuncs();
+    if (audioManager_ == nullptr) {
+        return SINK_GET_DEVICE_FAILED;
+    }
+    int32_t ret = LoadAudioAdapter();
+    if (ret != SINK_SUCCESS) {
+        return ret;
+    }
+    struct AudioSampleAttributes param;
+    InitAudioSampleAttributes(param);
+    ret = CreateAudioRender(param);
+    if (ret != SINK_SUCCESS) {
+        return ret;
     }
     MEDIA_DEBUG_LOG("init success");
     return SINK_SUCCESS;
@@ -154,11 +210,11 @@ void AudioSink::GetStatus(AudioSinkStatus &status)
     status.audFrameCount = rendFrameCnt_;
 }
 
-void AudioSink::UpdateAudioPts(int64_t lastPts, int64_t &timestamp, CodecBuffer &renderFrame)
+void AudioSink::UpdateAudioPts(int64_t lastPts, int64_t &timestamp, OutputInfo &renderFrame)
 {
     if (renderFrame.timeStamp == -1) {
-        float sampleCnt = (renderFrame.buffer[0].length / attr_.audAttr.channel) / AUDIO_SAMPLE_WIDTH_BYTE;
-        float duration = (static_cast<int64_t>(sampleCnt) * MS_SCALE) / attr_.audAttr.sampleRate;
+        float sampleCnt = (renderFrame.buffers[0].length / attr_.audAttr.channel) / AUDIO_SAMPLE_WIDTH_BYTE;
+        float duration = (sampleCnt / attr_.audAttr.sampleRate) * MS_SCALE;
         renderFrame.timeStamp = lastPts + duration;
     }
     timestamp = renderFrame.timeStamp;
@@ -168,10 +224,10 @@ void AudioSink::UpdateAudioPts(int64_t lastPts, int64_t &timestamp, CodecBuffer 
     }
 }
 
-void AudioSink::QueueRenderFrame(const PlayerBufferInfo &frame, const bool cacheQueue)
+void AudioSink::QueueRenderFrame(const OutputInfo &frame, const bool cacheQueue)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (frame.info.bufferCnt == 0) {
+    if (frame.type != AUDIO_DECODER || frame.bufferCnt == 0) {
         return;
     }
     if (cacheQueue) {
@@ -181,11 +237,11 @@ void AudioSink::QueueRenderFrame(const PlayerBufferInfo &frame, const bool cache
     }
 }
 
-int32_t AudioSink::GetRenderFrame(PlayerBufferInfo &renderFrame, const PlayerBufferInfo &frame)
+int32_t AudioSink::GetRenderFrame(OutputInfo &renderFrame, const OutputInfo &frame)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     int32_t ret = SINK_QUE_EMPTY;
-    if (frame.info.bufferCnt != 0) {
+    if (frame.type == AUDIO_DECODER &&  frame.bufferCnt != 0) {
         frameCacheQue_.push_back(frame);
     }
     if (frameCacheQue_.size() != 0) {
@@ -199,7 +255,7 @@ void AudioSink::ReleaseQueHeadFrame(void)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (frameCacheQue_.size() != 0) {
-        PlayerBufferInfo frame = frameCacheQue_[0];
+        OutputInfo frame = frameCacheQue_[0];
         frameCacheQue_.erase(frameCacheQue_.begin());
         frameReleaseQue_.push_back(frame);
     }
@@ -220,7 +276,7 @@ void AudioSink::ReleaseQueAllFrame(void)
     frameCacheQue_.clear();
 }
 
-int32_t AudioSink::DequeReleaseFrame(PlayerBufferInfo &frame)
+int32_t AudioSink::DequeReleaseFrame(OutputInfo &frame)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (frameReleaseQue_.size() == 0) {
@@ -244,34 +300,77 @@ void AudioSink::RenderRptEvent(EventCbType event)
     }
 }
 
-int32_t AudioSink::WriteToAudioDevice(CodecBuffer &renderFrame)
+int32_t AudioSink::WriteToAudioDevice(OutputInfo &renderFrame)
 {
     int32_t ret;
     uint64_t writeLen = 0;
-    if ((audioRender_ == nullptr) || (&renderFrame.buffer[0] == nullptr)) {
+    if ((audioRender_ == nullptr) || (renderFrame.buffers == nullptr)) {
         ReleaseQueHeadFrame();
         return SINK_RENDER_ERROR;
     }
-
-    ret = audioRender_->RenderFrame(audioRender_, (void*)(renderFrame.buffer[0].buf + renderFrame.buffer[0].offset),
-        static_cast<uint64_t>(renderFrame.buffer[0].length), &writeLen);
-    if ((unsigned long)renderFrame.buffer[0].length != writeLen) {
+    ret = audioRender_->RenderFrame(audioRender_, renderFrame.buffers[0].addr + renderFrame.buffers[0].offset,
+        static_cast<uint64_t>(renderFrame.buffers[0].length), &writeLen);
+    if ((unsigned long)renderFrame.buffers[0].length != writeLen) {
         return SINK_RENDER_FULL;
     } else if (ret != HI_SUCCESS) {
         ReleaseQueHeadFrame();
         MEDIA_ERR_LOG("RenderFrame failed ret: %x", ret);
         return SINK_RENDER_ERROR;
     }
+#ifdef ENABLE_PLAYER_HDMI_HOT_SWAP
+    hdmiQueryCnt_++;
+    if (hdmiQueryCnt_ >= 50) { // 50 frames per second
+        hdmiQueryCnt_ = 0;
+        float speed_ = 0.0;
+        if (audioRender_->GetRenderSpeed(audioRender_, &speed_) == HI_SUCCESS) {
+            bool currentHdmiState = (speed_ == 200); // 200 is the speed for HDMI
+            if (currentHdmiState != hdmiConnected_) {
+                ReleaseQueHeadFrame();
+                return SINK_RENDER_PAUSED;
+            }
+        }
+    }
+#endif
     ReleaseQueHeadFrame();
     return HI_SUCCESS;
 }
 
-int32_t AudioSink::RenderFrame(PlayerBufferInfo &frame)
+int32_t AudioSink::RenderFrameDevice(OutputInfo &renderFrame)
 {
+    int32_t ret = SINK_SUCCESS;
     SyncRet syncRet = SYNC_RET_PLAY;
     int64_t crtPlayPts = 0;
+    UpdateAudioPts(lastRendPts_, crtPlayPts, renderFrame);
+    ret = (syncHdl_ != nullptr) ? syncHdl_->ProcAudFrame(crtPlayPts, syncRet) : HI_SUCCESS;
+    if (ret != HI_SUCCESS) {
+        MEDIA_ERR_LOG("ProcAudFrame pts: %lld failed", renderFrame.timeStamp);
+        ReleaseQueHeadFrame();
+        return SINK_RENDER_ERROR;
+    }
+    if (syncRet == SYNC_RET_PLAY) {
+        ret = WriteToAudioDevice(renderFrame);
+    } else if (syncRet == SYNC_RET_DROP) {
+        ReleaseQueHeadFrame();
+        ret = SINK_SUCCESS;
+    } else if (syncRet == SYNC_RET_REPEAT) {
+        ret = SINK_RENDER_DELAY;
+    } else {
+        MEDIA_ERR_LOG("aud invalid sync ret: %d", syncRet);
+        ReleaseQueHeadFrame();
+        ret =  SINK_RENDER_ERROR;
+    }
+
+    if (ret == SINK_SUCCESS || ret == SINK_RENDER_ERROR) {
+        lastRendPts_ = renderFrame.timeStamp;
+        rendFrameCnt_++;
+    }
+    return ret;
+}
+
+int32_t AudioSink::RenderFrame(OutputInfo &frame)
+{
     uint64_t frameCnt;
-    PlayerBufferInfo renderFrame;
+    OutputInfo renderFrame;
     struct AudioTimeStamp timestamp;
 
     if (!reportedFirstFrame && renderMode_ == RENDER_MODE_PAUSE_AFTER_PLAY) {
@@ -306,31 +405,7 @@ int32_t AudioSink::RenderFrame(PlayerBufferInfo &frame)
         MEDIA_ERR_LOG("GetRenderPosition failed,ret=0x%x", ret);
         return SINK_RENDER_ERROR;
     }
-
-    UpdateAudioPts(lastRendPts_, crtPlayPts, renderFrame.info);
-    ret = (syncHdl_ != nullptr) ? syncHdl_->ProcAudFrame(crtPlayPts, syncRet) : HI_SUCCESS;
-    if (ret != HI_SUCCESS) {
-        MEDIA_ERR_LOG("ProcAudFrame pts: %lld failed", renderFrame.info.timeStamp);
-        ReleaseQueHeadFrame();
-        return SINK_RENDER_ERROR;
-    }
-    if (syncRet == SYNC_RET_PLAY) {
-        ret = WriteToAudioDevice(renderFrame.info);
-    } else if (syncRet == SYNC_RET_DROP) {
-        ReleaseQueHeadFrame();
-        ret = SINK_SUCCESS;
-    } else if (syncRet == SYNC_RET_REPEAT) {
-        ret = SINK_RENDER_DELAY;
-    } else {
-        MEDIA_ERR_LOG("aud invalid sync ret: %d", syncRet);
-        ReleaseQueHeadFrame();
-        ret =  SINK_RENDER_ERROR;
-    }
-
-    if (ret == SINK_SUCCESS || ret == SINK_RENDER_ERROR) {
-        lastRendPts_ = renderFrame.info.timeStamp;
-        rendFrameCnt_++;
-    }
+    ret = RenderFrameDevice(renderFrame);
     return ret;
 }
 

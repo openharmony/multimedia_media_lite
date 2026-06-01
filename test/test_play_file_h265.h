@@ -21,7 +21,7 @@
 #include <queue>
 
 #include "codec_type.h"
-#include "hal_display.h"
+#include "display_layer.h"
 
 #define FILENAME (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
 #define DEMO_LOG(format, ...) printf("%s[%s:%d]" format "\n", __func__, (FILENAME), __LINE__, ##__VA_ARGS__)
@@ -42,9 +42,9 @@ public:
 
 private:
     std::queue<OutputInfo *> playQ_ = {};
-    HalVideoOutputHdl voHdl_ = 0;
     int64_t frameCnt_ = 0;
-
+    LayerFuncs *layerFuncs;
+    uint32_t layerId;
     int32_t InitVideoOutput();
     int32_t DeinitVideoOutput();
     int32_t Write2VideoDevice(OutputInfo &outputInfo);

@@ -80,6 +80,7 @@ VideoSink::VideoSink(void)
     callBack_.priv = nullptr;
     frameCacheQue_.clear();
     frameReleaseQue_.clear();
+    layerId_ = 0;
 }
 
 VideoSink::~VideoSink()
@@ -90,7 +91,6 @@ VideoSink::~VideoSink()
 int32_t VideoSink::DeInit()
 {
     int32_t ret = HI_SUCCESS;
-    layerFuncs_->DeinitDisplay(0);
     return ret;
 }
 
@@ -98,7 +98,6 @@ int32_t VideoSink::Init(SinkAttr &attr)
 {
     attr_ = attr;
     (void)LayerInitialize(&layerFuncs_);
-    layerFuncs_->InitDisplay(0);
     return 0;
 }
 
@@ -153,7 +152,6 @@ void VideoSink::CreateAndConfigLayer(void)
     int32_t h;
     IRect attr;
     uint32_t devId = 0;
-    uint32_t layerId = 0;
     int32_t right = lastConfigRegionX_ + lastConfigRegionW_ - 1;
     int32_t botttom = lastConfigRegionY_ + lastConfigRegionH_ - 1;
     /* Make sure the coordinates are even */
@@ -170,11 +168,14 @@ void VideoSink::CreateAndConfigLayer(void)
     LayerInfo lInfo;
     lInfo.width = w;
     lInfo.height = h;
+    lInfo.type = LAYER_TYPE_OVERLAY;
+    int align = 8;
+    lInfo.bpp = align;
+    lInfo.pixFormat = PIXEL_FMT_YCRCB_420_SP;
     if (layerFuncs_ != nullptr) {
-        layerFuncs_->CreateLayer(devId, &lInfo, &layerId);
-        layerFuncs_->SetLayerSize(devId, layerId, &attr);
+        layerFuncs_->CreateLayer(devId, &lInfo, &layerId_);
+        layerFuncs_->SetLayerSize(devId, layerId_, &attr);
     }
-
 }
 
 void VideoSink::CheckConfigVideoOutput(void)
@@ -217,7 +218,7 @@ int32_t VideoSink::Stop()
     ResetRendStartTime();
     renderFrameCnt_ = 0;
     if (layerFuncs_ != nullptr) {
-        layerFuncs_->CloseLayer(0, 0);
+        layerFuncs_->CloseLayer(0, layerId_);
     }
     started_ = false;
     return HI_SUCCESS;
@@ -286,10 +287,10 @@ int32_t VideoSink::RegisterCallBack(PlayEventCallback &callback)
     return 0;
 }
 
-void VideoSink::QueueRenderFrame(PlayerBufferInfo &frame, bool cacheQueue)
+void VideoSink::QueueRenderFrame(OutputInfo &frame, bool cacheQueue)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (frame.info.bufferCnt == 0) {
+    if (frame.type != AUDIO_DECODER || frame.bufferCnt == 0) {
         return;
     }
     if (cacheQueue) {
@@ -299,11 +300,11 @@ void VideoSink::QueueRenderFrame(PlayerBufferInfo &frame, bool cacheQueue)
     }
 }
 
-int32_t VideoSink::GetRenderFrame(PlayerBufferInfo &renderFrame, PlayerBufferInfo &frame)
+int32_t VideoSink::GetRenderFrame(OutputInfo &renderFrame, OutputInfo &frame)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     int32_t ret = SINK_QUE_EMPTY;
-    if (frame.info.bufferCnt != 0) {
+    if (frame.type == VIDEO_DECODER && frame.bufferCnt != 0) {
         frameCacheQue_.push_back(frame);
     }
     if (frameCacheQue_.size() != 0) {
@@ -317,7 +318,7 @@ void VideoSink::ReleaseQueHeadFrame(void)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (frameCacheQue_.size() != 0) {
-        PlayerBufferInfo frame = frameCacheQue_[0];
+        OutputInfo frame = frameCacheQue_[0];
         frameCacheQue_.erase(frameCacheQue_.begin());
         frameReleaseQue_.push_back(frame);
     }
@@ -338,7 +339,7 @@ void VideoSink::ReleaseQueAllFrame(void)
     frameCacheQue_.clear();
 }
 
-int32_t VideoSink::DequeReleaseFrame(PlayerBufferInfo &frame)
+int32_t VideoSink::DequeReleaseFrame(OutputInfo &frame)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (frameReleaseQue_.size() == 0) {
@@ -362,22 +363,22 @@ void VideoSink::RenderRptEvent(EventCbType event)
     }
 }
 
-int32_t VideoSink::WriteToVideoDevice(CodecBuffer &renderFrame)
+int32_t VideoSink::WriteToVideoDevice(OutputInfo &renderFrame)
 {
     if (layerFuncs_ != nullptr) {
         LayerBuffer layerBuf;
-        layerBuf.data.virAddr = (void *)renderFrame.buffer[0].buf;
-        layerFuncs_->Flush(0, 0, &layerBuf);
+        layerBuf.data.virAddr = renderFrame.vendorPrivate;
+        layerFuncs_->Flush(0, layerId_, &layerBuf);
     }
     ReleaseQueHeadFrame();
     return SINK_SUCCESS;
 }
 
-int32_t VideoSink::RenderFrame(PlayerBufferInfo &frame)
+int32_t VideoSink::RenderFrame(OutputInfo &frame)
 {
     SyncRet syncRet = SYNC_RET_PLAY;
     int64_t crtPlayPts = 0;
-    PlayerBufferInfo renderFrame;
+    OutputInfo renderFrame;
 
     /* the frame should be save to queue at state paused and none-started */
     if (!started_ || paused_ || (renderMode_ == RENDER_MODE_PAUSE_AFTER_PLAY && renderFrameCnt_ == 1)) {
@@ -393,22 +394,22 @@ int32_t VideoSink::RenderFrame(PlayerBufferInfo &frame)
         return SINK_QUE_EMPTY;
     }
 
-    crtPlayPts = renderFrame.info.timeStamp;
+    crtPlayPts = renderFrame.timeStamp;
     int32_t ret = (syncHdl_ != nullptr) ? syncHdl_->ProcVidFrame(crtPlayPts, syncRet) : HI_SUCCESS;
     if (ret != HI_SUCCESS) {
         ReleaseQueHeadFrame();
-        MEDIA_ERR_LOG("ProcVidFrame pts: %llu failed", renderFrame.info.timeStamp);
+        MEDIA_ERR_LOG("ProcVidFrame pts: %llu failed", renderFrame.timeStamp);
         return SINK_RENDER_ERROR;
     }
 
     if (syncRet == SYNC_RET_PLAY) {
-        ret = WriteToVideoDevice(renderFrame.info);
+        ret = WriteToVideoDevice(renderFrame);
         if (renderFrameCnt_ == 0) {
-            callBack_.onEventCallback(callBack_.priv, EVNET_FIRST_VIDEO_REND, 0, 0);
+            callBack_.onEventCallback(callBack_.priv, EVNET_FIRST_VIDEO_REND, renderFrame.timeStamp, 0);
         }
         renderFrameCnt_++;
     } else if (syncRet == SYNC_RET_DROP) {
-        MEDIA_INFO_LOG("too late, drop, pts: %lld", renderFrame.info.timeStamp);
+        MEDIA_INFO_LOG("too late, drop, pts: %lld", renderFrame.timeStamp);
         ReleaseQueHeadFrame();
         ret = SINK_SUCCESS;
     } else if (syncRet == SYNC_RET_REPEAT) {
@@ -421,7 +422,7 @@ int32_t VideoSink::RenderFrame(PlayerBufferInfo &frame)
 
     /* render pts update after the frame that have been processed */
     if (ret == SINK_SUCCESS || ret == SINK_RENDER_ERROR) {
-        lastRendPts_ = (renderFrame.info.timeStamp > lastRendPts_) ? renderFrame.info.timeStamp : lastRendPts_;
+        lastRendPts_ = renderFrame.timeStamp;
     }
     return ret;
 }
@@ -440,6 +441,14 @@ void VideoSink::RenderEos(void)
 void VideoSink::GetRenderPosition(int64_t &position)
 {
     position = lastRendPts_;
+}
+
+int32_t VideoSink::SetParam(const char *key, dataType type, void* value)
+{
+    if (layerFuncs_ != nullptr && strcmp(key, LAYER_PRIORITYS) == 0) {
+        layerFuncs_->SetLayerPriority(*(uint32_t *)value);
+        return SINK_SUCCESS;
+    }
 }
 }
 }

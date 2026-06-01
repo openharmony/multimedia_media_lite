@@ -100,6 +100,8 @@ enum OutputFormatType : int32_t {
     FORMAT_MPEG_4,
     /** TS format */
     FORMAT_TS,
+    /** MP4A format */
+    FORMAT_M4A,
 };
 
 /**

@@ -45,7 +45,7 @@ public:
     int32_t SetSpeed(float speed);
     int32_t GetSpeed(float &speed);
     int32_t GetState(int32_t &state);
-    int32_t RenderFrame(PlayerBufferInfo &frame);
+    int32_t RenderFrame(OutputInfo &frame);
     void SetRenderMode(RenderMode mode);
     int32_t SetVolume(float left, float right);
     int32_t GetVolume(float &left, float &right);
@@ -57,20 +57,25 @@ public:
     int32_t RegisterCallBack(PlayEventCallback &callback);
     void GetStatus(AudioSinkStatus &status);
     void RenderEos(void);
-    int DequeReleaseFrame(PlayerBufferInfo &frame);
+    int DequeReleaseFrame(OutputInfo &frame);
     void GetRenderPosition(int64_t &position);
     void SetAudioStreamType(int32_t &type);
 
 private:
     void ResetRendStartTime();
     void SendAudioEndOfStream();
-    void UpdateAudioPts(int64_t lastPts, int64_t& timestamp, CodecBuffer &renderFrame);
-    int GetRenderFrame(PlayerBufferInfo &renderFrame, const PlayerBufferInfo &frame);
+    void UpdateAudioPts(int64_t lastPts, int64_t& timestamp, OutputInfo &renderFrame);
+    int GetRenderFrame(OutputInfo &renderFrame, const OutputInfo &frame);
     void ReleaseQueHeadFrame(void);
     void ReleaseQueAllFrame(void);
     void RenderRptEvent(EventCbType event);
-    int32_t WriteToAudioDevice(CodecBuffer &renderFrame);
-    void QueueRenderFrame(const PlayerBufferInfo &frame, bool cacheQueue);
+    int32_t WriteToAudioDevice(OutputInfo &renderFrame);
+    void QueueRenderFrame(const OutputInfo &frame, bool cacheQueue);
+    int32_t RenderFrameDevice(OutputInfo &renderFrame);
+    bool CheckAudioAdapter(struct AudioAdapterDescriptor *desc);
+    int32_t LoadAudioAdapter();
+    void InitAudioSampleAttributes(struct AudioSampleAttributes &param);
+    int32_t CreateAudioRender(struct AudioSampleAttributes &param);
 
     bool started_;
     bool paused_;
@@ -90,9 +95,11 @@ private:
     float rightVolume_;
     int64_t eosPts_;
     bool receivedEos_;
+    bool hdmiConnected_;
+    uint32_t hdmiQueryCnt_;
     std::mutex mutex_;
-    std::vector<PlayerBufferInfo> frameCacheQue_;
-    std::vector<PlayerBufferInfo> frameReleaseQue_;
+    std::vector<OutputInfo> frameCacheQue_;
+    std::vector<OutputInfo> frameReleaseQue_;
     struct AudioManager *audioManager_;
     struct AudioAdapter *audioAdapter_;
     struct AudioRender *audioRender_;

@@ -35,6 +35,9 @@ extern "C" {
 
 #define MAX_AUD_DECODER_PATH_LEN  256
 
+#define AV_INVALID_PTS (-1)
+#define MS_SCALE (1000)
+
 typedef enum {
     MEDIA_TYPE_VIDEO,
     MEDIA_TYPE_VIDEO_AUDIO,

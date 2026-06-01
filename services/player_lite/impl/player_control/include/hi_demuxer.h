@@ -61,31 +61,6 @@ typedef enum {
     HI_FORMAT_AUDIO_TYPE_BUTT
 } HI_FORMAT_AUDIO_TYPE_E;
 
-typedef struct {
-    int32_t s32VideoStreamIndex; /**< the index of the video stream */
-    uint32_t u32Width;            /**< The height of the media file's resolution */
-    uint32_t u32Height;           /**< The width of the media file's resolution */
-    CodecFormat enVideoType;
-} StreamResolution;
-
-typedef struct {
-    char *formatName;  /**< File format name, in the unit of byte. */
-    int64_t s64FileSize;  /**< File size, in the unit of byte. */
-    int64_t s64StartTime; /* the media file begin time */
-    int64_t s64Duration;  /**< Total duration of a file, in the unit of ms. */
-    StreamResolution stSteamResolution[HI_DEMUXER_RESOLUTION_CNT];
-    int32_t s32UsedVideoStreamIndex; /* <default used video index> */
-    float fFrameRate;            /**< the frame rate of the stream */
-    uint32_t u32Bitrate;              /**< File bit rate, in the unit of bit/s. */
-    uint32_t u32AudioChannelCnt;
-    uint32_t u32SampleRate;           /**< the sample rate of the audio stream */
-    int32_t s32UsedAudioStreamIndex; /**< the index of the audio stream. one file may have many audio streams */
-    uint32_t u32Width;            /**< The height of the media file's resolution */
-    uint32_t u32Height;           /**< The width of the media file's resolution */
-    CodecFormat enVideoType;
-    CodecFormat enAudioType;
-} FormatFileInfo;
-
 #ifdef __cplusplus
 #if __cplusplus
 }

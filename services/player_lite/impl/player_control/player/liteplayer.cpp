@@ -42,6 +42,7 @@ const uint32_t DECODER_DEFAULT_HEIGHT = 1080;
 const uint32_t QUEUE_BUFFER_FULL_SLEEP_TIME_US = 5000u;
 const uint32_t NO_DATA_READ_SLEEP_TIME_US = 5000u;
 const uint32_t MAX_EVENT_MESSAGE_NUM = 128;
+const uint32_t MAX_AUDIO_SEND_FRAME_FULL_NUM = 10;
 
 struct CodecFormatAndMimePair {
     CodecFormat format;
@@ -133,9 +134,9 @@ static void CondTimeWait(pthread_cond_t &cond, pthread_mutex_t &mutex, uint32_t 
 static void GetCurVideoSolution(FormatFileInfo &info, uint32_t &width, uint32_t &height)
 {
     for (int i = 0; i < HI_DEMUXER_RESOLUTION_CNT; i++) {
-        if (info.stSteamResolution[i].s32VideoStreamIndex == info.s32UsedVideoStreamIndex) {
-            width = info.stSteamResolution[i].u32Width;
-            height = info.stSteamResolution[i].u32Height;
+        if (info.stStreamResolution[i].s32VideoStreamIndex == info.s32UsedVideoStreamIndex) {
+            width = info.stStreamResolution[i].u32Width;
+            height = info.stStreamResolution[i].u32Height;
             break;
         }
     }
@@ -151,7 +152,8 @@ PlayerControl::PlayerControl() : stateMachine_(nullptr), observer_(nullptr), isI
     schThreadExit_(false), loop_(false), hasRenderAudioEos_(false), hasRenderVideoEos_(false), renderSleepTime_(0),
     leftVolume_(-1.0f), rightVolume_(-1.0f), schProcess_(0), seekToTimeMs_(-1), firstAudioFrameAfterSeek_(false),
     firstVideoFrameAfterSeek_(false), sourceType_(SOURCE_TYPE_BUT), fd_(-1), playerSource_(nullptr),
-    sinkManager_(nullptr), audioDecoder_(nullptr), videoDecoder_(nullptr), audioStreamType_(0)
+    sinkManager_(nullptr), audioDecoder_(nullptr), videoDecoder_(nullptr), audioStreamType_(0), continuousAudFull_(0),
+    isPaused_(false)
 {
     eventCallback_.player = nullptr;
     eventCallback_.callbackFun = nullptr;
@@ -343,9 +345,15 @@ int32_t PlayerControl::Prepare()
 int32_t PlayerControl::Play()
 {
     CHECK_NULL_RETURN(stateMachine_, HI_ERR_PLAYERCONTROL_NULL_PTR, "stateMachine_ nullptr");
+    isPaused_ = false;
     int32_t ret = stateMachine_->Send(PLAYERCONTROL_MSG_PLAY);
     CHECK_FAILED_PRINT(ret, HI_SUCCESS, "play failed");
     return ret;
+}
+
+bool PlayerControl::IsPaused(void)
+{
+    return isPaused_;
 }
 
 int32_t PlayerControl::SetVolume(VolumeAttr &volumeAttr)
@@ -796,20 +804,20 @@ void PlayerControl::DestroyDecoder()
 
 void PlayerControl::StopSinkAndDecoder()
 {
-    PlayerBufferInfo outInfo;
+    OutputInfo outInfo;
 
     if (sinkManager_ != nullptr) {
         sinkManager_->Stop();
     }
     if (audioDecoder_ != nullptr && sinkManager_ != nullptr) {
         while (sinkManager_->DequeReleaseFrame(true, outInfo) == 0) {
-            audioDecoder_->QueueOutputBuffer((CodecBuffer *)&outInfo, GET_BUFFER_TIMEOUT_MS);
+            audioDecoder_->QueueOutputBuffer(outInfo, GET_BUFFER_TIMEOUT_MS);
         }
         audioDecoder_->StopDec();
     }
     if (videoDecoder_ != nullptr && sinkManager_ != nullptr) {
         while (sinkManager_->DequeReleaseFrame(false, outInfo) == 0) {
-            videoDecoder_->QueueOutputBuffer((CodecBuffer *)&outInfo, GET_BUFFER_TIMEOUT_MS);
+            videoDecoder_->QueueOutputBuffer(outInfo, GET_BUFFER_TIMEOUT_MS);
         }
         videoDecoder_->StopDec();
     }
@@ -909,11 +917,11 @@ int32_t PlayerControl::GetVideoResolution(int32_t streamIdx, StreamResolution &r
     }
 
     for (uint32_t i = 0; i < HI_DEMUXER_RESOLUTION_CNT; i++) {
-        if (fmtFileInfo_.stSteamResolution[i].s32VideoStreamIndex == streamIdx) {
-            resolution.enVideoType = fmtFileInfo_.stSteamResolution[i].enVideoType;
-            resolution.s32VideoStreamIndex = fmtFileInfo_.stSteamResolution[i].s32VideoStreamIndex;
-            resolution.u32Width = fmtFileInfo_.stSteamResolution[i].u32Width;
-            resolution.u32Height = fmtFileInfo_.stSteamResolution[i].u32Height;
+        if (fmtFileInfo_.stStreamResolution[i].s32VideoStreamIndex == streamIdx) {
+            resolution.enVideoType = fmtFileInfo_.stStreamResolution[i].enVideoType;
+            resolution.s32VideoStreamIndex = fmtFileInfo_.stStreamResolution[i].s32VideoStreamIndex;
+            resolution.u32Width = fmtFileInfo_.stStreamResolution[i].u32Width;
+            resolution.u32Height = fmtFileInfo_.stStreamResolution[i].u32Height;
             return HI_SUCCESS;
         }
     }
@@ -979,19 +987,23 @@ void PlayerControl::ReleaseADecoderOutputFrame(void)
         return;
     }
     while (true) {
-        PlayerBufferInfo outInfo;
+        OutputInfo outInfo;
         if (sinkManager_->DequeReleaseFrame(true, outInfo) != 0) {
             break;
         }
-        audioDecoder_->QueueOutputBuffer((CodecBuffer *)&outInfo, GET_BUFFER_TIMEOUT_MS);
+        audioDecoder_->QueueOutputBuffer(outInfo, GET_BUFFER_TIMEOUT_MS);
     }
 }
 
-static void InitOutputBuffer(CodecBuffer &outInfo, CodecType type)
+static void InitOutputBuffer(OutputInfo &outInfo, CodecType type)
 {
     outInfo.bufferCnt = 0;
+    outInfo.buffers = nullptr;
     outInfo.timeStamp = -1;
+    outInfo.sequence = 0;
     outInfo.flag = 0;
+    outInfo.type = type;
+    outInfo.vendorPrivate = nullptr;
 }
 
 void PlayerControl::RenderAudioFrame(void)
@@ -1000,15 +1012,15 @@ void PlayerControl::RenderAudioFrame(void)
         return;
     }
 
-    PlayerBufferInfo outInfo;
-    int ret = audioDecoder_->DequeueOutputBuffer((CodecBuffer *)&outInfo, GET_BUFFER_TIMEOUT_MS);
+    OutputInfo outInfo;
+    int ret = audioDecoder_->DequeueOutputBuffer(outInfo, GET_BUFFER_TIMEOUT_MS);
     if (ret != 0) {
-        InitOutputBuffer(outInfo.info, AUDIO_DECODER);
+        InitOutputBuffer(outInfo, AUDIO_DECODER);
         if (ret == CODEC_RECEIVE_EOS && strmReadEnd_) {
             sinkManager_->RenderEos(true);  /* all frame have been send to audio sink */
         }
     }
-    ret = sinkManager_->RenderFrame(outInfo, AUDIO_DECODER);
+    ret = sinkManager_->RenderFrame(outInfo);
     if (ret == SINK_RENDER_FULL || ret == SINK_RENDER_DELAY) {
         renderSleepTime_ = RENDER_FULL_SLEEP_TIME_US;
     } else if (ret == SINK_QUE_EMPTY) {
@@ -1022,6 +1034,9 @@ void PlayerControl::RenderAudioFrame(void)
         if (IsPlayEos() == true) {
             isPlayEnd_ = true;
         }
+    } else if (ret == SINK_RENDER_PAUSED) {
+        MEDIA_INFO_LOG("audio sink render paused, pause player");
+        isPaused_ = true;
     }
 }
 
@@ -1031,11 +1046,11 @@ void PlayerControl::ReleaseVDecoderOutputFrame(void)
         return;
     }
     while (true) {
-        PlayerBufferInfo outInfo;
+        OutputInfo outInfo;
         if (sinkManager_->DequeReleaseFrame(false, outInfo) != 0) {
             break;
         }
-        videoDecoder_->QueueOutputBuffer((CodecBuffer *)&outInfo, GET_BUFFER_TIMEOUT_MS);
+        videoDecoder_->QueueOutputBuffer(outInfo, GET_BUFFER_TIMEOUT_MS);
     }
 }
 
@@ -1045,17 +1060,16 @@ void PlayerControl::RenderVideoFrame(void)
         return;
     }
 
-    PlayerBufferInfo outInfo;
-    outInfo.info.bufferCnt = 1;
-    int ret = videoDecoder_->DequeueOutputBuffer((CodecBuffer *)&outInfo, GET_BUFFER_TIMEOUT_MS);
+    OutputInfo outInfo;
+    int ret = videoDecoder_->DequeueOutputBuffer(outInfo, GET_BUFFER_TIMEOUT_MS);
     if (ret != 0) {
-        InitOutputBuffer(outInfo.info, VIDEO_DECODER);
+        InitOutputBuffer(outInfo, VIDEO_DECODER);
         if (ret == CODEC_RECEIVE_EOS) {
             sinkManager_->RenderEos(false); /* all frame have been send to video sink */
         }
     }
 
-    ret = sinkManager_->RenderFrame(outInfo, VIDEO_DECODER);
+    ret = sinkManager_->RenderFrame(outInfo);
     if (ret == SINK_RENDER_FULL || ret == SINK_RENDER_DELAY) {
         renderSleepTime_ = RENDER_FULL_SLEEP_TIME_US;
     } else if (ret == SINK_QUE_EMPTY) {
@@ -1111,6 +1125,9 @@ void *PlayerControl::DataSchProcess(void *priv)
         pthread_mutex_unlock(&play->schMutex_);
         play->EventQueueProcess();
         play->ReortRenderPosition();
+        if (play->isPaused_) {
+            play->Pause();
+        }
         if (play->isPlayEnd_) {
             play->DealPlayEnd();
             play->isPlayEnd_ = false;
@@ -1225,75 +1242,87 @@ inline static bool IsValidPacket(FormatFrame &packet)
 
 void PlayerControl::PushPacketToADecoder(void)
 {
+    InputInfo inputData;
+    CodecBufferInfo inBufInfo;
     if (audioDecoder_ == nullptr) {
         return;
     }
-    PlayerBufferInfo inputData = {};
-    CodecBufferInfo inBufInfo;
+    inputData.bufferCnt = 0;
+    inputData.buffers = nullptr;
+    inputData.pts = 0;
+    inputData.flag = 0;
     if (memset_s(&inBufInfo, sizeof(inBufInfo), 0, sizeof(CodecBufferInfo)) != EOK) {
         return;
     }
-
-    inBufInfo.type = BUFFER_TYPE_VIRTUAL;
-    inBufInfo.buf = (intptr_t)formatPacket_.data;
-    inBufInfo.length = formatPacket_.len;
-    inputData.info.bufferCnt = 1;
-    inputData.info.buffer[0] = inBufInfo;
-    inputData.info.timeStamp = formatPacket_.timestampUs;
-    inputData.info.flag = 0;
-
-    int32_t ret = audioDecoder_->QueueInputBuffer((CodecBuffer *)&inputData, GET_BUFFER_TIMEOUT_MS);
-    if (ret == CODEC_ERR_UNKOWN) { // CODEC_ERR_STREAM_BUF_FULL
-        renderSleepTime_ = QUEUE_BUFFER_FULL_SLEEP_TIME_US;
-        return;
-    }
-    PlayerBufferInfo outData;
-    ret = audioDecoder_->DequeInputBuffer((CodecBuffer *)&outData, GET_BUFFER_TIMEOUT_MS);
+    int32_t ret = audioDecoder_->DequeInputBuffer(inputData, GET_BUFFER_TIMEOUT_MS);
     if (ret != 0) {
-        MEDIA_DEBUG_LOG("audio DequeInputBuffer failed");
         return;
     }
+    inBufInfo.addr = formatPacket_.data;
+    inBufInfo.length = formatPacket_.len;
+    inputData.bufferCnt = 1;
+    inputData.buffers = &inBufInfo;
+    inputData.pts = formatPacket_.timestampUs;
+    inputData.flag = 0;
+    ret = audioDecoder_->QueueInputBuffer(inputData, GET_BUFFER_TIMEOUT_MS);
+    if (ret == CODEC_ERR_STREAM_BUF_FULL) {
+        continuousAudFull_++;
+        if (continuousAudFull_ == MAX_AUDIO_SEND_FRAME_FULL_NUM) {
+            MEDIA_INFO_LOG("adec continue full reach to max num %d \n", MAX_AUDIO_SEND_FRAME_FULL_NUM);
+            continuousAudFull_ = 0;
+            ClearCachePacket();
+        } else {
+            renderSleepTime_ = QUEUE_BUFFER_FULL_SLEEP_TIME_US;
+        }
+        return;
+    }
+    continuousAudFull_ = 0;
     if (firstAudioFrameAfterSeek_ && IsValidPacket(formatPacket_)) {
         firstAudioFrameAfterSeek_ = false;
-        MEDIA_INFO_LOG("push firstAudioFrameAfterSeek_ success, pts:%lld", inputData.info.timeStamp);
+        MEDIA_INFO_LOG("push firstAudioFrameAfterSeek_ success, pts:%lld", inputData.pts);
     }
     if (formatPacket_.data != nullptr || formatPacket_.len != 0) {
         lastSendAdecPts_ = formatPacket_.timestampUs;
     }
     ClearCachePacket();
+#ifdef ENABLE_DFX
+    MEDIA_DFX_LOG("send frame data success, dataSize = %d", inBufInfo.length);
+#endif
 }
 
 void PlayerControl::PushPacketToVDecoder(void)
 {
+    InputInfo inputData;
+    CodecBufferInfo inBufInfo;
     if (videoDecoder_ == nullptr) {
         return;
     }
-    PlayerBufferInfo inputData = {};
-    CodecBufferInfo inBufInfo;
+    inputData.bufferCnt = 0;
+    inputData.buffers = nullptr;
+    inputData.pts = 0;
+    inputData.flag = 0;
     if (memset_s(&inBufInfo, sizeof(inBufInfo), 0, sizeof(CodecBufferInfo)) != EOK) {
         return;
     }
-    inBufInfo.type = BUFFER_TYPE_VIRTUAL;
-    inBufInfo.buf = (intptr_t)formatPacket_.data;
-    inBufInfo.length = formatPacket_.len;
-    inputData.info.bufferCnt = 1;
-    inputData.info.buffer[0] = inBufInfo;
-    inputData.info.timeStamp = formatPacket_.timestampUs;
-    inputData.info.flag = 0;
-    int32_t ret = videoDecoder_->QueueInputBuffer((CodecBuffer *)&inputData, GET_BUFFER_TIMEOUT_MS);
-    if (ret == CODEC_ERR_UNKOWN) { // CODEC_ERR_STREAM_BUF_FULL
-        renderSleepTime_ = QUEUE_BUFFER_FULL_SLEEP_TIME_US;
+    int32_t ret = videoDecoder_->DequeInputBuffer(inputData, GET_BUFFER_TIMEOUT_MS);
+    if (ret != 0) {
         return;
     }
-    PlayerBufferInfo outData;
-    ret = videoDecoder_->DequeInputBuffer((CodecBuffer *)&outData, GET_BUFFER_TIMEOUT_MS);
-    if (ret != 0) {
-        MEDIA_DEBUG_LOG("video DequeInputBuffer failed");
+    inBufInfo.addr = formatPacket_.data;
+    inBufInfo.length = formatPacket_.len;
+    inputData.bufferCnt = 1;
+    inputData.buffers = &inBufInfo;
+    inputData.pts = formatPacket_.timestampUs;
+    inputData.flag = 0;
+    ret = videoDecoder_->QueueInputBuffer(inputData, GET_BUFFER_TIMEOUT_MS);
+    if (ret == CODEC_ERR_STREAM_BUF_FULL) {
+        renderSleepTime_ = QUEUE_BUFFER_FULL_SLEEP_TIME_US;
         return;
     }
     if (firstVideoFrameAfterSeek_ && IsValidPacket(formatPacket_)) {
         firstVideoFrameAfterSeek_ = false;
-        MEDIA_INFO_LOG("push firstVideoFrameAfterSeek_ success, pts:%lld", inputData.info.timeStamp);
+        MEDIA_INFO_LOG("push firstVideoFrameAfterSeek_ success, pts:%lld", inputData.pts);
+        EventCallback(PLAYERCONTROL_FIRST_VIDEO_FRAME, reinterpret_cast<void *>(&inputData.pts));
     }
     if (formatPacket_.data != nullptr && formatPacket_.len != 0) {
         lastSendVdecPts_ = formatPacket_.timestampUs;
@@ -1505,12 +1534,18 @@ int32_t PlayerControl::DoGetFileInfo(FormatFileInfo &fileInfo)
 int32_t PlayerControl::DoSetMedia(PlayerControlStreamAttr &mediaAttr)
 {
     CHECK_NULL_RETURN(playerSource_, HI_ERR_PLAYERCONTROL_NULL_PTR, "playerSource_ nullptr");
-    int32_t ret = playerSource_->SelectTrack(0, mediaAttr.s32VidStreamId);
-    CHECK_FAILED_RETURN(ret, 0, HI_ERR_PLAYERCONTROL_DEMUX_ERROR, "SelectTrack failed");
-    ret = playerSource_->SelectTrack(0, mediaAttr.s32AudStreamId);
-    CHECK_FAILED_RETURN(ret, 0, HI_ERR_PLAYERCONTROL_DEMUX_ERROR, "SelectTrack failed");
-    fmtFileInfo_.s32UsedVideoStreamIndex = mediaAttr.s32VidStreamId;
-    fmtFileInfo_.s32UsedAudioStreamIndex = mediaAttr.s32AudStreamId;
+    int32_t ret = HI_SUCCESS;
+    if (mediaAttr.s32VidStreamId != -1) {
+        ret = playerSource_->SelectTrack(0, mediaAttr.s32VidStreamId);
+        CHECK_FAILED_RETURN(ret, 0, HI_ERR_PLAYERCONTROL_DEMUX_ERROR, "SelectTrack failed");
+        fmtFileInfo_.s32UsedVideoStreamIndex = mediaAttr.s32VidStreamId;
+    }
+    if (mediaAttr.s32AudStreamId != -1) {
+        ret = playerSource_->SelectTrack(0, mediaAttr.s32AudStreamId);
+        CHECK_FAILED_RETURN(ret, 0, HI_ERR_PLAYERCONTROL_DEMUX_ERROR, "SelectTrack failed");
+        fmtFileInfo_.s32UsedAudioStreamIndex = mediaAttr.s32AudStreamId;
+    }
+
     return HI_SUCCESS;
 }
 
@@ -2064,6 +2099,14 @@ int32_t PlayerControl::DoSetAudioStreamType(int32_t type)
     audioStreamType_ = type;
     if (sinkManager_ != nullptr) {
         sinkManager_->SetAudioStreamType(type);
+    }
+    return 0;
+}
+
+int32_t PlayerControl::SetLayerPriority(uint32_t priority)
+{
+    if (sinkManager_ != nullptr) {
+        sinkManager_->SetParam(LAYER_PRIORITYS, DATA_TYPE_U32, &priority);
     }
     return 0;
 }

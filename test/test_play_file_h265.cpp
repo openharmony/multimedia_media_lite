@@ -24,6 +24,9 @@
 
 using namespace std;
 
+const int32_t DEFAULT_REGION_WIDTH = 480;
+const int32_t DEFAULT_REGION_HEIGHT = 480;
+
 void PlayManager::Display(CODEC_HANDLETYPE decoderHdl)
 {
     OutputInfo outInfo = {};
@@ -55,6 +58,7 @@ void PlayManager::Display(CODEC_HANDLETYPE decoderHdl)
 
 PlayManager::PlayManager()
 {
+    layerId = 0;
     InitVideoOutput();
 }
 
@@ -65,22 +69,39 @@ PlayManager::~PlayManager()
 
 int32_t PlayManager::InitVideoOutput()
 {
-    int32_t ret = HalPlayerSysInit();
-    if (ret != 0) {
-        DEMO_LOG("hal system init failed.");
-        return DEMO_ERR;
-    }
+    (void)LayerInitialize(&layerFuncs);
 
-    ret = HalPlayerVoInit(&voHdl_);
-    if (ret != 0) {
-        DEMO_LOG("video output init failed.");
-        return DEMO_ERR;
-    }
+    int32_t lastConfigRegionX = 0;
+    int32_t lastConfigRegionY = 0;
+    int32_t lastConfigRegionW = DEFAULT_REGION_WIDTH;
+    int32_t lastConfigRegionH = DEFAULT_REGION_HEIGHT;
+    IRect attr;
+    uint32_t devId = 0;
+    int32_t right = lastConfigRegionX + lastConfigRegionW - 1;
+    int32_t botttom = lastConfigRegionY + lastConfigRegionH - 1;
+    /* Make sure the coordinates are even */
+    int32_t x = lastConfigRegionX - lastConfigRegionX % 0x2;
+    int32_t y = lastConfigRegionY - lastConfigRegionY % 0x2;
+    int32_t w = right - x + 1;
+    int32_t h = botttom - y + 1;
+    int posMargin = 2;
+    w = w + w % posMargin;
+    h = h + h % posMargin;
+    attr.x = x;
+    attr.y = y;
+    attr.w = w;
+    attr.h = h;
 
-    ret = HalStartVideoOutput(voHdl_);
-    if (ret != 0) {
-        DEMO_LOG("video output start failed.");
-        return DEMO_ERR;
+    LayerInfo lInfo;
+    lInfo.width = w;
+    lInfo.height = h;
+    lInfo.type = LAYER_TYPE_OVERLAY;
+    int align = 8;
+    lInfo.bpp = align;
+    lInfo.pixFormat = PIXEL_FMT_YCRCB_420_SP;
+    if (layerFuncs != nullptr) {
+        layerFuncs->CreateLayer(devId, &lInfo, &layerId);
+        layerFuncs->SetLayerSize(devId, layerId, &attr);
     }
 
     return DEMO_OK;
@@ -88,35 +109,19 @@ int32_t PlayManager::InitVideoOutput()
 
 int32_t PlayManager::DeinitVideoOutput()
 {
-    int32_t ret = HalStopVideoOutput(voHdl_);
-    if (ret != 0) {
-        DEMO_LOG("video output start failed.");
-        return DEMO_ERR;
+    if (layerFuncs != nullptr) {
+        layerFuncs->CloseLayer(0, layerId);
     }
-
-    HalPlayerVoDeinit(voHdl_);
 
     return DEMO_OK;
 }
 
 int32_t PlayManager::Write2VideoDevice(OutputInfo &outputInfo)
 {
-    int32_t x = 200;
-    int32_t y = 200;
-    int32_t w = 960;
-    int32_t h = 540;
-
-    HalVideoOutputAttr voAttr = {x, y, w, h, 0};
-    int32_t ret = HalConfigVideoOutput(voHdl_, voAttr);
-    if (ret != 0) {
-        DEMO_LOG("HalConfigVideoOutput failed.");
-        return DEMO_ERR;
-    }
-
-    ret = HalWriteVo(voHdl_, outputInfo.vendorPrivate);
-    if (ret != 0) {
-        DEMO_LOG("HalWriteVo failed.");
-        return DEMO_ERR;
+    if (layerFuncs != nullptr) {
+        LayerBuffer layerBuf;
+        layerBuf.data.virAddr = outputInfo.vendorPrivate;
+        layerFuncs->Flush(0, layerId, &layerBuf);
     }
 
     return DEMO_OK;
@@ -136,7 +141,7 @@ int32_t DecodeManager::DecoderCreate()
 {
     int index = 0;
     Param param[PARAM_MAX_NUM];
-    AvCodecMime mime = MEDIA_MIMETYPE_VIDEO_HEVC;
+    AvCodecMime mime = MEDIA_MIMETYPE_VIDEO_AVC;
     param[index].key = KEY_MIMETYPE;
     param[index].val = (void *)&mime;
     param[index].size = sizeof(AvCodecMime);
@@ -194,9 +199,9 @@ int32_t DecodeManager::DecodePack(uint8_t *addr, uint32_t len, uint64_t timeStam
     InputInfo inputData = {};
     CodecBufferInfo inBufInfo = {};
     uint32_t timeoutMs = 100; // 100ms timeout
-    int32_t ret = CodecDequeInput(decoderHdl_, timeoutMs, &inputData);
+    int32_t ret = CodecDequeueInput(decoderHdl_, timeoutMs, &inputData);
     if (ret != 0) {
-        DEMO_LOG("CodecDequeInput error.(ret=%d)", ret);
+        DEMO_LOG("CodecDequeueInput error.(ret=%d)", ret);
         return DEMO_ERR;
     }
 
@@ -324,8 +329,7 @@ int main()
     uint64_t timeStamp = 0;
     int32_t bufLen = 0;
     while (file) {
-        bufLen += ReadH265File(file, static_cast<char *>(buf + bufLen), bufSize - bufLen);
-
+        bufLen += ReadH265File(file, reinterpret_cast<char *>(buf + bufLen), bufSize - bufLen);
         int32_t frameSize;
         int32_t codeSize;
         int32_t offset = 0;
@@ -346,6 +350,7 @@ int main()
             DEMO_LOG("Decode one frame failed.");
             continue;
         }
+        this_thread::sleep_for(chrono::microseconds(timeStep));
     }
     while (playMng.GetCnt() != decodeMng.GetCnt()) {
         this_thread::sleep_for(chrono::seconds(1)); // sleep 1s

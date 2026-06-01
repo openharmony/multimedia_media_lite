@@ -24,11 +24,6 @@ const int CODEC_SUCCESS = 0;
 const int CODEC_FAILURE = -1;
 
 typedef struct {
-    CodecBuffer info;
-    CodecBufferInfo buffer;
-} PlayerBufferInfo;
-
-typedef struct {
     AvCodecMime mime;
     uint32_t maxWidth;
     uint32_t maxHeight;
@@ -64,7 +59,7 @@ public:
 
     int32_t DestroyHandle();
 
-    int32_t SetPortBufferMode(DirectionType direct, AllocateBufferMode mode, BufferType type);
+    int32_t SetPortBufferMode(DirectionType type, BufferMode mode);
 
     int32_t SetMetadata(const Param *params, int paramCnt);
 
@@ -76,13 +71,13 @@ public:
 
     int32_t FlushDec();
 
-    int32_t QueueInputBuffer(CodecBuffer* inputData, uint32_t timeoutMs);
+    int32_t QueueInputBuffer(InputInfo &inputData, uint32_t timeoutMs);
 
-    int32_t DequeInputBuffer(CodecBuffer* inputData, uint32_t timeoutMs);
+    int32_t DequeInputBuffer(InputInfo &inputData, uint32_t timeoutMs);
 
-    int32_t QueueOutputBuffer(CodecBuffer* outInfo, uint32_t timeoutMs);
+    int32_t QueueOutputBuffer(OutputInfo &outInfo, uint32_t timeoutMs);
 
-    int32_t DequeueOutputBuffer(CodecBuffer* outInfo, uint32_t timeoutMs);
+    int32_t DequeueOutputBuffer(OutputInfo &outInfo, uint32_t timeoutMs);
 
     int32_t SetCallback(CodecCallback &cb, UINTPTR instance);
 

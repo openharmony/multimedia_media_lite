@@ -622,6 +622,10 @@ int32_t RecorderImpl::SetOutputFormat(OutputFormatType format)
             outPutFormat = OUTPUT_FORMAT_MPEG_4;
             MEDIA_WARNING_LOG("format: %d use default OUTPUT_FORMAT_MPEG_4", format);
             break;
+        case FORMAT_M4A:
+            outPutFormat = OUTPUT_FORMAT_M4A;
+            MEDIA_WARNING_LOG("format: %d use default OUTPUT_FORMAT_M4A", format);
+            break;
         default:
             MEDIA_ERR_LOG("invalid OutputFormatType: %d ", format);
             return ERR_INVALID_PARAM;

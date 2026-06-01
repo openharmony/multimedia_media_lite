@@ -29,6 +29,7 @@ namespace Media {
 #define MS_SCALE   1000
 #define ENABLE_RENDER "enable-render"
 #define MAX_PIPELINE_SINK_NUM  2
+#define LAYER_PRIORITYS "layer-priority"
 
 typedef enum {
     SINK_STATE_IDLE,
@@ -108,6 +109,7 @@ typedef enum {
     SINK_RENDER_DELAY,
     SINK_RENDER_ERROR,
     SINK_QUE_EMPTY,
+    SINK_RENDER_PAUSED,
     SINK_RENDER_EOS,
     SINK_INVALID_OP
 } SinkRetCode;

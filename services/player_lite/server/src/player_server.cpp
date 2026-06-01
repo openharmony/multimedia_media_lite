@@ -30,8 +30,8 @@ extern "C"
 #include <sys/prctl.h>
 #include "securec.h"
 }
-
-#define READ_LEN  (1024)
+constexpr int32_t SURFACE_SIZE = 4096;
+constexpr int32_t SURFACE_QUEUE_SIZE = 10;
 
 typedef struct TagIdleBuffer {
     size_t idx;
@@ -302,7 +302,8 @@ void PlayerServer::SetStreamSource(IpcIo *reply)
     if (ret == 0) {
         Surface* surface = Surface::CreateSurface();
         surface->SetUsage(BUFFER_CONSUMER_USAGE_HARDWARE);
-        surface->SetSize(READ_LEN);
+        surface->SetQueueSize(SURFACE_QUEUE_SIZE);
+        surface->SetSize(SURFACE_SIZE);
         if (sid_ == nullptr) {
             sid_ = new SvcIdentity();
         }
@@ -645,7 +646,7 @@ void PlayerServer::SetParameter(IpcIo *req, IpcIo *reply)
     int32_t count;
     ReadInt32(req, &count);
     for (int32_t i = 0; i < count; i++) {
-        uint32_t size;
+        size_t size;
         char *key = (char *)ReadString(req, &size);
         FormatDataType type;
         ReadInt32(req, (int32_t *)&type);

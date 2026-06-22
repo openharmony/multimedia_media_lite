@@ -53,7 +53,7 @@ executable("media_server") {
     "-laudio_hw",
     "-lformat_hw",
     "-lhdi_camera",
-    "-ldisplay_layer",
+    "-l${media_lite_display_library}",
     "-lpthread",
     "-Wl,-rpath-link=$ohos_root_path/$root_out_dir",
   ]
@@ -76,23 +76,14 @@ executable("media_server") {
 }
 
 copy("camera_config") {
-  if (board_name == "hispark_aifly" ||board_name == "hispark_aiflylite") {
-    sources = [ "cameradev_os08a20_928.ini" ]
-  } else if (board_name == "hi3516dv300" || board_name == "hispark_taurus") {
-    sources = [ "cameradev_imx335_5M.ini" ]
-  } else if ((board_name == "hi3518ev300" || board_name == "hispark_aries") &&
-              ohos_build_compiler == "clang") {
-    sources = [ "cameradev_jxf23.ini" ]
-  } else {
-    sources = [ "cameradev_imx307.ini" ]
-  }
+  sources = [ media_lite_camera_config_file ]
   outputs = [ "$root_out_dir/data/cameradev00.ini" ]
 }
-if (board_name == "hi3516dv300" || board_name == "hispark_taurus") {
- copy("camera_config01") {
-   sources = [ "cameradev_imx335_4M.ini" ]
-   outputs = [ "$root_out_dir/data/cameradev01.ini" ]
- }
+if (media_lite_camera_config_file_01 != "") {
+  copy("camera_config01") {
+    sources = [ media_lite_camera_config_file_01 ]
+    outputs = [ "$root_out_dir/data/cameradev01.ini" ]
+  }
 }
 copy("codec_config") {
   sources = [ "codec_config.ini" ]

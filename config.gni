@@ -18,4 +18,24 @@ declare_args() {
   } else {
     enable_multimedia_camera_lite = false
   }
+
+  # Board-specific camera config files and display libraries.
+  # These defaults can be overridden via product config.json or gn args.
+  media_lite_camera_config_file = "cameradev_imx307.ini"
+  media_lite_camera_config_file_01 = ""
+  media_lite_display_library = "hdi_videodisplayer"
+}
+
+# Board-specific mappings. Kept in config.gni rather than BUILD.gn
+# to keep build targets clean. When adding a new board, add its
+# mapping here instead of modifying BUILD.gn targets.
+if (board_name == "hispark_aifly" || board_name == "hispark_aiflylite") {
+  media_lite_camera_config_file = "cameradev_os08a20_928.ini"
+  media_lite_display_library = "display_layer"
+} else if (board_name == "hi3516dv300" || board_name == "hispark_taurus") {
+  media_lite_camera_config_file = "cameradev_imx335_5M.ini"
+  media_lite_camera_config_file_01 = "cameradev_imx335_4M.ini"
+} else if ((board_name == "hi3518ev300" || board_name == "hispark_aries") &&
+            ohos_build_compiler == "clang") {
+  media_lite_camera_config_file = "cameradev_jxf23.ini"
 }

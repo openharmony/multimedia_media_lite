@@ -30,6 +30,14 @@ constexpr uint32_t PARAM_MAX_NUM = 10;
 constexpr int32_t DEMO_OK = 0;
 constexpr int32_t DEMO_ERR = -1;
 
+struct DecoderParamAttr {
+    uint32_t width;
+    uint32_t height;
+    uint32_t bufSize;
+    AvCodecMime mime;
+    CodecType domain;
+};
+
 class PlayManager {
 public:
     PlayManager();
@@ -70,6 +78,7 @@ private:
 
     int32_t DecoderCreate();
     void DecoderDestroy();
+    int32_t FillDecoderParams(Param *param, int32_t maxNum, DecoderParamAttr *attr);
 };
 
 #endif // TEST_PLAY_FILE_H265_H

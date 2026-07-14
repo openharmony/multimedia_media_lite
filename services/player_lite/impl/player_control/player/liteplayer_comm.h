@@ -16,7 +16,11 @@
 #ifndef LITEPLAYER_COMM_H
 #define LITEPLAYER_COMM_H
 
+#include <pthread.h>
+#include <string>
 #include "player_define.h"
+#include "hi_demuxer.h"
+#include "codec_type.h"
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -33,5 +37,18 @@ uint64_t PlayerControlGetCurRelativeTime();
 }
 #endif
 #endif /* End of #ifdef __cplusplus */
+
+#ifdef __cplusplus
+namespace OHOS {
+namespace Media {
+void CondTimeWait(pthread_cond_t &cond, pthread_mutex_t &mutex, uint32_t delayUs);
+void GetCurVideoSolution(FormatFileInfo &info, uint32_t &width, uint32_t &height);
+AvCodecMime TransformCodecFormatToAvCodecMime(CodecFormat format);
+std::string GetAudioNameByAvCodecMime(AvCodecMime mime);
+void InitOutputBuffer(OutputInfo &outInfo, CodecType type);
+bool IsValidPacket(FormatFrame &packet);
+}
+}
+#endif
 
 #endif  // LITEPLAYER_COMM_H

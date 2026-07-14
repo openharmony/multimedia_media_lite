@@ -85,6 +85,7 @@ public:
     int32_t OnSwitchTPlay2Play(void);
 
     void OnVideoEndOfStream(void);
+    void OnAudioEndOfStream(void);
     void StateChangeCallback(PlayerStatus state) override;
     int32_t SetAudioStreamType(int32_t type);
     int32_t SetLayerPriority(uint32_t priority);
@@ -169,12 +170,15 @@ private:
     static void *DataSchProcess(void *priv);
     void ReortRenderPosition(void);
     void PushPacketToADecoder(void);
+    void PushPacketToADecoderInner(void);
     void PushPacketToVDecoder(void);
+    void PushPacketToVDecoderInner(void);
     int32_t DoSeekIfNeed(void);
     void FlushDecoder(void);
     int32_t EnablePauseAfterPlay(bool pauseAfterPlay);
     void EventProcess(EventCbType event);
     void EventQueueProcess(void);
+    int32_t DoPlayFromPrepared(void);
 
 private:
     PlayerControlStateMachine *stateMachine_;

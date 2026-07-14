@@ -292,6 +292,7 @@ int32_t SinkManager::GetSpeed(float &speed, TplayDirect  &tplayDirect)
     return 0;
 }
 
+#ifdef MEDIA_INTERFACE_V1_0
 int32_t SinkManager::RenderFrame(OutputInfo &frame)
 {
     int ret;
@@ -305,6 +306,21 @@ int32_t SinkManager::RenderFrame(OutputInfo &frame)
     }
     return ret;
 }
+#else
+int32_t SinkManager::RenderFrame(OutputInfo &frame, CodecType type)
+{
+    int ret;
+    if (type == AUDIO_DECODER) {
+        ret = audioSinkInfo_[0].sink->RenderFrame(frame);
+    } else if (type == VIDEO_DECODER) {
+        ret = videoSinkInfo_[0].sink->RenderFrame(frame);
+    } else {
+        MEDIA_ERR_LOG("RenderFrame not support frame type: %d", type);
+        ret = -1;
+    }
+    return ret;
+}
+#endif
 
 void SinkManager::SetRenderMode(RenderMode mode)
 {

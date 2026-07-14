@@ -290,7 +290,11 @@ int32_t VideoSink::RegisterCallBack(PlayEventCallback &callback)
 void VideoSink::QueueRenderFrame(OutputInfo &frame, bool cacheQueue)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+#ifdef MEDIA_INTERFACE_V1_0
     if (frame.type != AUDIO_DECODER || frame.bufferCnt == 0) {
+#else
+    if (frame.bufferCnt == 0) {
+#endif
         return;
     }
     if (cacheQueue) {
@@ -304,7 +308,11 @@ int32_t VideoSink::GetRenderFrame(OutputInfo &renderFrame, OutputInfo &frame)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     int32_t ret = SINK_QUE_EMPTY;
+#ifdef MEDIA_INTERFACE_V1_0
     if (frame.type == VIDEO_DECODER && frame.bufferCnt != 0) {
+#else
+    if (frame.bufferCnt != 0) {
+#endif
         frameCacheQue_.push_back(frame);
     }
     if (frameCacheQue_.size() != 0) {
@@ -367,7 +375,11 @@ int32_t VideoSink::WriteToVideoDevice(OutputInfo &renderFrame)
 {
     if (layerFuncs_ != nullptr) {
         LayerBuffer layerBuf;
+#ifdef MEDIA_INTERFACE_V1_0
         layerBuf.data.virAddr = renderFrame.vendorPrivate;
+#else
+        layerBuf.data.virAddr =  (void *)renderFrame.buffers[0].addr;
+#endif
         layerFuncs_->Flush(0, layerId_, &layerBuf);
     }
     ReleaseQueHeadFrame();

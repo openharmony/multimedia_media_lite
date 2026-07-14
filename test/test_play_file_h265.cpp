@@ -26,6 +26,8 @@ using namespace std;
 
 const int32_t DEFAULT_REGION_WIDTH = 480;
 const int32_t DEFAULT_REGION_HEIGHT = 480;
+const uint32_t DEFAULT_DECODER_WIDTH = 1920;
+const uint32_t DEFAULT_DECODER_HEIGHT = 1080;
 
 void PlayManager::Display(CODEC_HANDLETYPE decoderHdl)
 {
@@ -137,35 +139,57 @@ DecodeManager::~DecodeManager()
     DecoderDestroy();
 }
 
-int32_t DecodeManager::DecoderCreate()
+int32_t DecodeManager::FillDecoderParams(Param *param, int32_t maxNum, DecoderParamAttr *attr)
 {
     int index = 0;
-    Param param[PARAM_MAX_NUM];
-    AvCodecMime mime = MEDIA_MIMETYPE_VIDEO_AVC;
+    if (param == nullptr || attr == nullptr || maxNum < PARAM_MAX_NUM) {
+        return DEMO_ERR;
+    }
     param[index].key = KEY_MIMETYPE;
-    param[index].val = (void *)&mime;
+    param[index].val = (void *)&attr->mime;
     param[index].size = sizeof(AvCodecMime);
     index++;
-    uint32_t width = 1920;
+#ifdef MEDIA_INTERFACE_V1_0
     param[index].key = KEY_WIDTH;
-    param[index].val = (void *)&width;
+#else
+    param[index].key = KEY_VIDEO_WIDTH;
+#endif
+    param[index].val = (void *)&attr->width;
     param[index].size = sizeof(uint32_t);
     index++;
-    uint32_t height = 1080;
+#ifdef MEDIA_INTERFACE_V1_0
     param[index].key = KEY_HEIGHT;
-    param[index].val = (void *)&height;
+#else
+    param[index].key = KEY_VIDEO_HEIGHT;
+#endif
+    param[index].val = (void *)&attr->height;
     param[index].size = sizeof(uint32_t);
     index++;
-    uint32_t bufSize = 0;
     param[index].key = KEY_BUFFERSIZE;
-    param[index].val = (void *)&bufSize;
+    param[index].val = (void *)&attr->bufSize;
     param[index].size = sizeof(uint32_t);
     index++;
-    CodecType domain = VIDEO_DECODER;
     param[index].key = KEY_CODEC_TYPE;
-    param[index].val = (void *)&domain;
+    param[index].val = (void *)&attr->domain;
     param[index].size = sizeof(CodecType);
     index++;
+    return index;
+}
+
+int32_t DecodeManager::DecoderCreate()
+{
+    Param param[PARAM_MAX_NUM];
+    DecoderParamAttr attr = {};
+    attr.width = DEFAULT_DECODER_WIDTH;
+    attr.height = DEFAULT_DECODER_HEIGHT;
+    attr.bufSize = 0;
+    attr.mime = MEDIA_MIMETYPE_VIDEO_AVC;
+    attr.domain = VIDEO_DECODER;
+    int32_t index = FillDecoderParams(param, PARAM_MAX_NUM, &attr);
+    if (index < 0) {
+        DEMO_LOG("Fill decoder params failed.");
+        return DEMO_ERR;
+    }
 
     int32_t ret = CodecInit();
     if (ret != 0) {

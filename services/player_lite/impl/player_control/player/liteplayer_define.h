@@ -117,6 +117,39 @@ enum PlayerTplaySeekOffset {
 #ifdef __cplusplus
 #if __cplusplus
 }
+
+namespace OHOS {
+namespace Media {
+template <typename T>
+inline bool CheckIsNull(const T &value, const char *printfString)
+{
+    if (value == nullptr) {
+        MEDIA_ERR_LOG("%s", (printfString != nullptr) ? printfString : " ");
+        return true;
+    }
+    return false;
+}
+
+template <typename T, typename U>
+inline bool CheckIsFailed(const T &value, const U &target, const char *printfString)
+{
+    if (value != target) {
+        MEDIA_ERR_LOG("%s", (printfString != nullptr) ? printfString : " ");
+        return true;
+    }
+    return false;
+}
+
+inline bool CheckStateSame(PlayerStatus srcState, PlayerStatus dstState)
+{
+    if (dstState == srcState) {
+        MEDIA_INFO_LOG("current play state already be %d", dstState);
+        return true;
+    }
+    return false;
+}
+}
+}
 #endif
 #endif /* End of #ifdef __cplusplus */
 

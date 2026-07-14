@@ -87,11 +87,20 @@ static bool ConvertVdecAttributToParams(AvAttribute &attr, Param *param,
     param[index].val = static_cast<void*>(&(attr.vdecAttr.mime));
     param[index].size = sizeof(attr.vdecAttr.mime);
     index++;
+#ifdef MEDIA_INTERFACE_V1_0
     param[index].key = KEY_WIDTH;
+#else
+    param[index].key = KEY_VIDEO_WIDTH;
+#endif
     param[index].val = static_cast<void*>(&(attr.vdecAttr.maxWidth));
     param[index].size = sizeof(attr.vdecAttr.maxWidth);
     index++;
+
+#ifdef MEDIA_INTERFACE_V1_0
     param[index].key = KEY_HEIGHT;
+#else
+    param[index].key = KEY_VIDEO_HEIGHT;
+#endif
     param[index].val = static_cast<void*>(&(attr.vdecAttr.maxHeight));
     param[index].size = sizeof(attr.vdecAttr.maxHeight);
     index++;
@@ -150,11 +159,34 @@ int32_t Decoder::CreateHandle(const std::string &name, AvAttribute &attr)
         MEDIA_ERR_LOG("convert fail");
     }
 
+#ifdef MEDIA_INTERFACE_V1_0
     int32_t ret = CodecCreate(name.c_str(), param, actualLen, &codecHandle_);
+    if (ret != CODEC_SUCCESS) {
+        MEDIA_ERR_LOG("CodecCreate failed ret=%d", ret);
+        return CODEC_FAILURE;
+    }
+#else
+    AvCodecMime mime = MEDIA_MIMETYPE_INVALID;
+    if (attr.type == AUDIO_DECODER) {
+        mime = attr.adecAttr.mime;
+    } else if (attr.type == VIDEO_DECODER) {
+        mime = attr.vdecAttr.mime;
+    } else {
+        MEDIA_ERR_LOG("not find CodecType");
+    }
+
+    int32_t ret = CodecCreateByType(attr.type, mime, &codecHandle_);
     if (ret != CODEC_SUCCESS) {
         MEDIA_ERR_LOG("CodecCreateByType failed ret=%d", ret);
         return CODEC_FAILURE;
     }
+
+    ret = CodecSetParameter(codecHandle_, param, actualLen);
+    if (ret != CODEC_SUCCESS) {
+        MEDIA_ERR_LOG("CodecSetParameter failed ret=%d", ret);
+        CodecDestroy(codecHandle_);
+    }
+#endif
     return CODEC_SUCCESS;
 }
 
@@ -210,7 +242,7 @@ int32_t Decoder::StopDec()
     if (ret != CODEC_SUCCESS) {
         return CODEC_FAILURE;
     }
-    return CODEC_SUCCESS; 
+    return CODEC_SUCCESS;
 }
 
 int32_t Decoder::FlushDec()
@@ -219,18 +251,26 @@ int32_t Decoder::FlushDec()
     if (ret != CODEC_SUCCESS) {
         return CODEC_FAILURE;
     }
-    return CODEC_SUCCESS;  
+    return CODEC_SUCCESS;
 }
 
 int32_t Decoder::QueueInputBuffer(InputInfo &inputData, uint32_t timeoutMs)
 {
+#ifdef MEDIA_INTERFACE_V1_0
     int32_t ret = CodecQueueInput(codecHandle_, &inputData, timeoutMs);
+#else
+    int32_t ret = CodecQueueInput(codecHandle_, &inputData, timeoutMs, 0);
+#endif
     return ret;
 }
 
 int32_t Decoder::DequeInputBuffer(InputInfo &inputData, uint32_t timeoutMs)
 {
+#ifdef MEDIA_INTERFACE_V1_0
     int32_t ret = CodecDequeueInput(codecHandle_, timeoutMs, &inputData);
+#else
+    int32_t ret = CodecDequeueInput(codecHandle_, timeoutMs, nullptr, &inputData);
+#endif
     if (ret != CODEC_SUCCESS) {
         return CODEC_FAILURE;
     }
@@ -249,7 +289,7 @@ int32_t Decoder::QueueOutputBuffer(OutputInfo &outInfo, uint32_t timeoutMs)
 int32_t Decoder::DequeueOutputBuffer(OutputInfo &outInfo, uint32_t timeoutMs)
 {
     int32_t ret = CodecDequeueOutput(codecHandle_, timeoutMs, nullptr, &outInfo);
-    
+
     return ret;
 }
 

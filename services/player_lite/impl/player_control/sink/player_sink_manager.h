@@ -68,7 +68,11 @@ public:
     int32_t Resume(void);
     int32_t SetSpeed(float speed, TplayDirect  tplayDirect);
     int32_t GetSpeed(float &speed, TplayDirect  &tplayDirect);
+#ifdef MEDIA_INTERFACE_V1_0
     int32_t RenderFrame(OutputInfo &frame);
+#else
+    int32_t RenderFrame(OutputInfo &frame, CodecType type);
+#endif
     int32_t SetVolume(float left, float right);
     int32_t GetVolume(float &left, float &right);
     int32_t SetParam(const char *key, dataType type, void* value);

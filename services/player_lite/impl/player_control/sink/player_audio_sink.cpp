@@ -227,9 +227,15 @@ void AudioSink::UpdateAudioPts(int64_t lastPts, int64_t &timestamp, OutputInfo &
 void AudioSink::QueueRenderFrame(const OutputInfo &frame, const bool cacheQueue)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+#ifdef MEDIA_INTERFACE_V1_0
     if (frame.type != AUDIO_DECODER || frame.bufferCnt == 0) {
         return;
     }
+#else
+    if (frame.bufferCnt == 0) {
+        return;
+    }
+#endif
     if (cacheQueue) {
         frameCacheQue_.push_back(frame);
     } else {
@@ -241,9 +247,15 @@ int32_t AudioSink::GetRenderFrame(OutputInfo &renderFrame, const OutputInfo &fra
 {
     std::lock_guard<std::mutex> lock(mutex_);
     int32_t ret = SINK_QUE_EMPTY;
+#ifdef MEDIA_INTERFACE_V1_0
     if (frame.type == AUDIO_DECODER &&  frame.bufferCnt != 0) {
         frameCacheQue_.push_back(frame);
     }
+#else
+    if (frame.bufferCnt != 0) {
+        frameCacheQue_.push_back(frame);
+    }
+#endif
     if (frameCacheQue_.size() != 0) {
         renderFrame = frameCacheQue_[0];
         ret = SINK_SUCCESS;

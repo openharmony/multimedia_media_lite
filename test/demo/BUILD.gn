@@ -78,10 +78,13 @@ executable("surface_demo") {
 }
 
 group("demo_group") {
-  deps = [
-      ":video_player_sample",
-      ":aac_play_sample",
-      ":surface_demo",
-      "plugin_sample:plugin_group",
-    ]
+  deps = []
+  if (defined(media_interface_upgrade)) {
+    deps += [
+        ":video_player_sample",
+        ":aac_play_sample",
+        ":surface_demo",
+        "plugin_sample:plugin_group",
+      ]
+  }
 }

@@ -59,13 +59,6 @@ int main()
     cout << "AudioCapturer server start" << endl;
     AudioCapturerServer::GetInstance()->AudioCapturerServerInit();
 #endif
-#ifdef ENABLE_DH
-    cout << "kvstore_data_server start." << endl;
-    KvStoreDataServer::GetInstance()->KvStoreDataServerInit();
-
-    cout << "DistributedHardwareServer start." << endl;
-    DistributedHardwareServer::GetInstance()->DistributedHardwareServerInit();
-#endif
     cout << "Media server initialize succeed." << endl;
 
     sigset_t signalSet;

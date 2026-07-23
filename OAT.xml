@@ -54,7 +54,7 @@
                 <policyitem type="license" name="LGPL" path=".*" desc="Dynamically linked by module X"/>
                 <!--policyitem type="copyright" name="xxx" path=".*" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="Developed by X Company"/-->
                 <policyitem type="copyright" name="Copyright (c) 2025 HiSilicon (Shanghai) Technologies Co., Ltd." path=".*" desc="HiSilicon copyright"/>
-                <policyitem type="copyright" name="Copyright (C) 2026 RKH Corp." path=".*" desc="HiSilicon copyright"/>
+                <policyitem type="copyright" name="Copyright (C) 2026 RKH Corp." path=".*" desc="RKH copyright"/>
             </policy>
         </policylist>
 

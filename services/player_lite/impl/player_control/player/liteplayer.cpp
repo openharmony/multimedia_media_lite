@@ -1389,7 +1389,7 @@ void PlayerControl::PushPacketToVDecoderInner(void)
         return;
     }
     InputInfo outData;
-    memset_s(&outData, sizeof(outData), 0, sizeof(OutputInfo));
+    memset_s(&outData, sizeof(outData), 0, sizeof(InputInfo));
     ret = videoDecoder_->DequeInputBuffer(outData, GET_BUFFER_TIMEOUT_MS);
     if (ret != 0) {
         MEDIA_DEBUG_LOG("video DequeInputBuffer failed");

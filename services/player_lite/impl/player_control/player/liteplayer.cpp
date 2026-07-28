@@ -1188,8 +1188,15 @@ int32_t PlayerControl::DoPlayFromPrepared(void)
     if (ret != 0) {
         MEDIA_ERR_LOG("pthread_create failed %d", ret);
         pthread_mutex_lock(&schMutex_);
-        schThreadExit_ = false;
+        schThreadExit_ = true;
+        paused_ = false;
         pthread_mutex_unlock(&schMutex_);
+        schProcess_ = 0;
+        StopSinkAndDecoder();
+        ClearCachePacket();
+        if (playerSource_ != nullptr) {
+            (void)playerSource_->Stop();
+        }
         return -1;
     }
     pthread_mutex_lock(&schMutex_);

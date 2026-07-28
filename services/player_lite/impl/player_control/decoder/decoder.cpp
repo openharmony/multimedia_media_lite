@@ -25,8 +25,8 @@ extern "C"
 namespace OHOS {
 namespace Media {
 const int PARAM_MAX_NUM = 30;
-const uint32_t DEFAULT_REF_FRAME_NUM = 5;
-const uint32_t DEFAULT_ADEC_CACHE_FRAME_NUM = 50;
+static uint32_t g_defaultRefFrameNum = 5;
+static uint32_t g_defaultAdecCacheFrameNum = 50;
 Decoder::Decoder()
     : codecHandle_(nullptr)
 {
@@ -63,7 +63,7 @@ static bool ConvertAdecAttributToParams(AvAttribute &attr, Param *param,
     index++;
 #ifdef MEDIA_INTERFACE_V1_0
     param[index].key = KEY_ADEC_CACHE_FRAME_NUM;
-    param[index].val = static_cast<void*>(const_cast<uint32_t*>(&(DEFAULT_ADEC_CACHE_FRAME_NUM)));
+    param[index].val = static_cast<void*>(&g_defaultAdecCacheFrameNum);
     param[index].size = sizeof(uint32_t);
     index++;
 #endif
@@ -120,7 +120,7 @@ static bool ConvertVdecAttributToParams(AvAttribute &attr, Param *param,
     index++;
 #ifdef MEDIA_INTERFACE_V1_0
     param[index].key = KEY_REF_FRAME_NUM;
-    param[index].val = static_cast<void*>(const_cast<uint32_t*>(&(DEFAULT_REF_FRAME_NUM)));
+    param[index].val = static_cast<void*>(&g_defaultRefFrameNum);
     param[index].size = sizeof(uint32_t);
     index++;
 #endif

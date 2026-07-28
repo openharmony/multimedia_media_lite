@@ -17,6 +17,7 @@
 #define PLAYERCONTROL_H
 
 #include <string>
+#include <atomic>
 #include "hi_liteplayer.h"
 #include "liteplayer_state_machine.h"
 #include "player_define.h"
@@ -230,7 +231,7 @@ private:
     int64_t seekToTimeMs_;
     bool firstAudioFrameAfterSeek_;
     bool firstVideoFrameAfterSeek_;
-    bool isPaused_;
+    std::atomic<bool> isPaused_;
     SourceType sourceType_;
     int32_t fd_;
     std::string filePath_;

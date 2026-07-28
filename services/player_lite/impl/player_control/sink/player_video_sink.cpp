@@ -91,6 +91,9 @@ VideoSink::~VideoSink()
 int32_t VideoSink::DeInit()
 {
     int32_t ret = HI_SUCCESS;
+#ifndef MEDIA_INTERFACE_V1_0
+    layerFuncs_->DeinitDisplay(0);
+#endif
     return ret;
 }
 
@@ -98,6 +101,9 @@ int32_t VideoSink::Init(SinkAttr &attr)
 {
     attr_ = attr;
     (void)LayerInitialize(&layerFuncs_);
+#ifndef MEDIA_INTERFACE_V1_0
+    layerFuncs_->InitDisplay(0);
+#endif
     return 0;
 }
 
@@ -174,6 +180,7 @@ void VideoSink::CreateAndConfigLayer(void)
     lInfo.pixFormat = PIXEL_FMT_YCRCB_420_SP;
     if (layerFuncs_ != nullptr) {
         layerFuncs_->CreateLayer(devId, &lInfo, &layerId_);
+        MEDIA_ERR_LOG("layerId_: %d, width: %d, height: %d", layerId_, w, h);
         layerFuncs_->SetLayerSize(devId, layerId_, &attr);
     }
 }
@@ -287,14 +294,11 @@ int32_t VideoSink::RegisterCallBack(PlayEventCallback &callback)
     return 0;
 }
 
+#ifdef MEDIA_INTERFACE_V1_0
 void VideoSink::QueueRenderFrame(OutputInfo &frame, bool cacheQueue)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-#ifdef MEDIA_INTERFACE_V1_0
     if (frame.type != AUDIO_DECODER || frame.bufferCnt == 0) {
-#else
-    if (frame.bufferCnt == 0) {
-#endif
         return;
     }
     if (cacheQueue) {
@@ -308,11 +312,7 @@ int32_t VideoSink::GetRenderFrame(OutputInfo &renderFrame, OutputInfo &frame)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     int32_t ret = SINK_QUE_EMPTY;
-#ifdef MEDIA_INTERFACE_V1_0
     if (frame.type == VIDEO_DECODER && frame.bufferCnt != 0) {
-#else
-    if (frame.bufferCnt != 0) {
-#endif
         frameCacheQue_.push_back(frame);
     }
     if (frameCacheQue_.size() != 0) {
@@ -358,28 +358,11 @@ int32_t VideoSink::DequeReleaseFrame(OutputInfo &frame)
     return SINK_SUCCESS;
 }
 
-void VideoSink::RenderRptEvent(EventCbType event)
-{
-    if (callBack_.onEventCallback != nullptr) {
-        if (event == EVNET_VIDEO_PLAY_EOS && eosSended_ == true) {
-            return;
-        }
-        callBack_.onEventCallback(callBack_.priv, event, 0, 0);
-        if (event == EVNET_VIDEO_PLAY_EOS) {
-            eosSended_ = true;
-        }
-    }
-}
-
 int32_t VideoSink::WriteToVideoDevice(OutputInfo &renderFrame)
 {
     if (layerFuncs_ != nullptr) {
         LayerBuffer layerBuf;
-#ifdef MEDIA_INTERFACE_V1_0
         layerBuf.data.virAddr = renderFrame.vendorPrivate;
-#else
-        layerBuf.data.virAddr =  (void *)renderFrame.buffers[0].addr;
-#endif
         layerFuncs_->Flush(0, layerId_, &layerBuf);
     }
     ReleaseQueHeadFrame();
@@ -437,6 +420,147 @@ int32_t VideoSink::RenderFrame(OutputInfo &frame)
         lastRendPts_ = renderFrame.timeStamp;
     }
     return ret;
+}
+#else
+void VideoSink::QueueRenderFrame(PlayerBufferInfo &frame, bool cacheQueue)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (frame.info.bufferCnt == 0) {
+        return;
+    }
+    if (cacheQueue) {
+        frameCacheQue_.push_back(frame);
+    } else {
+        frameReleaseQue_.push_back(frame);
+    }
+}
+
+int32_t VideoSink::GetRenderFrame(PlayerBufferInfo &renderFrame, PlayerBufferInfo &frame)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    int32_t ret = SINK_QUE_EMPTY;
+    if (frame.info.bufferCnt != 0) {
+        frameCacheQue_.push_back(frame);
+    }
+    if (frameCacheQue_.size() != 0) {
+        renderFrame = frameCacheQue_[0];
+        ret = SINK_SUCCESS;
+    }
+    return ret;
+}
+
+void VideoSink::ReleaseQueHeadFrame(void)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (frameCacheQue_.size() != 0) {
+        PlayerBufferInfo frame = frameCacheQue_[0];
+        frameCacheQue_.erase(frameCacheQue_.begin());
+        frameReleaseQue_.push_back(frame);
+    }
+}
+
+void VideoSink::ReleaseQueAllFrame(void)
+{
+    size_t i;
+    size_t queSize;
+    std::lock_guard<std::mutex> lock(mutex_);
+    queSize = frameCacheQue_.size();
+    if (queSize > MAX_VIDEO_QUEUE_BUF_NUM) {
+        return;
+    }
+    for (i = 0; i < queSize; i++) {
+        frameReleaseQue_.push_back(frameCacheQue_[i]);
+    }
+    frameCacheQue_.clear();
+}
+
+int32_t VideoSink::DequeReleaseFrame(PlayerBufferInfo &frame)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (frameReleaseQue_.size() == 0) {
+        return SINK_QUE_EMPTY;
+    }
+    frame = frameReleaseQue_[0];
+    frameReleaseQue_.erase(frameReleaseQue_.begin());
+    return SINK_SUCCESS;
+}
+
+int32_t VideoSink::WriteToVideoDevice(CodecBuffer &renderFrame)
+{
+    if (layerFuncs_ != nullptr) {
+        LayerBuffer layerBuf;
+        layerBuf.data.virAddr = reinterpret_cast<void *>(renderFrame.buffer[0].buf);
+        layerFuncs_->Flush(0, layerId_, &layerBuf);
+    }
+    ReleaseQueHeadFrame();
+    return SINK_SUCCESS;
+}
+
+int32_t VideoSink::RenderFrame(PlayerBufferInfo &frame)
+{
+    SyncRet syncRet = SYNC_RET_PLAY;
+    int64_t crtPlayPts = 0;
+    PlayerBufferInfo renderFrame;
+
+    /* the frame should be save to queue at state paused and none-started */
+    if (!started_ || paused_ || (renderMode_ == RENDER_MODE_PAUSE_AFTER_PLAY && renderFrameCnt_ == 1)) {
+        QueueRenderFrame(frame, started_ ? true : false);
+        return SINK_SUCCESS;
+    }
+
+    if (GetRenderFrame(renderFrame, frame) != SINK_SUCCESS) {
+        if (recievedEos_ == true) {
+            RenderRptEvent(EVNET_VIDEO_PLAY_EOS);
+            return SINK_RENDER_EOS;
+        }
+        return SINK_QUE_EMPTY;
+    }
+
+    crtPlayPts = renderFrame.info.timeStamp;
+    int32_t ret = (syncHdl_ != nullptr) ? syncHdl_->ProcVidFrame(crtPlayPts, syncRet) : HI_SUCCESS;
+    if (ret != HI_SUCCESS) {
+        ReleaseQueHeadFrame();
+        MEDIA_ERR_LOG("ProcVidFrame pts: %llu failed", renderFrame.info.timeStamp);
+        return SINK_RENDER_ERROR;
+    }
+
+    if (syncRet == SYNC_RET_PLAY) {
+        ret = WriteToVideoDevice(renderFrame.info);
+        if (renderFrameCnt_ == 0) {
+            callBack_.onEventCallback(callBack_.priv, EVNET_FIRST_VIDEO_REND, renderFrame.info.timeStamp, 0);
+        }
+        renderFrameCnt_++;
+    } else if (syncRet == SYNC_RET_DROP) {
+        MEDIA_INFO_LOG("too late, drop, pts: %lld", renderFrame.info.timeStamp);
+        ReleaseQueHeadFrame();
+        ret = SINK_SUCCESS;
+    } else if (syncRet == SYNC_RET_REPEAT) {
+        ret = SINK_RENDER_DELAY;
+    } else {
+        MEDIA_ERR_LOG("video invalid sync ret: %d", syncRet);
+        ReleaseQueHeadFrame();
+        ret =  SINK_RENDER_ERROR;
+    }
+
+    /* render pts update after the frame that have been processed */
+    if (ret == SINK_SUCCESS || ret == SINK_RENDER_ERROR) {
+        lastRendPts_ = (renderFrame.info.timeStamp > lastRendPts_) ? renderFrame.info.timeStamp : lastRendPts_;
+    }
+    return ret;
+}
+#endif
+
+void VideoSink::RenderRptEvent(EventCbType event)
+{
+    if (callBack_.onEventCallback != nullptr) {
+        if (event == EVNET_VIDEO_PLAY_EOS && eosSended_ == true) {
+            return;
+        }
+        callBack_.onEventCallback(callBack_.priv, event, 0, 0);
+        if (event == EVNET_VIDEO_PLAY_EOS) {
+            eosSended_ = true;
+        }
+    }
 }
 
 void VideoSink::SetSync(PlayerSync *sync)

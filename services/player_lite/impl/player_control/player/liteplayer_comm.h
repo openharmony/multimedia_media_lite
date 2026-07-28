@@ -45,7 +45,11 @@ void CondTimeWait(pthread_cond_t &cond, pthread_mutex_t &mutex, uint32_t delayUs
 void GetCurVideoSolution(FormatFileInfo &info, uint32_t &width, uint32_t &height);
 AvCodecMime TransformCodecFormatToAvCodecMime(CodecFormat format);
 std::string GetAudioNameByAvCodecMime(AvCodecMime mime);
+#ifdef MEDIA_INTERFACE_V1_0
 void InitOutputBuffer(OutputInfo &outInfo, CodecType type);
+#else
+void InitOutputBuffer(CodecBuffer &outInfo, CodecType type);
+#endif
 bool IsValidPacket(FormatFrame &packet);
 }
 }

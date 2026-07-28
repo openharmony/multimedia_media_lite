@@ -210,6 +210,7 @@ void AudioSink::GetStatus(AudioSinkStatus &status)
     status.audFrameCount = rendFrameCnt_;
 }
 
+#ifdef MEDIA_INTERFACE_V1_0
 void AudioSink::UpdateAudioPts(int64_t lastPts, int64_t &timestamp, OutputInfo &renderFrame)
 {
     if (renderFrame.timeStamp == -1) {
@@ -227,15 +228,9 @@ void AudioSink::UpdateAudioPts(int64_t lastPts, int64_t &timestamp, OutputInfo &
 void AudioSink::QueueRenderFrame(const OutputInfo &frame, const bool cacheQueue)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-#ifdef MEDIA_INTERFACE_V1_0
     if (frame.type != AUDIO_DECODER || frame.bufferCnt == 0) {
         return;
     }
-#else
-    if (frame.bufferCnt == 0) {
-        return;
-    }
-#endif
     if (cacheQueue) {
         frameCacheQue_.push_back(frame);
     } else {
@@ -247,15 +242,9 @@ int32_t AudioSink::GetRenderFrame(OutputInfo &renderFrame, const OutputInfo &fra
 {
     std::lock_guard<std::mutex> lock(mutex_);
     int32_t ret = SINK_QUE_EMPTY;
-#ifdef MEDIA_INTERFACE_V1_0
-    if (frame.type == AUDIO_DECODER &&  frame.bufferCnt != 0) {
+    if (frame.type == AUDIO_DECODER && frame.bufferCnt != 0) {
         frameCacheQue_.push_back(frame);
     }
-#else
-    if (frame.bufferCnt != 0) {
-        frameCacheQue_.push_back(frame);
-    }
-#endif
     if (frameCacheQue_.size() != 0) {
         renderFrame = frameCacheQue_[0];
         ret = SINK_SUCCESS;
@@ -420,6 +409,202 @@ int32_t AudioSink::RenderFrame(OutputInfo &frame)
     ret = RenderFrameDevice(renderFrame);
     return ret;
 }
+#else
+void AudioSink::UpdateAudioPts(int64_t lastPts, int64_t &timestamp, CodecBuffer &renderFrame)
+{
+    if (renderFrame.timeStamp == -1) {
+        float sampleCnt = (renderFrame.buffer[0].length / attr_.audAttr.channel) / AUDIO_SAMPLE_WIDTH_BYTE;
+        float duration = (static_cast<int64_t>(sampleCnt) * MS_SCALE) / attr_.audAttr.sampleRate;
+        renderFrame.timeStamp = lastPts + duration;
+    }
+    timestamp = renderFrame.timeStamp;
+    renderDelay_ = 0;
+    if (audioRender_->GetLatency(audioRender_, &renderDelay_) == HI_SUCCESS) {
+        timestamp -= renderDelay_;
+    }
+}
+
+void AudioSink::QueueRenderFrame(const PlayerBufferInfo &frame, const bool cacheQueue)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (frame.info.bufferCnt == 0) {
+        return;
+    }
+    if (cacheQueue) {
+        frameCacheQue_.push_back(frame);
+    } else {
+        frameReleaseQue_.push_back(frame);
+    }
+}
+
+int32_t AudioSink::GetRenderFrame(PlayerBufferInfo &renderFrame, const PlayerBufferInfo &frame)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    int32_t ret = SINK_QUE_EMPTY;
+    if (frame.info.bufferCnt != 0) {
+        frameCacheQue_.push_back(frame);
+    }
+    if (frameCacheQue_.size() != 0) {
+        renderFrame = frameCacheQue_[0];
+        ret = SINK_SUCCESS;
+    }
+    return ret;
+}
+
+void AudioSink::ReleaseQueHeadFrame(void)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (frameCacheQue_.size() != 0) {
+        PlayerBufferInfo frame = frameCacheQue_[0];
+        frameCacheQue_.erase(frameCacheQue_.begin());
+        frameReleaseQue_.push_back(frame);
+    }
+}
+
+void AudioSink::ReleaseQueAllFrame(void)
+{
+    size_t i;
+    size_t queSize;
+    std::lock_guard<std::mutex> lock(mutex_);
+    queSize = frameCacheQue_.size();
+    if (queSize > MAX_QUEUE_BUF_NUM) {
+        return;
+    }
+    for (i = 0; i < queSize; i++) {
+        frameReleaseQue_.push_back(frameCacheQue_[i]);
+    }
+    frameCacheQue_.clear();
+}
+
+int32_t AudioSink::DequeReleaseFrame(PlayerBufferInfo &frame)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (frameReleaseQue_.size() == 0) {
+        return SINK_QUE_EMPTY;
+    }
+    frame = frameReleaseQue_[0];
+    frameReleaseQue_.erase(frameReleaseQue_.begin());
+    return SINK_SUCCESS;
+}
+
+void AudioSink::RenderRptEvent(EventCbType event)
+{
+    if (callBack_.onEventCallback != nullptr) {
+        if (event == EVNET_AUDIO_PLAY_EOS && eosSended_) {
+            return;
+        }
+        callBack_.onEventCallback(callBack_.priv, event, 0, 0);
+        if (event == EVNET_AUDIO_PLAY_EOS) {
+            eosSended_ = true;
+        }
+    }
+}
+
+int32_t AudioSink::WriteToAudioDevice(CodecBuffer &renderFrame)
+{
+    int32_t ret;
+    uint64_t writeLen = 0;
+    if ((audioRender_ == nullptr) || (&renderFrame.buffer[0] == nullptr)) {
+        ReleaseQueHeadFrame();
+        return SINK_RENDER_ERROR;
+    }
+
+    ret = audioRender_->RenderFrame(audioRender_,
+        reinterpret_cast<void *>(renderFrame.buffer[0].buf + renderFrame.buffer[0].offset),
+        static_cast<uint64_t>(renderFrame.buffer[0].length), &writeLen);
+    if ((unsigned long)renderFrame.buffer[0].length != writeLen) {
+        return SINK_RENDER_FULL;
+    } else if (ret != HI_SUCCESS) {
+        ReleaseQueHeadFrame();
+        MEDIA_ERR_LOG("RenderFrame failed ret: %x", ret);
+        return SINK_RENDER_ERROR;
+    }
+#ifdef ENABLE_PLAYER_HDMI_HOT_SWAP
+    hdmiQueryCnt_++;
+    if (hdmiQueryCnt_ >= 50) { // 50 frames per second
+        hdmiQueryCnt_ = 0;
+        float speed_ = 0.0;
+        if (audioRender_->GetRenderSpeed(audioRender_, &speed_) == HI_SUCCESS) {
+            bool currentHdmiState = (speed_ == 200); // 200 is the speed for HDMI
+            if (currentHdmiState != hdmiConnected_) {
+                ReleaseQueHeadFrame();
+                return SINK_RENDER_PAUSED;
+            }
+        }
+    }
+#endif
+    ReleaseQueHeadFrame();
+    return HI_SUCCESS;
+}
+
+int32_t AudioSink::RenderFrame(PlayerBufferInfo &frame)
+{
+    SyncRet syncRet = SYNC_RET_PLAY;
+    int64_t crtPlayPts = 0;
+    uint64_t frameCnt;
+    PlayerBufferInfo renderFrame;
+    struct AudioTimeStamp timestamp;
+
+    if (!reportedFirstFrame && renderMode_ == RENDER_MODE_PAUSE_AFTER_PLAY) {
+        callBack_.onEventCallback(callBack_.priv, EVNET_FIRST_AUDIO_REND, 0, 0);
+        reportedFirstFrame = true;
+        MEDIA_INFO_LOG("report first audio frame");
+    }
+
+    if (paused_ || renderMode_ == RENDER_MODE_PAUSE_AFTER_PLAY) {
+        QueueRenderFrame(frame, true);
+        return SINK_SUCCESS;
+    }
+    if (!started_ || audioRender_ == nullptr) {
+        QueueRenderFrame(frame, false);
+        MEDIA_ERR_LOG("paused or audio dev not inited");
+        return SINK_RENDER_ERROR;
+    }
+
+    if (GetRenderFrame(renderFrame, frame) != SINK_SUCCESS) {
+        if (receivedEos_) {
+            RenderRptEvent(EVNET_AUDIO_PLAY_EOS);
+            return SINK_RENDER_EOS;
+        }
+        return SINK_QUE_EMPTY;
+    }
+    if (pauseAfterPlay_) {
+        return SINK_SUCCESS;
+    }
+
+    int32_t ret = audioRender_->GetRenderPosition(audioRender_, &frameCnt, &timestamp);
+    if (ret != HI_SUCCESS) {
+        MEDIA_ERR_LOG("GetRenderPosition failed,ret=0x%x", ret);
+        return SINK_RENDER_ERROR;
+    }
+
+    UpdateAudioPts(lastRendPts_, crtPlayPts, renderFrame.info);
+    ret = (syncHdl_ != nullptr) ? syncHdl_->ProcAudFrame(crtPlayPts, syncRet) : HI_SUCCESS;
+    if (ret != HI_SUCCESS) {
+        MEDIA_ERR_LOG("ProcAudFrame pts: %lld failed", renderFrame.info.timeStamp);
+        ReleaseQueHeadFrame();
+        return SINK_RENDER_ERROR;
+    }
+    if (syncRet == SYNC_RET_PLAY) {
+        ret = WriteToAudioDevice(renderFrame.info);
+    } else if (syncRet == SYNC_RET_DROP) {
+        ReleaseQueHeadFrame();
+        ret = SINK_SUCCESS;
+    } else if (syncRet == SYNC_RET_REPEAT) {
+        ret = SINK_RENDER_DELAY;
+    } else {
+        MEDIA_ERR_LOG("aud invalid sync ret: %d", syncRet);
+        ReleaseQueHeadFrame();
+        ret =  SINK_RENDER_ERROR;
+    }
+
+    if (ret == SINK_SUCCESS || ret == SINK_RENDER_ERROR) {
+        lastRendPts_ = renderFrame.info.timeStamp;
+        rendFrameCnt_++;
+    }
+    return ret;
+}
+#endif
 
 void AudioSink::RenderEos(void)
 {

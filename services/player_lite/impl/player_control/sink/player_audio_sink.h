@@ -45,7 +45,11 @@ public:
     int32_t SetSpeed(float speed);
     int32_t GetSpeed(float &speed);
     int32_t GetState(int32_t &state);
+#ifdef MEDIA_INTERFACE_V1_0
     int32_t RenderFrame(OutputInfo &frame);
+#else
+    int32_t RenderFrame(PlayerBufferInfo &frame);
+#endif
     void SetRenderMode(RenderMode mode);
     int32_t SetVolume(float left, float right);
     int32_t GetVolume(float &left, float &right);
@@ -57,21 +61,32 @@ public:
     int32_t RegisterCallBack(PlayEventCallback &callback);
     void GetStatus(AudioSinkStatus &status);
     void RenderEos(void);
+#ifdef MEDIA_INTERFACE_V1_0
     int DequeReleaseFrame(OutputInfo &frame);
+#else
+    int DequeReleaseFrame(PlayerBufferInfo &frame);
+#endif
     void GetRenderPosition(int64_t &position);
     void SetAudioStreamType(int32_t &type);
 
 private:
     void ResetRendStartTime();
     void SendAudioEndOfStream();
+#ifdef MEDIA_INTERFACE_V1_0
     void UpdateAudioPts(int64_t lastPts, int64_t& timestamp, OutputInfo &renderFrame);
     int GetRenderFrame(OutputInfo &renderFrame, const OutputInfo &frame);
-    void ReleaseQueHeadFrame(void);
-    void ReleaseQueAllFrame(void);
-    void RenderRptEvent(EventCbType event);
     int32_t WriteToAudioDevice(OutputInfo &renderFrame);
     void QueueRenderFrame(const OutputInfo &frame, bool cacheQueue);
     int32_t RenderFrameDevice(OutputInfo &renderFrame);
+#else
+    void UpdateAudioPts(int64_t lastPts, int64_t& timestamp, CodecBuffer &renderFrame);
+    int GetRenderFrame(PlayerBufferInfo &renderFrame, const PlayerBufferInfo &frame);
+    int32_t WriteToAudioDevice(CodecBuffer &renderFrame);
+    void QueueRenderFrame(const PlayerBufferInfo &frame, bool cacheQueue);
+#endif
+    void ReleaseQueHeadFrame(void);
+    void ReleaseQueAllFrame(void);
+    void RenderRptEvent(EventCbType event);
     bool CheckAudioAdapter(struct AudioAdapterDescriptor *desc);
     int32_t LoadAudioAdapter();
     void InitAudioSampleAttributes(struct AudioSampleAttributes &param);
@@ -98,8 +113,13 @@ private:
     bool hdmiConnected_;
     uint32_t hdmiQueryCnt_;
     std::mutex mutex_;
+#ifdef MEDIA_INTERFACE_V1_0
     std::vector<OutputInfo> frameCacheQue_;
     std::vector<OutputInfo> frameReleaseQue_;
+#else
+    std::vector<PlayerBufferInfo> frameCacheQue_;
+    std::vector<PlayerBufferInfo> frameReleaseQue_;
+#endif
     struct AudioManager *audioManager_;
     struct AudioAdapter *audioAdapter_;
     struct AudioRender *audioRender_;

@@ -139,9 +139,9 @@ std::string GetAudioNameByAvCodecMime(AvCodecMime mime)
     return audioName;
 }
 
+#ifdef MEDIA_INTERFACE_V1_0
 void InitOutputBuffer(OutputInfo &outInfo, CodecType type)
 {
-#ifdef MEDIA_INTERFACE_V1_0
     outInfo.bufferCnt = 0;
     outInfo.buffers = nullptr;
     outInfo.timeStamp = -1;
@@ -149,13 +149,16 @@ void InitOutputBuffer(OutputInfo &outInfo, CodecType type)
     outInfo.flag = 0;
     outInfo.type = type;
     outInfo.vendorPrivate = nullptr;
+}
 #else
+void InitOutputBuffer(CodecBuffer &outInfo, CodecType type)
+{
     outInfo.bufferCnt = 0;
     outInfo.timeStamp = -1;
     outInfo.flag = 0;
     (void)type;
-#endif
 }
+#endif
 
 bool IsValidPacket(FormatFrame &packet)
 {

@@ -71,7 +71,7 @@ public:
 #ifdef MEDIA_INTERFACE_V1_0
     int32_t RenderFrame(OutputInfo &frame);
 #else
-    int32_t RenderFrame(OutputInfo &frame, CodecType type);
+    int32_t RenderFrame(PlayerBufferInfo &frame, CodecType type);
 #endif
     int32_t SetVolume(float left, float right);
     int32_t GetVolume(float &left, float &right);
@@ -81,7 +81,11 @@ public:
     int32_t RegisterCallBack(PlayEventCallback &callback);
     int32_t GetStatus(PlayerStreamInfo &info);
     void RenderEos(bool isAudio);
+#ifdef MEDIA_INTERFACE_V1_0
     int DequeReleaseFrame(bool audioSink, OutputInfo &frame);
+#else
+    int DequeReleaseFrame(bool audioSink, PlayerBufferInfo &frame);
+#endif
     void GetRenderPosition(int64_t &position);
     void SetAudioStreamType(int32_t &type);
 

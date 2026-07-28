@@ -23,6 +23,14 @@ namespace Media {
 const int CODEC_SUCCESS = 0;
 const int CODEC_FAILURE = -1;
 
+#ifndef MEDIA_INTERFACE_V1_0
+/* CodecBuffer ends with flexible array buffer[0]; embed CodecBufferInfo to provide storage. */
+typedef struct {
+    CodecBuffer info;
+    CodecBufferInfo buffer;
+} PlayerBufferInfo;
+#endif
+
 typedef struct {
     AvCodecMime mime;
     uint32_t maxWidth;
@@ -71,6 +79,7 @@ public:
 
     int32_t FlushDec();
 
+#ifdef MEDIA_INTERFACE_V1_0
     int32_t QueueInputBuffer(InputInfo &inputData, uint32_t timeoutMs);
 
     int32_t DequeInputBuffer(InputInfo &inputData, uint32_t timeoutMs);
@@ -78,6 +87,15 @@ public:
     int32_t QueueOutputBuffer(OutputInfo &outInfo, uint32_t timeoutMs);
 
     int32_t DequeueOutputBuffer(OutputInfo &outInfo, uint32_t timeoutMs);
+#else
+    int32_t QueueInputBuffer(CodecBuffer *inputData, uint32_t timeoutMs);
+
+    int32_t DequeInputBuffer(CodecBuffer *inputData, uint32_t timeoutMs);
+
+    int32_t QueueOutputBuffer(CodecBuffer *outInfo, uint32_t timeoutMs);
+
+    int32_t DequeueOutputBuffer(CodecBuffer *outInfo, uint32_t timeoutMs);
+#endif
 
     int32_t SetCallback(CodecCallback &cb, UINTPTR instance);
 

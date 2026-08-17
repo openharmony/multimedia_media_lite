@@ -1,0 +1,130 @@
+# Copyright (C) 2026 RKH Corp.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/lite/config/component/lite_component.gni")
+import("//build/lite/ndk/ndk.gni")
+import("//foundation/multimedia/media_lite/config.gni")
+import("//foundation/multimedia/media_utils_lite/config.gni")
+
+config("player_impl_external_library_config") {
+  include_dirs = [ "//foundation/multimedia/frameworks/player_lite/binder" ]
+  include_dirs +=
+      [ "//foundation/multimedia/media_lite/interfaces/kits/player_lite" ]
+  include_dirs += [ "//foundation/multimedia/media_lite/services/player_lite/impl/buffersource/include" ]
+  include_dirs += [ "//foundation/multimedia/media_lite/services/player_lite/impl/player_control/include" ]
+  include_dirs += [ "//foundation/multimedia/media_lite/services/player_lite/impl/player_control/player" ]
+  include_dirs += [ "//foundation/multimedia/media_utils_lite/interfaces/kits" ]
+  include_dirs += [ "//drivers/peripheral/format/interfaces/include" ]
+  include_dirs += [ "//foundation/multimedia/media_lite/services/player_lite/impl/player_control/player/fsm/src" ]
+  include_dirs += [ "//foundation/multimedia/media_lite/services/player_lite/impl/player_control/player/fsm/include" ]
+  include_dirs += [ "//foundation/multimedia/media_lite/services/player_lite/impl/player_control/source" ]
+  include_dirs += [ "//foundation/multimedia/media_lite/services/player_lite/impl/player_control/sink" ]
+  include_dirs += [ "//drivers/peripheral/codec/interfaces/include" ]
+  include_dirs += [ "//foundation/multimedia/media_lite/services/player_lite/impl/player_control/decoder" ]
+  include_dirs += [ "//drivers/peripheral/audio/interfaces/include" ]
+}
+
+executable("plugin_play") {
+  sources = [
+    "plugin_play.cpp",
+    "player_sample_common.cpp",
+    ]
+  cflags = [ "-Wall" ]
+  cflags_cc = cflags
+  include_dirs = [
+    "${aafwk_lite_path}/interfaces/kits/ability_lite",
+    "${appexecfwk_lite_path}/interfaces/kits/bundle_lite",
+    "${aafwk_lite_path}/interfaces/kits/want_lite",
+    "//drivers/peripheral/display/interfaces/include",
+    "//foundation/multimedia/camera_lite/services/server/include",
+    "//foundation/multimedia/camera_lite/services/impl/include",
+    "//foundation/multimedia/camera_lite/services/impl/include",
+  ]
+  public_configs = [
+    ":player_impl_external_library_config",
+    ]
+
+  ldflags = [ "-Wl,-Map=media_server.map" ]
+  ldflags += [
+    "-lstdc++",
+    "-lcodec",
+    "-laudio_hw",
+    "-lformat_hw",
+    "-lhdi_camera",
+    "-ldisplay_layer",
+    "-lpthread",
+    "-Wl,-rpath-link=$ohos_root_path/$root_out_dir",
+  ]
+  deps = [
+    "//foundation/multimedia/media_lite/services:camera_config",
+    "//foundation/multimedia/media_lite/services:codec_config",
+    "//foundation/multimedia/media_lite/services:media_config",
+    "//foundation/multimedia/media_lite/services/player_lite:player_impl",
+    "//foundation/multimedia/media_lite/services:media_server",
+    "//foundation/multimedia/camera_lite/services:camera_server",
+    "//foundation/multimedia/media_lite/services/recorder_lite:recorder_impl",
+    "//foundation/multimedia/media_lite/services/recorder_lite:recorder_server",
+  ]
+  output_dir = "$root_out_dir/usr"
+}
+
+executable("plugin_play_two_channe") {
+  sources = [
+    "plugin_play_two_channe.cpp",
+    "player_sample_common.cpp",
+    ]
+  cflags = [ "-Wall" ]
+  cflags_cc = cflags
+  include_dirs = [
+    "${aafwk_lite_path}/interfaces/kits/ability_lite",
+    "${appexecfwk_lite_path}/interfaces/kits/bundle_lite",
+    "${aafwk_lite_path}/interfaces/kits/want_lite",
+    "//drivers/peripheral/display/interfaces/include",
+    "//foundation/multimedia/camera_lite/services/server/include",
+    "//foundation/multimedia/camera_lite/services/impl/include",
+    "//foundation/multimedia/camera_lite/services/impl/include",
+  ]
+  public_configs = [
+    ":player_impl_external_library_config",
+    ]
+
+  ldflags = [ "-Wl,-Map=media_server.map" ]
+  ldflags += [
+    "-lstdc++",
+    "-lcodec",
+    "-laudio_hw",
+    "-lformat_hw",
+    "-lhdi_camera",
+    "-ldisplay_layer",
+    "-lpthread",
+    "-Wl,-rpath-link=$ohos_root_path/$root_out_dir",
+  ]
+  deps = [
+    "//foundation/multimedia/media_lite/services:camera_config",
+    "//foundation/multimedia/media_lite/services:codec_config",
+    "//foundation/multimedia/media_lite/services:media_config",
+    "//foundation/multimedia/media_lite/services/player_lite:player_impl",
+    "//foundation/multimedia/media_lite/services:media_server",
+    "//foundation/multimedia/camera_lite/services:camera_server",
+    "//foundation/multimedia/media_lite/services/recorder_lite:recorder_impl",
+    "//foundation/multimedia/media_lite/services/recorder_lite:recorder_server",
+  ]
+  output_dir = "$root_out_dir/usr"
+}
+
+group("plugin_group") {
+  deps = [
+    ":plugin_play",
+    ":plugin_play_two_channe",
+  ]
+}

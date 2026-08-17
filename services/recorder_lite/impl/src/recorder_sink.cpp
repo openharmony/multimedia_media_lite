@@ -16,6 +16,7 @@
 #include "recorder_sink.h"
 #include <unistd.h>
 #include <sys/prctl.h>
+#include <sys/stat.h>
 #include "format_interface.h"
 #include "media_log.h"
 #include "securec.h"
@@ -31,7 +32,7 @@ RecorderSink::RecorderSink()
     :formatMuxerHandle_(nullptr),
      prepared_(false),
      started_(false),
-     outputFormat_(OUTPUT_FORMAT_INVALID),
+     outputFormat_(OUTPUT_FORMAT_MPEG_4),
      outputFd_(-1),
      outputNextFd_(-1),
      path_("/userdata"),
@@ -362,7 +363,7 @@ int32_t RecorderSink::Start()
             return -1;
         }
     }
-
+    umask(0);
     int32_t ret = FormatMuxerStart(formatMuxerHandle_);
     if (ret != SUCCESS) {
         MEDIA_ERR_LOG("FormatMuxerStart failed 0x%x", ret);
@@ -434,7 +435,7 @@ int32_t RecorderSink::Reset()
     }
     CloseFd();
     prepared_ = false;
-    outputFormat_ = OUTPUT_FORMAT_INVALID;
+    outputFormat_ = OUTPUT_FORMAT_MPEG_4;
     maxFileSize_ = -1;
     maxDuration_ = -1;
     return SUCCESS;

@@ -24,8 +24,9 @@
 extern "C" {
 #endif
 #endif /* End of #ifdef __cplusplus */
+namespace OHOS {
+namespace Media {
 
-static const uint32_t  MS_SCALE   = 1000;
 static const int64_t INVALID_PTS = -1;
 
 static const uint32_t FULL_TPLAY_FRAMERATE_LIMIT = 30;
@@ -70,7 +71,6 @@ static const uint32_t PLAYER_MPF_BUF_EXTRA = 2048;
 /* PLAYER_MPF_ESBUF_MIN: (32 * 1024) */
 static const uint32_t PLAYER_MPF_ESBUF_MIN = 32768;
 
-static const int32_t AV_INVALID_PTS = -1;
 
 static const uint32_t NO_WAIT = 0;
 
@@ -111,9 +111,44 @@ enum PlayerTplaySeekOffset {
     TPLAY_SEEK_OFFSET_64X = 3200,
     TPLAY_SEEK_OFFSET_128X = 6400
 };
+}
+}
 
 #ifdef __cplusplus
 #if __cplusplus
+}
+
+namespace OHOS {
+namespace Media {
+template <typename T>
+inline bool CheckIsNull(const T &value, const char *printfString)
+{
+    if (value == nullptr) {
+        MEDIA_ERR_LOG("%s", (printfString != nullptr) ? printfString : " ");
+        return true;
+    }
+    return false;
+}
+
+template <typename T, typename U>
+inline bool CheckIsFailed(const T &value, const U &target, const char *printfString)
+{
+    if (value != target) {
+        MEDIA_ERR_LOG("%s", (printfString != nullptr) ? printfString : " ");
+        return true;
+    }
+    return false;
+}
+
+inline bool CheckStateSame(PlayerStatus srcState, PlayerStatus dstState)
+{
+    if (dstState == srcState) {
+        MEDIA_INFO_LOG("current play state already be %d", dstState);
+        return true;
+    }
+    return false;
+}
+}
 }
 #endif
 #endif /* End of #ifdef __cplusplus */

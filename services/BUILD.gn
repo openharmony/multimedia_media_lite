@@ -43,6 +43,7 @@ executable("media_server") {
     "//foundation/multimedia/media_lite/services/player_lite",
     "//foundation/multimedia/audio_lite/services/impl",
     "//foundation/multimedia/audio_lite/services/server/include",
+    "//foundation/multimedia/media_lite/interfaces/kits/recorder_lite",
     "//foundation/multimedia/media_lite/services/recorder_lite/impl/include",
     "//foundation/multimedia/media_lite/services/recorder_lite/server/include",
   ]
@@ -61,6 +62,7 @@ executable("media_server") {
     ":codec_config",
     ":media_config",
     "//foundation/multimedia/camera_lite/services:camera_server",
+    "//foundation/multimedia/media_lite/services/recorder_lite:recorder_impl",
     "//foundation/systemabilitymgr/samgr_lite/samgr:samgr",
   ]
   if (enable_media_passthrough_mode == false) {

@@ -21,7 +21,8 @@ executable("test_play_file_h265") {
   include_dirs = [
     "//third_party/bounds_checking_function/include",
     "//drivers/peripheral/codec/interfaces/include",
-    "//foundation/multimedia/media_utils_lite/hals",
+    "//drivers/peripheral/display/interfaces/include",
+    "//drivers/peripheral/base",
   ]
 
   if (enable_media_passthrough_mode == true) {
@@ -32,7 +33,11 @@ executable("test_play_file_h265") {
   ldflags += [ "-lcodec" ]
   ldflags += [ "-Wl,-rpath-link=$ohos_root_path/$root_out_dir" ]
   deps = [
-    "//device/soc/hisilicon/common/hal/media:hardware_media_sdk",
+    "${ohos_board_adapter_dir}/media:hardware_media_sdk",
     "//third_party/bounds_checking_function:libsec_shared",
   ]
+      ldflags += [ "-ldisplay_layer" ]
+      deps += [
+        "${ohos_board_adapter_dir}/display:display_layer",
+      ]
 }

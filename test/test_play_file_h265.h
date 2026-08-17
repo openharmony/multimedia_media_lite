@@ -21,7 +21,7 @@
 #include <queue>
 
 #include "codec_type.h"
-#include "hal_display.h"
+#include "display_layer.h"
 
 #define FILENAME (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
 #define DEMO_LOG(format, ...) printf("%s[%s:%d]" format "\n", __func__, (FILENAME), __LINE__, ##__VA_ARGS__)
@@ -29,6 +29,14 @@
 constexpr uint32_t PARAM_MAX_NUM = 10;
 constexpr int32_t DEMO_OK = 0;
 constexpr int32_t DEMO_ERR = -1;
+
+struct DecoderParamAttr {
+    uint32_t width;
+    uint32_t height;
+    uint32_t bufSize;
+    AvCodecMime mime;
+    CodecType domain;
+};
 
 class PlayManager {
 public:
@@ -42,9 +50,9 @@ public:
 
 private:
     std::queue<OutputInfo *> playQ_ = {};
-    HalVideoOutputHdl voHdl_ = 0;
     int64_t frameCnt_ = 0;
-
+    LayerFuncs *layerFuncs;
+    uint32_t layerId;
     int32_t InitVideoOutput();
     int32_t DeinitVideoOutput();
     int32_t Write2VideoDevice(OutputInfo &outputInfo);
@@ -70,6 +78,7 @@ private:
 
     int32_t DecoderCreate();
     void DecoderDestroy();
+    int32_t FillDecoderParams(Param *param, int32_t maxNum, DecoderParamAttr *attr);
 };
 
 #endif // TEST_PLAY_FILE_H265_H

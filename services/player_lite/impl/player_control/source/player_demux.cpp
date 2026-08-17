@@ -156,6 +156,9 @@ int32_t PlayerDemuxer::Prepare(void)
 
 int32_t PlayerDemuxer::GetFileInfo(FormatFileInfo &fileInfo)
 {
+#ifdef MEDIA_INTERFACE_V1_0
+    CHECK_FAILED_RETURN(FormatDemuxerGetFileInfo(demuxer_, &fileInfo), 0, -1, "");
+#else
     uint32_t i;
     FileInfo info;
     int programId = -1;
@@ -212,21 +215,22 @@ int32_t PlayerDemuxer::GetFileInfo(FormatFileInfo &fileInfo)
         programInfo = &info.programInfo[i];
         for (j = 0; j < programInfo->trackNum; j++) {
             if (programInfo->track[j].trackType == TRACK_TYPE_VIDEO && index < HI_DEMUXER_RESOLUTION_CNT) {
-                fileInfo.stSteamResolution[index].s32VideoStreamIndex = programInfo->track[j].trackId;
-                fileInfo.stSteamResolution[index].u32Width = programInfo->track[j].vidTrack.width;
-                fileInfo.stSteamResolution[index].u32Height = programInfo->track[j].vidTrack.height;
-                fileInfo.stSteamResolution[index].enVideoType = programInfo->track[j].vidTrack.format;
+                fileInfo.stStreamResolution[index].s32VideoStreamIndex = programInfo->track[j].trackId;
+                fileInfo.stStreamResolution[index].u32Width = programInfo->track[j].vidTrack.width;
+                fileInfo.stStreamResolution[index].u32Height = programInfo->track[j].vidTrack.height;
+                fileInfo.stStreamResolution[index].enVideoType = programInfo->track[j].vidTrack.format;
                 index++;
             }
         }
     }
     for (; index < HI_DEMUXER_RESOLUTION_CNT; index++) {
-        fileInfo.stSteamResolution[index].s32VideoStreamIndex = -1;
-        fileInfo.stSteamResolution[index].u32Width = 0;
-        fileInfo.stSteamResolution[index].u32Height = 0;
+        fileInfo.stStreamResolution[index].s32VideoStreamIndex = -1;
+        fileInfo.stStreamResolution[index].u32Width = 0;
+        fileInfo.stStreamResolution[index].u32Height = 0;
     }
 
     fileInfo.formatName = info.formatName;
+#endif
     return 0;
 }
 

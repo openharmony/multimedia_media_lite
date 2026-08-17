@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include "recorder_client.h"
+
 #include "media_log.h"
 
 namespace OHOS {

@@ -17,6 +17,7 @@
 #define PLAYERCONTROL_H
 
 #include <string>
+#include <atomic>
 #include "hi_liteplayer.h"
 #include "liteplayer_state_machine.h"
 #include "player_define.h"
@@ -66,6 +67,8 @@ public:
 
     int32_t Pause(void);
 
+    bool IsPaused(void);
+
     int32_t Seek(int64_t timeInMs);
 
     int32_t GetFileInfo(FormatFileInfo &formatInfo);
@@ -83,8 +86,10 @@ public:
     int32_t OnSwitchTPlay2Play(void);
 
     void OnVideoEndOfStream(void);
+    void OnAudioEndOfStream(void);
     void StateChangeCallback(PlayerStatus state) override;
     int32_t SetAudioStreamType(int32_t type);
+    int32_t SetLayerPriority(uint32_t priority);
 
 protected:
     int32_t DoRegCallback(PlayerCtrlCallbackParam &observer) override;
@@ -166,12 +171,15 @@ private:
     static void *DataSchProcess(void *priv);
     void ReortRenderPosition(void);
     void PushPacketToADecoder(void);
+    void PushPacketToADecoderInner(void);
     void PushPacketToVDecoder(void);
+    void PushPacketToVDecoderInner(void);
     int32_t DoSeekIfNeed(void);
     void FlushDecoder(void);
     int32_t EnablePauseAfterPlay(bool pauseAfterPlay);
     void EventProcess(EventCbType event);
     void EventQueueProcess(void);
+    int32_t DoPlayFromPrepared(void);
 
 private:
     PlayerControlStateMachine *stateMachine_;
@@ -223,6 +231,7 @@ private:
     int64_t seekToTimeMs_;
     bool firstAudioFrameAfterSeek_;
     bool firstVideoFrameAfterSeek_;
+    std::atomic<bool> isPaused_;
     SourceType sourceType_;
     int32_t fd_;
     std::string filePath_;
@@ -235,6 +244,7 @@ private:
     std::vector<PalayControlEventItem> eventQueue;
     int32_t audioStreamType_;
     int64_t seekTabel_[0x2] = {-1, -1};
+    uint32_t continuousAudFull_;
 private:
     PlayerControl(const PlayerControl &);
     PlayerControl &operator=(const PlayerControl &);

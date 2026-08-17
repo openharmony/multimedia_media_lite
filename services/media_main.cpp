@@ -20,6 +20,11 @@
 #include "camera_server.h"
 #include "recorder_service.h"
 #include "audio_capturer_server.h"
+
+#ifdef ENABLE_DH
+#include "kvstore_data_server.h"
+#include "distributed_hardware_server.h"
+#endif
 #include "ohos_init.h"
 
 #include <csignal>
@@ -29,6 +34,11 @@
 
 using namespace OHOS;
 using namespace OHOS::Media;
+#ifdef ENABLE_DH
+using namespace OHOS::DistributedKv;
+using namespace OHOS::DistributedHardware;
+#endif
+
 extern "C" void __attribute__((weak)) OHOS_SystemInit(void)
 {
     SAMGR_Bootstrap();
@@ -64,4 +74,8 @@ int main()
 #ifndef ENABLE_PASSTHROUGH_MODE
 SYSEX_SERVICE_INIT(RecorderServiceReg);
 SYSEX_SERVICE_INIT(AudioCapturerServiceReg);
+#endif
+#ifdef ENABLE_DH
+SYSEX_SERVICE_INIT(KvStoreDataServerReg);
+SYSEX_SERVICE_INIT(DistributedHardwareServerReg);
 #endif

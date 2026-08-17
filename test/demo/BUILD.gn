@@ -1,0 +1,90 @@
+# Copyright (C) 2026 RKH Corp.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/lite/config/component/lite_component.gni")
+import("//foundation/multimedia/media_utils_lite/config.gni")
+
+executable("video_player_sample") {
+  sources = [ "video_player_sample.cpp" ]
+  cflags = [ "-Wall" ]
+  cflags_cc = cflags
+  include_dirs = [
+    "${aafwk_lite_path}/interfaces/kits/ability_lite",
+    "${appexecfwk_lite_path}/interfaces/kits/bundle_lite",
+    "${aafwk_lite_path}/interfaces/kits/want_lite",
+  ]
+  ldflags = [ "-lstdc++" ]
+  ldflags += [ "-lpthread" ]
+  ldflags += [ "-Wl,-rpath-link=$ohos_root_path/$root_out_dir" ]
+  deps = [
+    "//foundation/multimedia/media_lite/frameworks/player_lite:player_lite",
+    "//third_party/bounds_checking_function:libsec_shared",
+    "//foundation/graphic/graphic_utils_lite:utils_lite",
+    "//foundation/arkui/ui_lite:ui_lite",
+  ]
+  output_dir = "$root_out_dir/usr"
+}
+
+executable("aac_play_sample") {
+  sources = [ "aac_player_sample.cpp" ]
+  cflags = [ "-Wall" ]
+  cflags_cc = cflags
+  include_dirs = [
+    "${aafwk_lite_path}/interfaces/kits/ability_lite",
+    "${appexecfwk_lite_path}/interfaces/kits/bundle_lite",
+    "${aafwk_lite_path}/interfaces/kits/want_lite",
+  ]
+  ldflags = [ "-lstdc++" ]
+  ldflags += [ "-lpthread" ]
+  ldflags += [ "-Wl,-rpath-link=$ohos_root_path/$root_out_dir" ]
+  deps = [
+    "//foundation/multimedia/media_lite/frameworks/player_lite:player_lite",
+    "//third_party/bounds_checking_function:libsec_shared",
+    "//foundation/graphic/graphic_utils_lite:utils_lite",
+    "//foundation/arkui/ui_lite:ui_lite",
+  ]
+  output_dir = "$root_out_dir/usr"
+}
+
+executable("surface_demo") {
+  sources = [ "surface_demo.cpp" ]
+  cflags = [ "-Wall" ]
+  cflags_cc = cflags
+  include_dirs = [
+    "${aafwk_lite_path}/interfaces/kits/ability_lite",
+    "${appexecfwk_lite_path}/interfaces/kits/bundle_lite",
+    "${aafwk_lite_path}/interfaces/kits/want_lite",
+  ]
+  ldflags = [ "-lstdc++" ]
+  ldflags += [ "-lpthread" ]
+  ldflags += [ "-Wl,-rpath-link=$ohos_root_path/$root_out_dir" ]
+  deps = [
+    "//foundation/multimedia/media_lite/frameworks/player_lite:player_lite",
+    "//third_party/bounds_checking_function:libsec_shared",
+    "//foundation/graphic/graphic_utils_lite:utils_lite",
+    "//foundation/arkui/ui_lite:ui_lite",
+  ]
+  output_dir = "$root_out_dir/usr"
+}
+
+group("demo_group") {
+  deps = []
+  if (defined(media_interface_upgrade)) {
+    deps += [
+        ":video_player_sample",
+        ":aac_play_sample",
+        ":surface_demo",
+        "plugin_sample:plugin_group",
+      ]
+  }
+}

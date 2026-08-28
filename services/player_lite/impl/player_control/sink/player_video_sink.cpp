@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include "player_video_sink.h"
+#include "parse_surface_region_int.h"
 #include "media_log.h"
 
 namespace OHOS {
@@ -185,10 +186,18 @@ void VideoSink::CheckConfigVideoOutput(void)
         SetDefaultDisplayRegionInfo();
         return CreateAndConfigLayer();
     }
-    int32_t x = std::stoi(surface->GetUserData("region_position_x"));
-    int32_t y = std::stoi(surface->GetUserData("region_position_y"));
-    int32_t w = std::stoi(surface->GetUserData("region_width"));
-    int32_t h = std::stoi(surface->GetUserData("region_height"));
+    int32_t x = 0;
+    int32_t y = 0;
+    int32_t w = 0;
+    int32_t h = 0;
+    if (!ParseSurfaceRegionInt(surface->GetUserData("region_position_x"), x) ||
+        !ParseSurfaceRegionInt(surface->GetUserData("region_position_y"), y) ||
+        !ParseSurfaceRegionInt(surface->GetUserData("region_width"), w) ||
+        !ParseSurfaceRegionInt(surface->GetUserData("region_height"), h)) {
+        MEDIA_ERR_LOG("invalid surface region userdata");
+        SetDefaultDisplayRegionInfo();
+        return CreateAndConfigLayer();
+    }
     UpdateDisplayRegionInfo(x, y, w, h);
 
     CreateAndConfigLayer();
